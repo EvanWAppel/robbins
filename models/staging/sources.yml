@@ -16,3 +16,24 @@ sources:
           One row per offense: report/offense datetimes, NIBRS offense category and
           description, block address, neighborhood/beat/precinct, and WGS84 lat/lon.
           Missing geo appears as a '-1.0' sentinel or 'REDACTED' (recent rows).
+      - name: fire_911
+        description: >
+          Seattle Real-Time Fire 911 dispatch (Socrata kzjm-xkqj), recent years via
+          CSV export. One row per dispatch: incident_number, call type, datetime,
+          address, and WGS84 latitude/longitude (all text from the CSV load).
+      - name: food_inspections
+        description: >
+          Public Health – Seattle & King County food establishment inspections
+          (Socrata r878-4sxa). ONE ROW PER VIOLATION — a clean inspection is one row
+          with null violation fields; dedupe on inspection_serial_num for per-
+          inspection facts. Non-spatial (address/city/zip only, no lat/lon).
+      - name: short_term_rentals
+        description: >
+          Seattle Short-Term Rental licenses (Socrata s7df-xba4, ~11k). licenseid,
+          licensestatus (Active/Inactive/Expired/...), licenseexpirationdate,
+          propertytype, geographicregion, and WGS84 lat/lon (~70% populated).
+      - name: business_licenses
+        description: >
+          Active Seattle business license tax certificates (Socrata wnbq-64tb, ~84k).
+          business_legal_name, trade_name, ownership_type, naics_code/description,
+          license_start_date (YYYYMMDD text — parse with strptime), city/zip. Non-spatial.

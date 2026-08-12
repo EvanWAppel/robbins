@@ -17,6 +17,10 @@ st.set_page_config(
 pages = [
     st.Page("views/building_permits.py", title="Building Permits", icon="🏗️", default=True),
     st.Page("views/crime.py", title="Crime", icon="🚨"),
+    st.Page("views/fire_911.py", title="Fire 911 Calls", icon="🚒"),
+    st.Page("views/restaurants.py", title="Restaurant Inspections", icon="🍽️"),
+    st.Page("views/short_term_rentals.py", title="Short-Term Rentals", icon="🏠"),
+    st.Page("views/business_licenses.py", title="Business Licenses", icon="📋"),
 ]
 
 st.navigation(pages).run()
