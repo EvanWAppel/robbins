@@ -16,6 +16,7 @@ st.set_page_config(
 
 pages = [
     st.Page("views/building_permits.py", title="Building Permits", icon="🏗️", default=True),
+    st.Page("views/crime.py", title="Crime", icon="🚨"),
 ]
 
 st.navigation(pages).run()

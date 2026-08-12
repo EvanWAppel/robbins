@@ -10,3 +10,9 @@ sources:
           Seattle DCI building permits (Socrata 76t5-zqzr, ~192k rows, 1986-present).
           One row per permit: class, type, estimated project cost, applied/issued/
           completed dates, current status, address, and WGS84 coordinates.
+      - name: crime
+        description: >
+          SPD Crime Data (Socrata tazs-3rd5), capped to recent years via CSV export.
+          One row per offense: report/offense datetimes, NIBRS offense category and
+          description, block address, neighborhood/beat/precinct, and WGS84 lat/lon.
+          Missing geo appears as a '-1.0' sentinel or 'REDACTED' (recent rows).

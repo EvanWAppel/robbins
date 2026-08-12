@@ -25,6 +25,25 @@ def test_socrata_csv_url():
     )
 
 
+def test_socrata_resource_csv_url_plain():
+    # No filters: the .csv resource endpoint with just a $limit.
+    url = bw.socrata_resource_csv_url("data.seattle.gov", "tazs-3rd5", limit=5)
+    assert url == "https://data.seattle.gov/resource/tazs-3rd5.csv?%24limit=5"
+
+
+def test_socrata_resource_csv_url_encodes_where():
+    # $where must be URL-encoded (spaces, quotes, >=) so DuckDB/httpfs can read it.
+    url = bw.socrata_resource_csv_url(
+        "data.seattle.gov", "tazs-3rd5",
+        where="report_date_time >= '2019-01-01'", limit=2_000_000,
+    )
+    assert url.startswith("https://data.seattle.gov/resource/tazs-3rd5.csv?")
+    assert "%24where=" in url            # $where encoded
+    assert "%3E%3D" in url               # ">=" encoded
+    assert "2019-01-01" in url
+    assert "%24limit=2000000" in url
+
+
 # --------------------------------------------------------------------------- #
 # Paging                                                                       #
 # --------------------------------------------------------------------------- #
@@ -108,6 +127,27 @@ def test_fetch_socrata_defaults_order_to_id_for_stable_paging(monkeypatch):
 
     # Socrata paging is only stable with an explicit $order; default to :id.
     assert captured["$order"] == ":id"
+
+
+def test_ingest_csv_loads_rows(tmp_path):
+    import duckdb
+
+    csv = tmp_path / "x.csv"
+    csv.write_text("a,b\n1,foo\n2,bar\n")
+    con = duckdb.connect()
+    bw.ingest_csv(con, "sample", str(csv))
+    rows = con.execute("select * from raw.sample order by a").fetchall()
+    assert rows == [("1", "foo"), ("2", "bar")]  # all_varchar: staging casts later
+
+
+def test_ingest_csv_zero_rows_raises(tmp_path):
+    import duckdb
+
+    csv = tmp_path / "empty.csv"
+    csv.write_text("a,b\n")  # header only, no data rows
+    con = duckdb.connect()
+    with pytest.raises(ValueError, match="zero rows"):
+        bw.ingest_csv(con, "empty", str(csv))
 
 
 def test_soda_get_sends_app_token_header(monkeypatch):
