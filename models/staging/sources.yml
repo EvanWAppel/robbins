@@ -1,0 +1,12 @@
+version: 2
+
+sources:
+  - name: raw
+    database: seattle
+    schema: raw
+    tables:
+      - name: building_permits
+        description: >
+          Seattle DCI building permits (Socrata 76t5-zqzr, ~192k rows, 1986-present).
+          One row per permit: class, type, estimated project cost, applied/issued/
+          completed dates, current status, address, and WGS84 coordinates.
