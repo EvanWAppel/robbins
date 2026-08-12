@@ -154,7 +154,7 @@ source.
 - [x] **TOPIC-licenses** — Business license tax certificates (`wnbq-64tb`). ✅
 - [ ] **TOPIC-water** — Signature water body: USGS NWIS + NOAA tides 9447130 + SPU/SNOTEL (all 3).
 - [ ] **TOPIC-tourism** — Tourism / Air Travel (Sea-Tac passengers + Visit Seattle). **No gaming.**
-- [ ] **TOPIC-art** — Public Art — **ArcGIS-only** (`PublicArt2`, org ZOyb2t4B0UYuYNYH, 758 pts).
+- [x] **TOPIC-art** — Public Art — **ArcGIS** (`PublicArt2`, 758 pts, 754 geocoded). ✅ 2nd pattern.
 - [x] **TOPIC-marriage** — Marriage Licenses — **DROPPED** (no Seattle/KC open feed). Logged.
 - [ ] **TOPIC-extras** — Deferred (311, transit, tree canopy, seismic) — revisit after core.
 - [ ] **TOPIC-overview** — Overview page LAST: headline metrics from the marts that exist.
