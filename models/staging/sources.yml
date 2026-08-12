@@ -37,3 +37,9 @@ sources:
           Active Seattle business license tax certificates (Socrata wnbq-64tb, ~84k).
           business_legal_name, trade_name, ownership_type, naics_code/description,
           license_start_date (YYYYMMDD text — parse with strptime), city/zip. Non-spatial.
+      - name: public_art
+        description: >
+          Seattle Office of Arts & Culture public art (ArcGIS PublicArt2, ~758 points).
+          The FIRST ArcGIS-sourced table (vs. Socrata): TITLE, ARTIST_NAM, CLASSIFICA
+          (type), MEDIUM, DATED (year, text), LOCATION__; WGS84 latitude/longitude are
+          computed from feature geometry at fetch time (the source lat/lon attrs are 0).

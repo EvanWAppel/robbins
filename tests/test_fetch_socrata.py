@@ -150,6 +150,37 @@ def test_ingest_csv_zero_rows_raises(tmp_path):
         bw.ingest_csv(con, "empty", str(csv))
 
 
+# --------------------------------------------------------------------------- #
+# ArcGIS geometry transforms (pure)                                            #
+# --------------------------------------------------------------------------- #
+def test_centroid_point():
+    assert bw._centroid({"x": -122.33, "y": 47.6}) == (-122.33, 47.6)
+
+
+def test_centroid_polygon_ring_averages_vertices():
+    # A unit square ring (closed: first == last) → centroid at (0.5, 0.5).
+    ring = [[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]]
+    lon, lat = bw._centroid({"rings": [ring]})
+    assert lon == 0.5
+    assert lat == 0.5
+
+
+def test_centroid_none_returns_nones():
+    assert bw._centroid(None) == (None, None)
+    assert bw._centroid({}) == (None, None)
+
+
+def test_epoch_to_date_converts_millis():
+    # 2020-01-01T00:00:00Z in epoch millis.
+    assert bw._epoch_to_date(1_577_836_800_000) == "2020-01-01"
+
+
+def test_epoch_to_date_none_and_sentinel():
+    assert bw._epoch_to_date(None) is None
+    # Pre-1990 sentinel (ArcGIS "no date") → None.
+    assert bw._epoch_to_date(0) is None
+
+
 def test_soda_get_sends_app_token_header(monkeypatch):
     captured = {}
 

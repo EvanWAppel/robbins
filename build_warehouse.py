@@ -148,6 +148,90 @@ def fetch_socrata(
 
 
 # --------------------------------------------------------------------------- #
+# ArcGIS FeatureServer (ported from Elvis; King County GIS + Seattle art)      #
+# --------------------------------------------------------------------------- #
+ARCGIS_PAGE = 2000
+
+
+def fetch_features(
+    base_url: str,
+    where: str = "1=1",
+    out_fields: str = "*",
+    geometry: bool = True,
+    out_sr: int = 4326,
+    ssl_verify: bool = True,
+) -> list[tuple[dict, dict | None]]:
+    """Paginate an ArcGIS layer, returning (attributes, geometry) per feature.
+
+    Works for FeatureServer/MapServer layers across orgs. ``ssl_verify=False``
+    tolerates a server with a broken TLS cert — pass it ONLY per-host, and we
+    log loudly when it's used (never disable verification globally).
+    """
+    if not ssl_verify:
+        log.warning("TLS verification DISABLED for %s (broken-cert host)", base_url)
+        import urllib3
+
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+    def get(url: str, params: dict) -> dict:
+        r = requests.get(url, params=params, timeout=180, verify=ssl_verify)
+        r.raise_for_status()
+        return r.json()
+
+    meta = get(base_url, {"f": "json"})
+    page = min(meta.get("maxRecordCount") or ARCGIS_PAGE, ARCGIS_PAGE)
+    out: list[tuple[dict, dict | None]] = []
+    offset = 0
+    while True:
+        feats = get(
+            f"{base_url}/query",
+            {
+                "where": where,
+                "outFields": out_fields,
+                "returnGeometry": "true" if geometry else "false",
+                "outSR": out_sr,
+                "f": "json",
+                "resultOffset": offset,
+                "resultRecordCount": page,
+            },
+        ).get("features", [])
+        if not feats:
+            break
+        out.extend((f.get("attributes", {}), f.get("geometry")) for f in feats)
+        offset += len(feats)
+        log.info("  %s: %d features", base_url.rsplit("/services/", 1)[-1], len(out))
+        if len(feats) < page:
+            break
+    return out
+
+
+def _centroid(geom: dict | None) -> tuple[float | None, float | None]:
+    """(lon, lat) for a point, or the vertex-average of a polygon's outer ring."""
+    if not geom:
+        return (None, None)
+    if "x" in geom:
+        return (geom.get("x"), geom.get("y"))
+    rings = geom.get("rings")
+    if rings:
+        ext = rings[0]
+        pts = ext[:-1] if len(ext) > 1 and ext[0] == ext[-1] else ext
+        if pts:
+            return (sum(p[0] for p in pts) / len(pts), sum(p[1] for p in pts) / len(pts))
+    return (None, None)
+
+
+def _epoch_to_date(ms) -> str | None:
+    """ArcGIS epoch-millisecond timestamp -> ISO date string (None if missing)."""
+    if ms is None or (isinstance(ms, float) and pd.isna(ms)):
+        return None
+    dt = pd.to_datetime(ms, unit="ms", errors="coerce")
+    # ArcGIS uses a 1900 sentinel for "no date"; treat pre-1990 as null.
+    if pd.isna(dt) or dt.year < 1990:
+        return None
+    return dt.strftime("%Y-%m-%d")
+
+
+# --------------------------------------------------------------------------- #
 # DuckDB raw loader                                                            #
 # --------------------------------------------------------------------------- #
 def ingest_csv(
@@ -225,6 +309,24 @@ def build_business_licenses(con: duckdb.DuckDBPyConnection) -> None:
     load_raw(con, "business_licenses", fetch_socrata(*cfg.BUSINESS_LICENSES))
 
 
+def build_public_art(con: duckdb.DuckDBPyConnection) -> None:
+    """Seattle public art (ArcGIS PublicArt2 layer, ~758 points).
+
+    The layer's LATITUDE/LONGITUDE attribute columns are all 0, so we read the
+    real WGS84 coordinates from the feature geometry (out_sr=4326).
+    """
+    org, service, layer = cfg.PUBLIC_ART
+    base = f"{org}/{service}/FeatureServer/{layer}"
+    rows: list[dict] = []
+    for attrs, geom in fetch_features(base, geometry=True):
+        # Drop the source LATITUDE/LONGITUDE attrs (all 0, and they collide
+        # case-insensitively with our geometry-derived columns in DuckDB).
+        a = {k: v for k, v in attrs.items() if k.upper() not in ("LATITUDE", "LONGITUDE")}
+        a["longitude"], a["latitude"] = _centroid(geom)
+        rows.append(a)
+    load_raw(con, "public_art", pd.DataFrame(rows))
+
+
 # raw table name -> builder. Add topics here as their sources are verified.
 BUILDERS = {
     "building_permits": build_building_permits,
@@ -233,6 +335,7 @@ BUILDERS = {
     "food_inspections": build_food_inspections,
     "short_term_rentals": build_short_term_rentals,
     "business_licenses": build_business_licenses,
+    "public_art": build_public_art,
 }
 
 

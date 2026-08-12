@@ -143,25 +143,21 @@ reframe) are recorded above and each source is verified. For each: fetch → `st
 view → `mart_` table → `views/*.py` page. Drop and **log** any topic without a
 source.
 
-- [ ] **TOPIC-permits** — Building Permits (Seattle DCI, Socrata). *(likely VS topic)*
-- [ ] **TOPIC-crime** — SPD Crime Data (Socrata, CSV export). Hexbin map.
-- [ ] **TOPIC-restaurants** — Food establishment inspections (King County, Socrata).
+- [x] **TOPIC-permits** — Building Permits (Seattle DCI, Socrata `76t5-zqzr`). ✅ VS topic.
+- [x] **TOPIC-crime** — SPD Crime (`tazs-3rd5`, CSV export, recent yrs). Hexbin map. ✅
+- [x] **TOPIC-restaurants** — Food inspections (King County `r878-4sxa`). ✅ non-spatial.
 - [ ] **TOPIC-parks** — Parks (Seattle/King County GIS, ArcGIS) + water-feature flags.
-- [ ] **TOPIC-air** — Air Quality (EPA AQS bulk, WA FIPS).
-- [ ] **TOPIC-weather** — Weather extremes (NOAA GHCN-Daily, Sea-Tac). Rename page.
-- [ ] **TOPIC-fire** — SFD 911 dispatch calls (Socrata). Reframed from inspections.
-- [ ] **TOPIC-str** — Short-Term Rental licenses (Seattle, Socrata). Verify.
-- [ ] **TOPIC-licenses** — Business license tax certificates (Seattle/WA DOR). Verify.
-- [ ] **TOPIC-water** — Signature water body time series (USGS NWIS / NOAA / SPU).
-- [ ] **TOPIC-tourism** — Tourism / Air Travel (Sea-Tac passengers + Visit Seattle).
-  **No gaming.**
-- [ ] **TOPIC-art** — Public Art (Office of Arts & Culture) — *optional; verify.*
-- [ ] **TOPIC-marriage** — Marriage Licenses (King County) — *high risk; candidate to
-  drop + log.*
-- [ ] **TOPIC-extras** — Any Seattle-specific extras chosen in the interview (311,
-  transit ridership, tree canopy, seismic zones…).
-- [ ] **TOPIC-overview** — Overview page LAST: headline metrics from the marts that
-  actually exist.
+- [ ] **TOPIC-air** — Air Quality (EPA AQS bulk, WA FIPS 53/033/053/061).
+- [ ] **TOPIC-weather** — Weather (NOAA GHCN-Daily, Sea-Tac `USW00024233`). "Rain & Records".
+- [x] **TOPIC-fire** — SFD 911 dispatch (`kzjm-xkqj`). ✅ Reframed from inspections.
+- [x] **TOPIC-str** — Short-Term Rental licenses (`s7df-xba4`). ✅ scatter map.
+- [x] **TOPIC-licenses** — Business license tax certificates (`wnbq-64tb`). ✅
+- [ ] **TOPIC-water** — Signature water body: USGS NWIS + NOAA tides 9447130 + SPU/SNOTEL (all 3).
+- [ ] **TOPIC-tourism** — Tourism / Air Travel (Sea-Tac passengers + Visit Seattle). **No gaming.**
+- [ ] **TOPIC-art** — Public Art — **ArcGIS-only** (`PublicArt2`, org ZOyb2t4B0UYuYNYH, 758 pts).
+- [x] **TOPIC-marriage** — Marriage Licenses — **DROPPED** (no Seattle/KC open feed). Logged.
+- [ ] **TOPIC-extras** — Deferred (311, transit, tree canopy, seismic) — revisit after core.
+- [ ] **TOPIC-overview** — Overview page LAST: headline metrics from the marts that exist.
 
 ---
 
