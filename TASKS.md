@@ -172,7 +172,10 @@ source.
 - [x] **TOPIC-art** — Public Art — **ArcGIS** (`PublicArt2`, 758 pts, 754 geocoded). ✅ 2nd pattern.
 - [x] **TOPIC-marriage** — Marriage Licenses — **DROPPED** (no Seattle/KC open feed). Logged.
 - [ ] **TOPIC-extras** — Deferred (311, transit, tree canopy, seismic) — revisit after core.
-- [ ] **TOPIC-overview** — Overview page LAST: headline metrics from the marts that exist.
+- [x] **TOPIC-overview** — ✅ Landing page (nav default): warehouse-wide headline (1.8M+
+  records, 11 topics, 3 ingestion patterns) + themed KPI sections (City & Housing,
+  Public Safety, Health & Food, Environment, Culture & Rec) each with `st.page_link`s
+  into the detail pages. Aggregates existing marts only. Verified in-browser.
 
 ---
 
