@@ -54,6 +54,19 @@ SEATTLE_ARCGIS = "https://services.arcgis.com/ZOyb2t4B0UYuYNYH/ArcGIS/rest/servi
 # attribute columns are all 0 — read coordinates from feature geometry (out_sr=4326).
 PUBLIC_ART = (SEATTLE_ARCGIS, "PublicArt2", 0)  # (org, service, layer) — ~758 points
 
+# Seattle Parks & Recreation park boundaries (ArcGIS, point geometry despite the
+# name — one point per park). NAME + PARKSBND_AREA (square feet). ~511 parks.
+PARK_BOUNDARIES = (SEATTLE_ARCGIS, "Park_Boundaries", 0)
+
+# Substrings (matched case-insensitively against a park's name) that flag a
+# water-associated park. The boundary layer has no amenity attributes, so this
+# name heuristic is our "water feature" signal — approximate, labeled as such.
+PARK_WATER_KEYWORDS = (
+    "beach", "lake", "pond", "bay", "cove", "waterfront", "lagoon", "creek",
+    "river", "falls", "spring", "inlet", "harbor", "marina", "boat", "tidelands",
+    "wading", "spray", "waterway", "shore",
+)
+
 # Seattle-metro bounding box (King + Pierce + Snohomish) for filtering stray geo.
 METRO_BBOX = {"lat": (46.9, 48.4), "lon": (-122.7, -121.3)}
 
@@ -86,10 +99,10 @@ NOAA_STATION = "USW00024233"
 # Placeholders only — do NOT fetch these until each is confirmed live and its
 # dataset id / layer path recorded above.
 UNVERIFIED = (
-    "parks",              # Seattle/King County parks (ArcGIS) — verify layer
     "water_body",         # USGS NWIS + NOAA tides 9447130 + SPU/SNOTEL (all three)
     "tourism",            # Port of Seattle (Sea-Tac) passengers + Visit Seattle
     # weather (NOAA GHCN-Daily USW00024233) — VERIFIED + WIRED 2026-08-11.
     # air_quality (EPA AQS bulk, WA 53 / 033 / 053 / 061) — VERIFIED + WIRED 2026-08-11.
+    # parks (Seattle ArcGIS Park_Boundaries) — VERIFIED + WIRED 2026-08-12.
     # Marriage Licenses intentionally DROPPED (no Seattle/KC open feed) — logged.
 )

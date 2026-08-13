@@ -43,6 +43,12 @@ sources:
           The FIRST ArcGIS-sourced table (vs. Socrata): TITLE, ARTIST_NAM, CLASSIFICA
           (type), MEDIUM, DATED (year, text), LOCATION__; WGS84 latitude/longitude are
           computed from feature geometry at fetch time (the source lat/lon attrs are 0).
+      - name: parks
+        description: >
+          Seattle Parks & Recreation park boundaries (ArcGIS Park_Boundaries, ~511
+          rows). Point geometry (one point per park); name, area_sqft (PARKSBND_AREA,
+          square feet), WGS84 latitude/longitude from geometry, and is_water_name — a
+          name-derived boolean flagging water-associated parks (attached at fetch).
       - name: weather
         description: >
           Sea-Tac daily weather (NOAA GHCN-Daily station USW00024233, ~28k days,

@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import io
 import logging
+import re
 import socket
 import urllib.parse
 from pathlib import Path
@@ -417,6 +418,48 @@ def build_public_art(con: duckdb.DuckDBPyConnection) -> None:
     load_raw(con, "public_art", pd.DataFrame(rows))
 
 
+_WATER_NAME_RE = re.compile(
+    r"\b(" + "|".join(cfg.PARK_WATER_KEYWORDS) + r")", re.IGNORECASE
+)
+
+
+def is_water_park_name(name: str | None) -> bool:
+    """True if a park's name references water (Seattle has many waterfront parks).
+
+    The boundary layer carries no amenity attributes, so the name is our only
+    signal. Matches any of :data:`city_config.PARK_WATER_KEYWORDS` at a word
+    boundary — so "Green Lake" and "Lakeridge" match but "Discovery" (which merely
+    *contains* "cove") does not. Approximate by design (labeled as such in the UI).
+    """
+    if not name:
+        return False
+    return _WATER_NAME_RE.search(name) is not None
+
+
+def build_parks(con: duckdb.DuckDBPyConnection) -> None:
+    """Seattle Parks & Recreation park boundaries (ArcGIS, ~511 points).
+
+    The layer is point geometry (one point per park); coordinates come from the
+    feature geometry (out_sr=4326). We attach the name-derived water flag here so
+    the raw table already carries it.
+    """
+    org, service, layer = cfg.PARK_BOUNDARIES
+    base = f"{org}/{service}/FeatureServer/{layer}"
+    rows: list[dict] = []
+    for attrs, geom in fetch_features(base, out_fields="NAME,PARKSBND_AREA", geometry=True):
+        lon, lat = _centroid(geom)
+        rows.append(
+            {
+                "name": attrs.get("NAME"),
+                "area_sqft": attrs.get("PARKSBND_AREA"),
+                "longitude": lon,
+                "latitude": lat,
+                "is_water_name": is_water_park_name(attrs.get("NAME")),
+            }
+        )
+    load_raw(con, "parks", pd.DataFrame(rows))
+
+
 def build_air_quality(con: duckdb.DuckDBPyConnection) -> None:
     """EPA AQS daily PM2.5 + Ozone for the Seattle metro (King/Pierce/Snohomish).
 
@@ -454,6 +497,7 @@ BUILDERS = {
     "short_term_rentals": build_short_term_rentals,
     "business_licenses": build_business_licenses,
     "public_art": build_public_art,
+    "parks": build_parks,
     "weather": build_weather,
     "air_quality": build_air_quality,
 }

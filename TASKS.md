@@ -146,7 +146,10 @@ source.
 - [x] **TOPIC-permits** — Building Permits (Seattle DCI, Socrata `76t5-zqzr`). ✅ VS topic.
 - [x] **TOPIC-crime** — SPD Crime (`tazs-3rd5`, CSV export, recent yrs). Hexbin map. ✅
 - [x] **TOPIC-restaurants** — Food inspections (King County `r878-4sxa`). ✅ non-spatial.
-- [ ] **TOPIC-parks** — Parks (Seattle/King County GIS, ArcGIS) + water-feature flags.
+- [x] **TOPIC-parks** — Parks (Seattle GIS `Park_Boundaries`, ArcGIS, ~511 pts). ✅ Size
+  bands, acreage map (sized by area, water-name parks in blue), largest table. Water
+  flag is name-derived (word-boundary regex, TDD'd; fixed a "cove"⊂"Discovery" false
+  positive). Verified in-browser.
 - [x] **TOPIC-air** — Air Quality (EPA AQS bulk, WA FIPS 53/033/053/061). ✅ PM2.5 +
   Ozone daily, 2019+ (capped for lean builds; ~6 min of EPA downloads at build time).
   Category distribution, monthly peak-AQI (wildfire-smoke spikes), monitor map, worst
