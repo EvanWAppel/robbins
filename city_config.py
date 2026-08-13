@@ -94,15 +94,35 @@ AQS_END_YEAR = 2026  # inclusive; the current year's file is partial but publish
 NOAA_STATION = "USW00024233"
 
 # --------------------------------------------------------------------------- #
+# Signature water body — three keyless federal feeds (interview: "all three")  #
+# --------------------------------------------------------------------------- #
+# Cedar River is Seattle's primary drinking-water source; the Renton gage has a
+# long daily streamflow record.
+USGS_CEDAR_RIVER_SITE = "12119000"   # USGS NWIS — Cedar River at Renton, WA
+USGS_FLOW_PARAM = "00060"            # discharge, cubic feet per second
+
+# NOAA CO-OPS tide station in Elliott Bay; monthly_mean gives sea-level datums
+# (MSL/MHHW/MLLW) — a multi-decade sea-level trend for Puget Sound.
+NOAA_TIDES_STATION = "9447130"       # Seattle, WA
+
+# NRCS SNOTEL snowpack in the Cascades above the Cedar/Green watersheds; peak
+# snow-water-equivalent per water year tells the drought story (e.g. 2015).
+SNOTEL_STATION = "791:WA:SNTL"       # Stampede Pass
+
+WATER_START_YEAR = 2014              # from 2014 so water year 2015 (the historic
+                                     # snow-drought) is fully captured; lean enough
+TIDES_START_YEAR = 2000             # tides go back further — sea-level trend
+
+# --------------------------------------------------------------------------- #
 # Sources still being verified before they get wired (see TASKS.md Group TOPIC)#
 # --------------------------------------------------------------------------- #
 # Placeholders only — do NOT fetch these until each is confirmed live and its
 # dataset id / layer path recorded above.
 UNVERIFIED = (
-    "water_body",         # USGS NWIS + NOAA tides 9447130 + SPU/SNOTEL (all three)
     "tourism",            # Port of Seattle (Sea-Tac) passengers + Visit Seattle
     # weather (NOAA GHCN-Daily USW00024233) — VERIFIED + WIRED 2026-08-11.
     # air_quality (EPA AQS bulk, WA 53 / 033 / 053 / 061) — VERIFIED + WIRED 2026-08-11.
     # parks (Seattle ArcGIS Park_Boundaries) — VERIFIED + WIRED 2026-08-12.
+    # water_body (USGS 12119000 + NOAA 9447130 + SNOTEL 791:WA:SNTL) — WIRED 2026-08-12.
     # Marriage Licenses intentionally DROPPED (no Seattle/KC open feed) — logged.
 )

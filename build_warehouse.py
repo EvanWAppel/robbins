@@ -17,6 +17,7 @@ import logging
 import re
 import socket
 import urllib.parse
+from datetime import UTC, datetime
 from pathlib import Path
 
 import duckdb
@@ -236,6 +237,85 @@ def fetch_aqs_year(
     log.info("  %s %d: %d metro daily rows (of %d national)",
              param_code, year, len(metro), len(national))
     return metro
+
+
+# --------------------------------------------------------------------------- #
+# Water — three keyless federal feeds (USGS NWIS, NOAA CO-OPS, NRCS SNOTEL)     #
+# --------------------------------------------------------------------------- #
+def usgs_nwis_dv_url(site: str, param: str, start: str, end: str) -> str:
+    """USGS NWIS daily-values JSON for one site + parameter over a date range."""
+    return (
+        "https://waterservices.usgs.gov/nwis/dv/?format=json"
+        f"&sites={site}&parameterCd={param}"
+        f"&startDT={start}&endDT={end}"
+    )
+
+
+def noaa_tides_monthly_url(station: str, begin: str, end: str) -> str:
+    """NOAA CO-OPS monthly-mean sea-level datums JSON (dates as YYYYMMDD)."""
+    return (
+        "https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?"
+        "product=monthly_mean&application=robbins"
+        f"&begin_date={begin}&end_date={end}"
+        f"&datum=MSL&station={station}"
+        "&time_zone=lst&units=english&format=json"
+    )
+
+
+def snotel_daily_csv_url(
+    triplet: str, start: str, end: str, elements: tuple[str, ...] = ("WTEQ", "SNWD")
+) -> str:
+    """NRCS SNOTEL daily report CSV for one station (dates as YYYY-MM-DD)."""
+    cols = ",".join(f"{e}::value" for e in elements)
+    return (
+        "https://wcc.sc.egov.usda.gov/reportGenerator/view_csv/"
+        f"customSingleStationReport/daily/{triplet}/{start},{end}/{cols}"
+    )
+
+
+def fetch_usgs_dv(site: str, param: str, start: str, end: str) -> pd.DataFrame:
+    """USGS daily values -> DataFrame[obs_date, value]. Raises on an empty series."""
+    url = usgs_nwis_dv_url(site, param, start, end)
+    log.info("USGS NWIS fetch %s param %s (%s..%s)", site, param, start, end)
+    resp = requests.get(url, timeout=SODA_TIMEOUT)
+    resp.raise_for_status()
+    series = resp.json()["value"]["timeSeries"]
+    if not series:
+        raise ValueError(f"USGS NWIS returned no series for {site}/{param}")
+    values = series[0]["values"][0]["value"]
+    df = pd.DataFrame(values)[["dateTime", "value"]].rename(
+        columns={"dateTime": "obs_date"}
+    )
+    log.info("  USGS %s: %d daily rows", site, len(df))
+    return df
+
+
+def fetch_noaa_tides_monthly(station: str, begin: str, end: str) -> pd.DataFrame:
+    """NOAA monthly-mean datums -> DataFrame (one row per month). Raises if empty."""
+    url = noaa_tides_monthly_url(station, begin, end)
+    log.info("NOAA tides fetch station %s (%s..%s)", station, begin, end)
+    resp = requests.get(url, timeout=SODA_TIMEOUT)
+    resp.raise_for_status()
+    data = resp.json().get("data")
+    if not data:
+        raise ValueError(f"NOAA tides returned no data for station {station}")
+    log.info("  NOAA %s: %d monthly rows", station, len(data))
+    return pd.DataFrame(data)
+
+
+def fetch_snotel_daily(triplet: str, start: str, end: str) -> pd.DataFrame:
+    """NRCS SNOTEL daily report CSV -> DataFrame. Skips the '#'-commented header."""
+    url = snotel_daily_csv_url(triplet, start, end)
+    log.info("NRCS SNOTEL fetch %s (%s..%s)", triplet, start, end)
+    resp = requests.get(url, timeout=SODA_TIMEOUT)
+    resp.raise_for_status()
+    df = pd.read_csv(io.StringIO(resp.text), comment="#")
+    if df.empty:
+        raise ValueError(f"NRCS SNOTEL returned no rows for {triplet}")
+    # Columns are verbose ("Snow Water Equivalent (in) ...") — normalize.
+    df.columns = ["obs_date", "swe_in", "snow_depth_in"][: len(df.columns)]
+    log.info("  SNOTEL %s: %d daily rows", triplet, len(df))
+    return df
 
 
 # --------------------------------------------------------------------------- #
@@ -460,6 +540,42 @@ def build_parks(con: duckdb.DuckDBPyConnection) -> None:
     load_raw(con, "parks", pd.DataFrame(rows))
 
 
+def build_water(con: duckdb.DuckDBPyConnection) -> None:
+    """The signature-water-body topic — three raw tables from three feeds.
+
+    Cedar River streamflow (USGS), Seattle sea-level datums (NOAA), and Stampede
+    Pass snowpack (NRCS SNOTEL). One builder, three ``raw`` tables, so the whole
+    topic rebuilds together.
+    """
+    today = datetime.now(UTC).date()
+    load_raw(
+        con,
+        "cedar_river_flow",
+        fetch_usgs_dv(
+            cfg.USGS_CEDAR_RIVER_SITE,
+            cfg.USGS_FLOW_PARAM,
+            f"{cfg.WATER_START_YEAR}-01-01",
+            today.isoformat(),
+        ),
+    )
+    load_raw(
+        con,
+        "seattle_tides",
+        fetch_noaa_tides_monthly(
+            cfg.NOAA_TIDES_STATION,
+            f"{cfg.TIDES_START_YEAR}0101",
+            today.strftime("%Y%m%d"),
+        ),
+    )
+    load_raw(
+        con,
+        "snowpack",
+        fetch_snotel_daily(
+            cfg.SNOTEL_STATION, f"{cfg.WATER_START_YEAR}-10-01", today.isoformat()
+        ),
+    )
+
+
 def build_air_quality(con: duckdb.DuckDBPyConnection) -> None:
     """EPA AQS daily PM2.5 + Ozone for the Seattle metro (King/Pierce/Snohomish).
 
@@ -500,6 +616,7 @@ BUILDERS = {
     "parks": build_parks,
     "weather": build_weather,
     "air_quality": build_air_quality,
+    "water": build_water,
 }
 
 

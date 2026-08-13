@@ -160,7 +160,10 @@ source.
 - [x] **TOPIC-fire** — SFD 911 dispatch (`kzjm-xkqj`). ✅ Reframed from inspections.
 - [x] **TOPIC-str** — Short-Term Rental licenses (`s7df-xba4`). ✅ scatter map.
 - [x] **TOPIC-licenses** — Business license tax certificates (`wnbq-64tb`). ✅
-- [ ] **TOPIC-water** — Signature water body: USGS NWIS + NOAA tides 9447130 + SPU/SNOTEL (all 3).
+- [x] **TOPIC-water** — Signature water body, **all three** ✅ USGS Cedar River @ Renton
+  (streamflow), NOAA Seattle 9447130 (sea-level datums), NRCS SNOTEL Stampede Pass
+  (snowpack). One `build_water` → 3 raw tables; page has snowpack-by-water-year (2015
+  drought), recent winters, Cedar hydrograph, sea-level trend w/ regression. Verified.
 - [ ] **TOPIC-tourism** — Tourism / Air Travel (Sea-Tac passengers + Visit Seattle). **No gaming.**
 - [x] **TOPIC-art** — Public Art — **ArcGIS** (`PublicArt2`, 758 pts, 754 geocoded). ✅ 2nd pattern.
 - [x] **TOPIC-marriage** — Marriage Licenses — **DROPPED** (no Seattle/KC open feed). Logged.

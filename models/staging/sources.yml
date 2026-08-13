@@ -63,3 +63,18 @@ sources:
           daily standard). Columns: county/site, lat/lon, date_local, parameter_name,
           arithmetic_mean (µg/m³ for PM2.5, ppm for Ozone), aqi. A few POC dupes per
           site/day are averaged in staging; AQI is the cross-pollutant comparable.
+      - name: cedar_river_flow
+        description: >
+          Cedar River at Renton daily streamflow (USGS NWIS 12119000, param 00060),
+          2015-present. obs_date (ISO timestamp text) + value (discharge, cfs, text).
+          Seattle's primary drinking-water source. One of three "water" feeds.
+      - name: seattle_tides
+        description: >
+          Seattle (Elliott Bay) monthly tide datums (NOAA CO-OPS 9447130, monthly_mean),
+          2000-present. year/month + sea-level datums in feet (MSL, MHHW, MLLW, GT great
+          diurnal range, highest/lowest), all text. Drives the sea-level trend.
+      - name: snowpack
+        description: >
+          Stampede Pass daily snowpack (NRCS SNOTEL 791:WA:SNTL), 2015-present.
+          obs_date, swe_in (snow water equivalent), snow_depth_in. Water year = Oct 1
+          to Sep 30. Peak SWE per water year is the drought signal (2015 collapse).
