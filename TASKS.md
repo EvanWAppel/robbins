@@ -87,12 +87,12 @@ live 2026-08-11 (~192k rows). Exercises the net-new `fetch_socrata()` helper.
   `mart_permits_by_class`, `mart_permits_map_sample`. `dbt build` green (4 models).
 - [x] **VS-07** — `views/building_permits.py`: KPIs + monthly area/line charts + by-class
   bar + PyDeck hexbin map. Verified rendering in-browser (no console errors).
-- [~] **VS-08** — Docker image built locally: warehouse bakes at build time, container
-  serves on injected `$PORT` (health `ok`). **Remaining: actual Railway deploy needs
-  Evan's Railway auth** (create project, `railway up` / connect repo). Path validated.
+- [x] **VS-08** — Deployed to Railway ✅ Project `robbins`; `railway up` bakes the
+  warehouse at build time (43 dbt models) and serves Streamlit on injected `$PORT`.
+  Live at https://robbins-production.up.railway.app (verified in-browser).
 
-**Exit criteria:** ✅ local — `pytest` (9), `ruff`, `ty` all green; page renders; Docker
-image bakes + serves on `$PORT`. ⏳ Railway deploy pending Evan.
+**Exit criteria:** ✅ local — `pytest`, `ruff`, `ty` all green; page renders; Docker
+image bakes + serves on `$PORT`. ✅ Railway deploy live.
 
 ---
 
@@ -147,8 +147,13 @@ source.
 - [x] **TOPIC-crime** — SPD Crime (`tazs-3rd5`, CSV export, recent yrs). Hexbin map. ✅
 - [x] **TOPIC-restaurants** — Food inspections (King County `r878-4sxa`). ✅ non-spatial.
 - [ ] **TOPIC-parks** — Parks (Seattle/King County GIS, ArcGIS) + water-feature flags.
-- [ ] **TOPIC-air** — Air Quality (EPA AQS bulk, WA FIPS 53/033/053/061).
-- [ ] **TOPIC-weather** — Weather (NOAA GHCN-Daily, Sea-Tac `USW00024233`). "Rain & Records".
+- [x] **TOPIC-air** — Air Quality (EPA AQS bulk, WA FIPS 53/033/053/061). ✅ PM2.5 +
+  Ozone daily, 2019+ (capped for lean builds; ~6 min of EPA downloads at build time).
+  Category distribution, monthly peak-AQI (wildfire-smoke spikes), monitor map, worst
+  days. Verified in-browser.
+- [x] **TOPIC-weather** — Weather (NOAA GHCN-Daily, Sea-Tac `USW00024233`). ✅ "Rain &
+  Records": monthly climatology, temp band, annual trend, all-time records. 3rd
+  ingestion pattern (federal bulk CSV). Verified in-browser.
 - [x] **TOPIC-fire** — SFD 911 dispatch (`kzjm-xkqj`). ✅ Reframed from inspections.
 - [x] **TOPIC-str** — Short-Term Rental licenses (`s7df-xba4`). ✅ scatter map.
 - [x] **TOPIC-licenses** — Business license tax certificates (`wnbq-64tb`). ✅
@@ -168,8 +173,10 @@ source.
 - [ ] **DEPLOY-02** — Configure `prek` (ruff + ty) pre-commit; `uv run prek
   install`; confirm hooks fire.
 - [ ] **DEPLOY-03** — GitHub Actions CI: pytest + ruff + ty on push/PR.
-- [ ] **DEPLOY-04** — Full Railway deploy with all kept topics; confirm baked
-  warehouse builds and app serves. Note total build time.
+- [x] **DEPLOY-04** — Railway deploy live with all 8 shipped topics ✅ Project `robbins`
+  on Evan's workspace; baked warehouse builds (43 models) and app serves at
+  https://robbins-production.up.railway.app. Build ~ a few min (deps + full source
+  fetch incl. ~6 min EPA AQS). Deployed from working dir via `railway up`.
 - [ ] **DEPLOY-05** — Write `README.md`: what Robbins is, the ELT + dbt + Streamlit
   story with two-pattern (Socrata + ArcGIS) ingestion, local run steps, source list.
 - [ ] **DEPLOY-06** *(optional, interview #8)* — Register in the portfolio

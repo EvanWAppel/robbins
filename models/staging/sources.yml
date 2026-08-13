@@ -43,3 +43,17 @@ sources:
           The FIRST ArcGIS-sourced table (vs. Socrata): TITLE, ARTIST_NAM, CLASSIFICA
           (type), MEDIUM, DATED (year, text), LOCATION__; WGS84 latitude/longitude are
           computed from feature geometry at fetch time (the source lat/lon attrs are 0).
+      - name: weather
+        description: >
+          Sea-Tac daily weather (NOAA GHCN-Daily station USW00024233, ~28k days,
+          1948-present). Wide keyless station CSV; DATE plus GHCN-convention values
+          (all space-padded text): PRCP/SNOW/SNWD in tenths-mm or mm, TMAX/TMIN/TAVG
+          in tenths of a degree C. Staging divides by 10 and derives inches / °F.
+      - name: air_quality
+        description: >
+          EPA AQS daily PM2.5 + Ozone for the Seattle metro (King/Pierce/Snohomish),
+          2019-present, filtered from the keyless national daily bulk files. Only the
+          AQI-bearing daily rows are kept (one per monitor/day on each pollutant's
+          daily standard). Columns: county/site, lat/lon, date_local, parameter_name,
+          arithmetic_mean (µg/m³ for PM2.5, ppm for Ozone), aqi. A few POC dupes per
+          site/day are averaged in staging; AQI is the cross-pollutant comparable.

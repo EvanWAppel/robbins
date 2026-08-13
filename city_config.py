@@ -68,7 +68,11 @@ AQS_COUNTIES = {
     "061": "Snohomish",
 }
 AQS_PARAMS = {"88101": "PM2.5", "44201": "Ozone"}  # param code -> label
-AQS_START_YEAR = 2015
+# The national daily bulk files are large and EPA's server is slow (~20-35s each),
+# so — like crime/fire — the baked warehouse caps to recent years for lean builds.
+# 2019 still spans the 2020 & 2022/2023 wildfire-smoke seasons.
+AQS_START_YEAR = 2019
+AQS_END_YEAR = 2026  # inclusive; the current year's file is partial but published
 
 # --------------------------------------------------------------------------- #
 # NOAA GHCN-Daily — keyless station CSV                                        #
@@ -83,9 +87,9 @@ NOAA_STATION = "USW00024233"
 # dataset id / layer path recorded above.
 UNVERIFIED = (
     "parks",              # Seattle/King County parks (ArcGIS) — verify layer
-    "air_quality",        # EPA AQS bulk, WA 53 / King 033 / Pierce 053 / Snohomish 061
-    "weather",            # NOAA GHCN-Daily, Sea-Tac USW00024233
     "water_body",         # USGS NWIS + NOAA tides 9447130 + SPU/SNOTEL (all three)
     "tourism",            # Port of Seattle (Sea-Tac) passengers + Visit Seattle
+    # weather (NOAA GHCN-Daily USW00024233) — VERIFIED + WIRED 2026-08-11.
+    # air_quality (EPA AQS bulk, WA 53 / 033 / 053 / 061) — VERIFIED + WIRED 2026-08-11.
     # Marriage Licenses intentionally DROPPED (no Seattle/KC open feed) — logged.
 )

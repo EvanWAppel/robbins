@@ -12,6 +12,7 @@ Usage:
 
 from __future__ import annotations
 
+import io
 import logging
 import socket
 import urllib.parse
@@ -145,6 +146,95 @@ def fetch_socrata(
     if not rows:
         raise ValueError(f"Socrata {domain}/{dataset_id} returned zero rows")
     return pd.DataFrame(rows)
+
+
+# --------------------------------------------------------------------------- #
+# NOAA GHCN-Daily — keyless per-station bulk CSV (ported from Elvis)           #
+# --------------------------------------------------------------------------- #
+NCEI_GHCN_ACCESS = (
+    "https://www.ncei.noaa.gov/data/"
+    "global-historical-climatology-network-daily/access"
+)
+
+
+def noaa_ghcn_url(station: str) -> str:
+    """The keyless GHCN-Daily CSV holding a station's entire daily record.
+
+    NCEI serves one CSV per station with a wide column set (PRCP, SNOW, TMAX,
+    TMIN, TAVG, ...). Values follow the GHCN convention — tenths of a mm for
+    precip, tenths of a degree C for temperatures — so the staging layer divides
+    by 10. Updated daily.
+    """
+    return f"{NCEI_GHCN_ACCESS}/{station}.csv"
+
+
+# --------------------------------------------------------------------------- #
+# EPA AQS — keyless pre-generated national daily bulk files (ported from Elvis) #
+# --------------------------------------------------------------------------- #
+AQS_AIRDATA = "https://aqs.epa.gov/aqsweb/airdata"
+
+# National-file column -> our snake_case name. Everything else is dropped.
+_AQS_COLUMNS = {
+    "State Code": "state_code",
+    "County Code": "county_code",
+    "County Name": "county_name",
+    "Site Num": "site_num",
+    "Parameter Code": "parameter_code",
+    "Parameter Name": "parameter_name",
+    "Latitude": "latitude",
+    "Longitude": "longitude",
+    "Date Local": "date_local",
+    "Arithmetic Mean": "arithmetic_mean",
+    "AQI": "aqi",
+    "Units of Measure": "units",
+    "Local Site Name": "local_site_name",
+    "CBSA Name": "cbsa_name",
+}
+
+
+def aqs_daily_url(param_code: str, year: int) -> str:
+    """The keyless national daily-summary zip for one pollutant and year."""
+    return f"{AQS_AIRDATA}/daily_{param_code}_{year}.zip"
+
+
+def _aqs_metro_daily(df: pd.DataFrame, state: str, counties: set[str]) -> pd.DataFrame:
+    """Keep only the metro counties' authoritative daily rows, snake_cased.
+
+    A national daily file carries several rows per monitor per day (different
+    sample durations / pollutant standards). The rows bearing an ``AQI`` are the
+    one-per-day values on each pollutant's daily standard, so we keep those and
+    drop the rest. State/county codes are compared as strings (leading zeros).
+    """
+    keep = (
+        (df["State Code"].astype(str) == state)
+        & (df["County Code"].astype(str).isin(counties))
+        & (df["AQI"].notna())
+    )
+    return (
+        df.loc[keep, list(_AQS_COLUMNS)]
+        .rename(columns=_AQS_COLUMNS)
+        .reset_index(drop=True)
+    )
+
+
+def fetch_aqs_year(
+    param_code: str, year: int, state: str, counties: set[str]
+) -> pd.DataFrame:
+    """Download one national daily zip and return just the metro daily rows."""
+    url = aqs_daily_url(param_code, year)
+    log.info("AQS fetch %s %d -> %s", param_code, year, url)
+    resp = requests.get(url, timeout=SODA_TIMEOUT)
+    resp.raise_for_status()
+    national = pd.read_csv(
+        io.BytesIO(resp.content),
+        compression="zip",
+        dtype={"State Code": str, "County Code": str},
+        low_memory=False,
+    )
+    metro = _aqs_metro_daily(national, state, counties)
+    log.info("  %s %d: %d metro daily rows (of %d national)",
+             param_code, year, len(metro), len(national))
+    return metro
 
 
 # --------------------------------------------------------------------------- #
@@ -327,6 +417,34 @@ def build_public_art(con: duckdb.DuckDBPyConnection) -> None:
     load_raw(con, "public_art", pd.DataFrame(rows))
 
 
+def build_air_quality(con: duckdb.DuckDBPyConnection) -> None:
+    """EPA AQS daily PM2.5 + Ozone for the Seattle metro (King/Pierce/Snohomish).
+
+    Loops the keyless national daily files for each pollutant and year in the
+    configured window, keeping only the metro counties' AQI-bearing daily rows,
+    and concatenates them into one raw table.
+    """
+    counties = set(cfg.AQS_COUNTIES)
+    frames: list[pd.DataFrame] = []
+    for param_code in cfg.AQS_PARAMS:
+        for year in range(cfg.AQS_START_YEAR, cfg.AQS_END_YEAR + 1):
+            frames.append(fetch_aqs_year(param_code, year, cfg.AQS_STATE, counties))
+    combined = pd.concat(frames, ignore_index=True)
+    if combined.empty:
+        raise ValueError("EPA AQS fetch returned zero metro rows")
+    load_raw(con, "air_quality", combined)
+
+
+def build_weather(con: duckdb.DuckDBPyConnection) -> None:
+    """Sea-Tac daily weather, GHCN-Daily station CSV (~28k days since 1948).
+
+    The whole station record is one keyless CSV; DuckDB reads it directly. The
+    file is wide (100+ mostly-empty attribute columns) so we read all as text
+    and let the staging layer pick out and unit-convert the fields we chart.
+    """
+    ingest_csv(con, "weather", noaa_ghcn_url(cfg.NOAA_STATION))
+
+
 # raw table name -> builder. Add topics here as their sources are verified.
 BUILDERS = {
     "building_permits": build_building_permits,
@@ -336,6 +454,8 @@ BUILDERS = {
     "short_term_rentals": build_short_term_rentals,
     "business_licenses": build_business_licenses,
     "public_art": build_public_art,
+    "weather": build_weather,
+    "air_quality": build_air_quality,
 }
 
 
