@@ -164,7 +164,11 @@ source.
   (streamflow), NOAA Seattle 9447130 (sea-level datums), NRCS SNOTEL Stampede Pass
   (snowpack). One `build_water` → 3 raw tables; page has snowpack-by-water-year (2015
   drought), recent winters, Cedar hydrograph, sea-level trend w/ regression. Verified.
-- [ ] **TOPIC-tourism** — Tourism / Air Travel (Sea-Tac passengers + Visit Seattle). **No gaming.**
+- [x] **TOPIC-tourism** — **DROPPED** (logged). No machine-readable Sea-Tac passenger
+  feed exists: other cities publish airport traffic on open portals (NY Port Authority
+  `8pkr-4b7t`, LAX `g3qu-7q2u`) but the Port of Seattle does not, and BTS T-100 is
+  form/POST-only (not a clean GET). Checked 2026-08-12. Possible pivot: WSDOT ferry
+  ridership as a Puget Sound travel proxy — deferred pending Evan's call.
 - [x] **TOPIC-art** — Public Art — **ArcGIS** (`PublicArt2`, 758 pts, 754 geocoded). ✅ 2nd pattern.
 - [x] **TOPIC-marriage** — Marriage Licenses — **DROPPED** (no Seattle/KC open feed). Logged.
 - [ ] **TOPIC-extras** — Deferred (311, transit, tree canopy, seismic) — revisit after core.

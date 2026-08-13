@@ -118,11 +118,18 @@ TIDES_START_YEAR = 2000             # tides go back further — sea-level trend
 # --------------------------------------------------------------------------- #
 # Placeholders only — do NOT fetch these until each is confirmed live and its
 # dataset id / layer path recorded above.
-UNVERIFIED = (
-    "tourism",            # Port of Seattle (Sea-Tac) passengers + Visit Seattle
-    # weather (NOAA GHCN-Daily USW00024233) — VERIFIED + WIRED 2026-08-11.
-    # air_quality (EPA AQS bulk, WA 53 / 033 / 053 / 061) — VERIFIED + WIRED 2026-08-11.
-    # parks (Seattle ArcGIS Park_Boundaries) — VERIFIED + WIRED 2026-08-12.
-    # water_body (USGS 12119000 + NOAA 9447130 + SNOTEL 791:WA:SNTL) — WIRED 2026-08-12.
-    # Marriage Licenses intentionally DROPPED (no Seattle/KC open feed) — logged.
-)
+UNVERIFIED: tuple[str, ...] = ()
+# All core topics are now verified+wired or explicitly dropped:
+#   weather (NOAA GHCN-Daily USW00024233) — VERIFIED + WIRED 2026-08-11.
+#   air_quality (EPA AQS bulk, WA 53 / 033 / 053 / 061) — VERIFIED + WIRED 2026-08-11.
+#   parks (Seattle ArcGIS Park_Boundaries) — VERIFIED + WIRED 2026-08-12.
+#   water_body (USGS 12119000 + NOAA 9447130 + SNOTEL 791:WA:SNTL) — WIRED 2026-08-12.
+#
+# Topics DROPPED for lack of a machine-readable Seattle source (logged, per the
+# data-discipline rule "drop any topic Seattle doesn't publish"):
+#   marriage_licenses — no Seattle/King County open feed.
+#   tourism — no Sea-Tac passenger feed on any open-data portal. Other cities
+#     publish airport traffic (NY Port Authority 8pkr-4b7t, LAX g3qu-7q2u), but
+#     the Port of Seattle does not; BTS T-100 is form/POST-only (not a clean GET).
+#     Checked 2026-08-12. A pivot to WSDOT ferry ridership could stand in for a
+#     Puget Sound travel page if desired.
