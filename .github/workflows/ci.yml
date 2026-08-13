@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Install dependencies
+        run: uv sync --dev
+
+      # Code-quality gates only. These do NOT build the warehouse (that fetches
+      # dozens of live sources and is done at Docker build time); the test suite
+      # stubs the network, so it runs without one.
+      - name: Lint (ruff)
+        run: uv run ruff check .
+
+      - name: Typecheck (ty)
+        run: uv run ty check
+
+      - name: Tests (pytest)
+        run: uv run pytest -q

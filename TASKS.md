@@ -181,17 +181,21 @@ source.
 
 ## Group DEPLOY — Ship & document
 
-- [ ] **DEPLOY-01** — `.gitignore` the build artifacts: `*.duckdb`, `target/`,
-  `logs/`, `.venv/`, `.env`, `.DS_Store`, `__pycache__/`.
-- [ ] **DEPLOY-02** — Configure `prek` (ruff + ty) pre-commit; `uv run prek
-  install`; confirm hooks fire.
-- [ ] **DEPLOY-03** — GitHub Actions CI: pytest + ruff + ty on push/PR.
+- [x] **DEPLOY-01** — `.gitignore` covers the build artifacts (`*.duckdb`, `target/`,
+  `logs/`, `.venv/`, `__pycache__/`, `.DS_Store`). ✅ (since VS-02).
+- [x] **DEPLOY-02** — `prek` pre-commit configured ✅ `.pre-commit-config.yaml` runs
+  `ruff check` + `ty` on commit and `pytest` on push (local/system hooks → uv tools).
+  Installed via `prek install`; hooks confirmed firing. `ruff format` intentionally
+  NOT enforced (would rewrite the compact hand style; `ruff check` covers real issues).
+- [x] **DEPLOY-03** — GitHub Actions CI ✅ `.github/workflows/ci.yml`: ruff + ty +
+  pytest on every push/PR (uv-based; skips the warehouse bake — tests stub the network).
 - [x] **DEPLOY-04** — Railway deploy live with all 8 shipped topics ✅ Project `robbins`
   on Evan's workspace; baked warehouse builds (43 models) and app serves at
   https://robbins-production.up.railway.app. Build ~ a few min (deps + full source
   fetch incl. ~6 min EPA AQS). Deployed from working dir via `railway up`.
-- [ ] **DEPLOY-05** — Write `README.md`: what Robbins is, the ELT + dbt + Streamlit
-  story with two-pattern (Socrata + ArcGIS) ingestion, local run steps, source list.
+- [x] **DEPLOY-05** — `README.md` refreshed ✅ live URL, three-pattern ingestion story
+  (Socrata + ArcGIS + federal bulk), full 11-topic source table, dropped-topic note,
+  local run + quality-gate steps.
 - [ ] **DEPLOY-06** *(optional, interview #8)* — Register in the portfolio
   orchestrator manifest and wire `robbins.evanappel.me`.
 
