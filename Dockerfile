@@ -13,7 +13,7 @@ COPY . .
 # phase runs in a throwaway container, so the build must happen here (fetches
 # the Socrata + ArcGIS + EPA/NOAA sources, then materializes the dbt marts). The
 # DB stays out of git and is rebuilt fresh on every deploy.
-RUN python build_warehouse.py && dbt build --profiles-dir .
+RUN dbt deps && python build_warehouse.py && dbt build --profiles-dir .
 
 # Railway injects $PORT at runtime; default to 8501 for local runs.
 EXPOSE 8501
