@@ -40,8 +40,9 @@ Elvis where data exists; framing = broad Data/DE; codename = `robbins`.
   inspections).
 - [x] Tourism = **Sea-Tac passenger volumes + Visit Seattle** (confirmed; no gaming).
 - [x] Public Art = **keep** (not dropped).
-- [ ] Seattle-specific extras: optional; revisit after the core set ships (candidates:
-  311/Find-It-Fix-It, transit ridership, tree canopy, seismic zones).
+- [x] Seattle-specific extras: **shipped** 311/Find-It-Fix-It, transit ridership, ferry
+  ridership, and street trees (2026-08-15). Tree-canopy rasters + seismic zones remain
+  deferred (no strong tabular source).
 - [x] Deploy target: **Standalone Railway** from the Dockerfile (orchestrator +
   `robbins.evanappel.me` deferred; DEPLOY-06 stays optional).
 
@@ -98,41 +99,42 @@ image bakes + serves on `$PORT`. ✅ Railway deploy live.
 
 ## Group SOCRATA — SODA API ingestion (net-new vs. Elvis)
 
-- [ ] **SOCRATA-01** — Implement `fetch_socrata(domain, dataset_id, where=None,
-  select=None, order=None)` with `$limit`/`$offset` paging until a short page. TDD.
-- [ ] **SOCRATA-02** — Add a CSV-export path
-  (`/api/views/{id}/rows.csv?accessType=DOWNLOAD`) for large datasets; ingest via
-  DuckDB `read_csv_auto`. Use it for SPD crime. TDD the URL builder.
-- [ ] **SOCRATA-03** — Support an optional `$$app_token` from `city_config.py`
-  (raises throttling limits; anonymous still works). Log whether a token is in use.
-- [ ] **SOCRATA-04** — A fetch returning zero rows raises (don't ship an empty page).
+- [x] **SOCRATA-01** — `fetch_socrata()` with `$limit`/`$offset` paging until a short
+  page (default `$order=:id`). TDD: 9 tests (`tests/test_fetch_socrata.py`). ✅ (VS-04)
+- [x] **SOCRATA-02** — CSV path: `socrata_resource_csv_url()` (SoQL `$where`-filterable
+  `.csv`) + `socrata_csv_url()` bulk export → `ingest_csv()` via DuckDB `read_csv_auto`.
+  Used for SPD crime, Fire 911, and 311. ✅
+- [x] **SOCRATA-03** — Optional `X-App-Token` from `city_config.SOCRATA_APP_TOKEN`;
+  anonymous still works; the fetch logs `app_token=yes/no`. ✅
+- [x] **SOCRATA-04** — Zero rows raises in both `fetch_socrata()` and `ingest_csv()`. ✅
 
 ---
 
 ## Group CONFIG — City configuration
 
-- [ ] **CONFIG-01** — Record in `city_config.py` the **Seattle Open Data** Socrata
-  domain (`data.seattle.gov`) + dataset ids for kept topics.
-- [ ] **CONFIG-02** — Record the **King County** Socrata (`data.kingcounty.gov`) +
-  **King County / Seattle GeoData** ArcGIS roots and layer paths.
-- [ ] **CONFIG-03** — Record **EPA AQS** FIPS: WA state `53`, King `033` (add Pierce
-  `053`, Snohomish `061` if metro breadth = full metro).
-- [ ] **CONFIG-04** — Record **NOAA GHCN-Daily** station: Sea-Tac `USW00024233`.
-- [ ] **CONFIG-05** — Record the **SPD crime** dataset id + available date range.
-- [ ] **CONFIG-06** — Record the chosen **signature water body** source (USGS NWIS
-  site id, NOAA Tides station 9447130, or SPU/SNOTEL feed).
+- [x] **CONFIG-01** — Seattle Socrata domain + dataset ids for all kept topics
+  (permits, crime, fire, STR, licenses, 311) recorded in `city_config.py`. ✅
+- [x] **CONFIG-02** — King County Socrata (`data.kingcounty.gov`, food inspections) +
+  Seattle ArcGIS org root (`ZOyb2t4B0UYuYNYH`) for art, parks, and trees. ✅
+- [x] **CONFIG-03** — EPA AQS FIPS WA `53` + King `033` / Pierce `053` / Snohomish
+  `061` (full metro). ✅
+- [x] **CONFIG-04** — NOAA GHCN-Daily Sea-Tac `USW00024233`. ✅
+- [x] **CONFIG-05** — SPD crime `tazs-3rd5`, `CRIME_START=2019-01-01`. ✅
+- [x] **CONFIG-06** — Water sources: USGS `12119000`, NOAA tides `9447130`, SNOTEL
+  `791:WA:SNTL`. ✅
 
 ---
 
 ## Group ETL — Ingestion hardening
 
-- [ ] **ETL-01** — Confirm the **force-IPv4 for `aqs.epa.gov`** path is carried over
-  (see `PRIMER.md` §4). Test that the AQS fetch completes in the target env.
-- [ ] **ETL-02** — Port the ArcGIS helpers for King County GIS; keep the per-host
-  `ssl_verify=False` escape hatch (logged) for any broken-TLS server.
-- [ ] **ETL-03** — Centralize encoding handling (Windows-1252 / cp1252) for any muni
-  bulk files in `_read_delimited`. TDD with a fixture file.
-- [ ] **ETL-04** — Ensure every fetch logs source, URL, and row count.
+- [x] **ETL-01** — Force-IPv4 (`_ipv4_first` global `getaddrinfo` wrapper) carried over;
+  AQS fetch completes locally + on Railway. ✅
+- [x] **ETL-02** — ArcGIS `fetch_features()` (paging, WGS84 reprojection, polygon
+  centroids) with the per-host `ssl_verify=False` escape hatch (logged loudly). ✅
+- [~] **ETL-03** — cp1252 handling not needed: every shipped source is JSON, UTF-8
+  CSV, or a zip DuckDB/pandas reads directly. No muni bulk file required a cp1252
+  decode, so no `_read_delimited` was added. Re-open if a future topic hits one.
+- [x] **ETL-04** — Every fetch logs source, URL, and row count. ✅
 
 ---
 
@@ -167,11 +169,28 @@ source.
 - [x] **TOPIC-tourism** — **DROPPED** (logged). No machine-readable Sea-Tac passenger
   feed exists: other cities publish airport traffic on open portals (NY Port Authority
   `8pkr-4b7t`, LAX `g3qu-7q2u`) but the Port of Seattle does not, and BTS T-100 is
-  form/POST-only (not a clean GET). Checked 2026-08-12. Possible pivot: WSDOT ferry
-  ridership as a Puget Sound travel proxy — deferred pending Evan's call.
+  form/POST-only (not a clean GET). Checked 2026-08-12. **Pivot shipped** as
+  TOPIC-ferry: WSF + King County Water Taxi monthly ridership from the federal NTD,
+  a clean Puget Sound travel proxy with strong summer seasonality (2026-08-15).
 - [x] **TOPIC-art** — Public Art — **ArcGIS** (`PublicArt2`, 758 pts, 754 geocoded). ✅ 2nd pattern.
 - [x] **TOPIC-marriage** — Marriage Licenses — **DROPPED** (no Seattle/KC open feed). Logged.
-- [ ] **TOPIC-extras** — Deferred (311, transit, tree canopy, seismic) — revisit after core.
+- [x] **TOPIC-311** — Customer Service Requests / Find-It-Fix-It (Socrata `5ngg-rpne`,
+  ~2.46M all-time, capped 2020+ ≈ 1.65M via CSV export). Page: monthly trend, top
+  request types (abandoned vehicles, encampments, dumping, graffiti, potholes),
+  reporting channel (77% via the Find-It-Fix-It app), owning department, hexbin map.
+  Verified in-browser. ✅
+- [x] **TOPIC-trees** — SDOT street trees (**ArcGIS** `SDOT_Trees_(Active)`, 211,713
+  points, 777 species). Genus derived at fetch (TDD'd, `tests/test_trees.py`). Page:
+  top species/genera, plantings by year, condition (mostly unassessed — a data-quality
+  note), green hexbin density map. Verified in-browser. ✅
+- [x] **TOPIC-transit** — Puget Sound transit ridership (**federal NTD** `8bui-9xvu` @
+  `data.transportation.gov`, 2015+). Curated metro agencies; monthly UPT. Page: COVID
+  collapse + 91% recovery, by-agency + by-mode, Link light-rail 6.2× growth. Verified. ✅
+- [x] **TOPIC-ferry** — Ferry ridership (same NTD source, mode FB — the parked Tourism
+  pivot). WSF + King County Water Taxi. Page: seasonal summer swell (July peak), 2020
+  collapse, by-operator (WSF 98%), annual. Verified in-browser. ✅
+- [x] **TOPIC-extras** — 311, transit, ferry, and street trees shipped (above). Remaining
+  candidates (tree *canopy* rasters, seismic zones) deferred — no strong tabular source.
 - [x] **TOPIC-overview** — ✅ Landing page (nav default): warehouse-wide headline (1.8M+
   records, 11 topics, 3 ingestion patterns) + themed KPI sections (City & Housing,
   Public Safety, Health & Food, Environment, Culture & Rec) each with `st.page_link`s

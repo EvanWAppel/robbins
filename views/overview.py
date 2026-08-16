@@ -13,7 +13,7 @@ st.title("🌲 Seattle-Metro Open-Data Explorer")
 st.markdown(
     "Public data from across the Seattle metro — the city, King/Pierce/Snohomish "
     "counties, and federal feeds — loaded into DuckDB, modeled with **dbt**, and "
-    "served here. Eleven topics, drawn through **three ingestion patterns**: the "
+    "served here. Fifteen topics, drawn through **three ingestion patterns**: the "
     "Socrata SODA API, ArcGIS FeatureServers, and keyless federal bulk files."
 )
 
@@ -28,6 +28,14 @@ permits = scalar("select sum(permit_count) from main.mart_permits_monthly")
 permit_value = scalar("select sum(total_valuation) from main.mart_permits_monthly")
 crime = scalar("select sum(incident_count) from main.mart_crime_monthly")
 fire = scalar("select sum(call_count) from main.mart_fire_monthly")
+csr = scalar("select sum(request_count) from main.mart_csr_monthly")
+csr_app_pct = scalar(
+    """
+    select round(100.0 * sum(request_count) filter (where method_received ilike '%find it fix it%')
+        / sum(request_count))
+    from main.mart_csr_by_method
+    """
+)
 inspections = scalar("select count(*) from main.mart_inspections")
 establishments = scalar("select count(distinct establishment) from main.mart_inspections")
 sat_pct = scalar(
@@ -44,6 +52,10 @@ licenses = scalar("select sum(license_count) from main.mart_licenses_by_industry
 art = scalar("select sum(artwork_count) from main.mart_art_by_type")
 parks = scalar("select count(*) from main.mart_parks_points")
 park_acres = scalar("select sum(area_acres) from main.mart_parks_points")
+trees = scalar("select total_trees from main.mart_trees_summary")
+tree_species = scalar("select distinct_species from main.mart_trees_summary")
+transit_total = scalar("select sum(boardings) from main.mart_transit_by_agency")
+ferry_total = scalar("select sum(boardings) from main.mart_ferry_by_operator")
 air_good = scalar(
     """
     select round(100.0 * sum(day_count) filter (where aqi_category in ('Good','Moderate'))
@@ -63,11 +75,11 @@ sea_rise_in = (tides_full.iloc[-1]["avg_msl_ft"] - tides_full.iloc[0]["avg_msl_f
 
 total_records = (
     int(permits) + int(crime) + int(fire) + int(inspections)
-    + int(licenses) + int(art) + int(parks)
+    + int(licenses) + int(art) + int(parks) + int(csr) + int(trees)
 )
 c = st.columns(3)
 c[0].metric("Records in the warehouse", f"{total_records / 1e6:.1f}M+")
-c[1].metric("Topics", "11")
+c[1].metric("Topics", "15")
 c[2].metric("Data sources", "Socrata · ArcGIS · Federal")
 
 st.divider()
@@ -87,13 +99,26 @@ lc[2].page_link("views/short_term_rentals.py", label="Short-Term Rentals", icon=
 st.divider()
 
 # --- Public Safety ---
-st.subheader("🚨 Public Safety")
-a, b = st.columns(2)
+st.subheader("🚨 Public Safety & City Services")
+a, b, d = st.columns(3)
 a.metric("Police offenses", f"{int(crime):,}", "since 2019", delta_color="off")
 b.metric("Fire 911 dispatches", f"{int(fire):,}", "since 2019", delta_color="off")
-sc = st.columns(2)
+d.metric("311 requests", f"{int(csr):,}", f"{int(csr_app_pct)}% via app", delta_color="off")
+sc = st.columns(3)
 sc[0].page_link("views/crime.py", label="Crime", icon="🚨")
 sc[1].page_link("views/fire_911.py", label="Fire 911 Calls", icon="🚒")
+sc[2].page_link("views/csr_311.py", label="311 Requests", icon="📱")
+
+st.divider()
+
+# --- Getting Around ---
+st.subheader("🚌 Getting Around")
+a, b = st.columns(2)
+a.metric("Transit boardings", f"{transit_total / 1e9:.1f}B", "since 2015", delta_color="off")
+b.metric("Ferry boardings", f"{ferry_total / 1e6:.0f}M", "since 2015", delta_color="off")
+gc = st.columns(2)
+gc[0].page_link("views/transit.py", label="Transit Ridership", icon="🚌")
+gc[1].page_link("views/ferry.py", label="Ferry Ridership", icon="⛴️")
 
 st.divider()
 
@@ -123,9 +148,11 @@ st.divider()
 
 # --- Culture & Recreation ---
 st.subheader("🎨 Culture & Recreation")
-a, b = st.columns(2)
+a, b, d = st.columns(3)
 a.metric("Parks", f"{int(parks):,}", f"{int(park_acres):,} acres", delta_color="off")
-b.metric("Public artworks", f"{int(art):,}")
-rc = st.columns(2)
+b.metric("Street trees", f"{int(trees):,}", f"{int(tree_species):,} species", delta_color="off")
+d.metric("Public artworks", f"{int(art):,}")
+rc = st.columns(3)
 rc[0].page_link("views/parks.py", label="Parks", icon="🌲")
-rc[1].page_link("views/public_art.py", label="Public Art", icon="🎨")
+rc[1].page_link("views/trees.py", label="Street Trees", icon="🌳")
+rc[2].page_link("views/public_art.py", label="Public Art", icon="🎨")

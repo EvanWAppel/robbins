@@ -21,6 +21,22 @@ sources:
           Seattle Real-Time Fire 911 dispatch (Socrata kzjm-xkqj), recent years via
           CSV export. One row per dispatch: incident_number, call type, datetime,
           address, and WGS84 latitude/longitude (all text from the CSV load).
+      - name: csr_311
+        description: >
+          Seattle Customer Service Requests / Find-It-Fix-It (Socrata 5ngg-rpne),
+          capped to 2020-present via CSV export (~1.65M rows). One row per request:
+          servicerequestnumber, webintakeservicerequests (request type), departmentname,
+          createddate, methodreceivedname (Find It Fix It Apps / web / phone / ...),
+          servicerequeststatusname, address, zip, councildistrict, policeprecinct, and
+          WGS84 latitude/longitude (all text from the CSV load).
+      - name: ntd_ridership
+        description: >
+          Puget Sound monthly transit + ferry ridership (FTA National Transit
+          Database, Socrata 8bui-9xvu @ data.transportation.gov), 2015-present,
+          curated to the metro's operators. One row per agency/mode/month: agency +
+          agency_label (friendly), mode + mode_label (human), is_ferry (mode FB), date
+          (month), upt (unlinked passenger trips). Feeds both the Transit and Ferry
+          pages — ferry filters is_ferry, transit takes the rest.
       - name: food_inspections
         description: >
           Public Health – Seattle & King County food establishment inspections
@@ -49,6 +65,12 @@ sources:
           rows). Point geometry (one point per park); name, area_sqft (PARKSBND_AREA,
           square feet), WGS84 latitude/longitude from geometry, and is_water_name — a
           name-derived boolean flagging water-associated parks (attached at fetch).
+      - name: trees
+        description: >
+          SDOT active street-tree inventory (ArcGIS SDOT_Trees_(Active), ~212k points).
+          scientific_name (full binomial), genus (name-derived at fetch), condition
+          (GOOD/FAIR), heritage / exceptional (Y/N), planted_epoch_ms (epoch ms),
+          district (council district code), and WGS84 latitude/longitude from geometry.
       - name: weather
         description: >
           Sea-Tac daily weather (NOAA GHCN-Daily station USW00024233, ~28k days,

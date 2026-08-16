@@ -69,7 +69,7 @@ Public, no secrets. A Socrata app token is optional (raises rate limits only). T
 Vegas→Seattle source mapping and known gotchas are in [`PRIMER.md`](./PRIMER.md);
 the task board is [`TASKS.md`](./TASKS.md).
 
-Eleven topics across three ingestion patterns:
+Fifteen topics across three ingestion patterns:
 
 | Page | Source | Pattern |
 | --- | --- | --- |
@@ -77,18 +77,22 @@ Eleven topics across three ingestion patterns:
 | Building Permits | Seattle DCI Building Permits (`76t5-zqzr`) | Socrata |
 | Crime | SPD Crime (`tazs-3rd5`, CSV export) | Socrata |
 | Fire 911 Calls | Seattle Real-Time Fire 911 (`kzjm-xkqj`) | Socrata |
+| 311 Requests | Seattle Customer Service Requests / Find-It-Fix-It (`5ngg-rpne`, CSV export) | Socrata |
 | Restaurant Inspections | Public Health – Seattle & King County (`r878-4sxa`) | Socrata |
 | Short-Term Rentals | Seattle STR licenses (`s7df-xba4`) | Socrata |
 | Business Licenses | Active business license certs (`wnbq-64tb`) | Socrata |
 | Public Art | Seattle Office of Arts & Culture (`PublicArt2`) | ArcGIS |
 | Parks | Seattle Parks boundaries (`Park_Boundaries`) | ArcGIS |
+| Street Trees | SDOT tree inventory (`SDOT_Trees_(Active)`, ~212k) | ArcGIS |
 | Rain & Records | NOAA GHCN-Daily, Sea-Tac (`USW00024233`) | Federal bulk |
 | Air Quality | EPA AQS daily PM2.5 + Ozone (King/Pierce/Snohomish) | Federal bulk |
 | Water | USGS streamflow + NOAA tides + NRCS SNOTEL snowpack | Federal bulk |
+| Transit Ridership | FTA National Transit Database (`8bui-9xvu`, Puget Sound agencies) | Federal (Socrata) |
+| Ferry Ridership | FTA NTD ferry mode — WSF + King County Water Taxi | Federal (Socrata) |
 
 Two topics were **dropped for lack of a machine-readable Seattle source** (and
 logged in `city_config.py`): Marriage Licenses and Tourism (no open Sea-Tac
-passenger feed).
+passenger feed — the **Ferry Ridership** page is its Puget-Sound-travel stand-in).
 
 ## Deploy
 

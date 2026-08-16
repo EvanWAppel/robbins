@@ -465,6 +465,65 @@ def build_fire_911(con: duckdb.DuckDBPyConnection) -> None:
     ingest_csv(con, "fire_911", url)
 
 
+def build_csr_311(con: duckdb.DuckDBPyConnection) -> None:
+    """Seattle 311 / Find-It-Fix-It service requests, recent years via CSV export."""
+    url = socrata_resource_csv_url(
+        *cfg.CSR_311, where=f"createddate >= '{cfg.CSR_311_START}'"
+    )
+    ingest_csv(con, "csr_311", url)
+
+
+# NTD two-letter mode code -> human label. Covers the modes the Puget Sound
+# agencies actually report; an unknown code falls back to the raw code so nothing
+# is silently dropped.
+_NTD_MODE_LABELS = {
+    "MB": "Bus",
+    "CB": "Commuter Bus",
+    "RB": "Bus Rapid Transit",
+    "TB": "Trolleybus",
+    "LR": "Light Rail",
+    "SR": "Streetcar",
+    "CR": "Commuter Rail",
+    "MG": "Monorail / Automated Guideway",
+    "MO": "Monorail",
+    "FB": "Ferryboat",
+    "DR": "Demand Response",
+    "DT": "Demand Response Taxi",
+    "VP": "Vanpool",
+}
+FERRY_MODE = "FB"
+
+
+def ntd_mode_label(mode_code: str | None) -> str:
+    """Human label for an NTD mode code, falling back to the raw code if unknown."""
+    if not mode_code:
+        return "Unknown"
+    return _NTD_MODE_LABELS.get(mode_code.strip().upper(), mode_code.strip().upper())
+
+
+def build_ntd_ridership(con: duckdb.DuckDBPyConnection) -> None:
+    """Puget Sound monthly ridership (FTA NTD, Socrata) — transit *and* ferries.
+
+    One raw table feeds two topics: the ferry pages filter to mode FB, the transit
+    pages take the rest. We fetch only the curated metro agencies (and only recent
+    years), attach each agency's friendly label and a human mode label at fetch
+    time, so staging is a straight cast.
+    """
+    agencies = list(cfg.NTD_AGENCIES)
+    quoted = ", ".join("'" + a.replace("'", "''") + "'" for a in agencies)
+    where = f"agency in ({quoted}) and state = 'WA' and date >= '{cfg.NTD_START}'"
+    df = fetch_socrata(
+        *cfg.NTD_RIDERSHIP,
+        where=where,
+        select="agency, mode, tos, date, upt",
+        order="date",
+    )
+    df["agency_label"] = df["agency"].map(cfg.NTD_AGENCIES)
+    df["mode_label"] = df["mode"].map(ntd_mode_label)
+    df["is_ferry"] = df["mode"] == FERRY_MODE
+    load_raw(con, "ntd_ridership", df)
+
+
 def build_food_inspections(con: duckdb.DuckDBPyConnection) -> None:
     """Public Health – Seattle & King County food inspections (Socrata, ~106k)."""
     load_raw(con, "food_inspections", fetch_socrata(*cfg.FOOD_INSPECTIONS))
@@ -540,6 +599,57 @@ def build_parks(con: duckdb.DuckDBPyConnection) -> None:
     load_raw(con, "parks", pd.DataFrame(rows))
 
 
+def tree_genus(scientific_name: str | None) -> str | None:
+    """Genus (first token) of a botanical name, title-cased. None if unavailable.
+
+    SDOT records the full scientific name (e.g. ``"Acer rubrum"`` -> ``"Acer"``).
+    Some names are hybrids written with a leading ``"x "`` (``"x Cupressocyparis
+    leylandii"``) or an unknown placeholder; we skip the hybrid marker and treat a
+    blank / "unknown" as no genus so the "most common genera" chart stays clean.
+    """
+    if not scientific_name:
+        return None
+    tokens = scientific_name.strip().split()
+    if not tokens:
+        return None
+    # Skip a leading hybrid marker ("x" / "×") so the genus is the real first word.
+    if tokens[0].lower() in ("x", "×") and len(tokens) > 1:
+        tokens = tokens[1:]
+    genus = tokens[0].capitalize()
+    if genus.lower() in ("unknown", "vacant", "stump", ""):
+        return None
+    return genus
+
+
+def build_trees(con: duckdb.DuckDBPyConnection) -> None:
+    """SDOT street trees (ArcGIS SDOT_Trees_(Active), ~212k points).
+
+    Point geometry; coordinates come from the feature geometry (out_sr=4326). We
+    request only the columns we chart to keep the ~106-page fetch lean, and derive
+    the genus (name-derived, TDD'd) here so the raw table already carries it.
+    """
+    org, service, layer = cfg.SDOT_TREES
+    base = f"{org}/{service}/FeatureServer/{layer}"
+    fields = "SCIENTIFIC_NAME,CONDITION,HERITAGE,EXCEPTIONAL,PLANTED_DATE,PRIMARYDISTRICTCD"
+    rows: list[dict] = []
+    for attrs, geom in fetch_features(base, out_fields=fields, geometry=True):
+        lon, lat = _centroid(geom)
+        rows.append(
+            {
+                "scientific_name": attrs.get("SCIENTIFIC_NAME"),
+                "genus": tree_genus(attrs.get("SCIENTIFIC_NAME")),
+                "condition": attrs.get("CONDITION"),
+                "heritage": attrs.get("HERITAGE"),
+                "exceptional": attrs.get("EXCEPTIONAL"),
+                "planted_epoch_ms": attrs.get("PLANTED_DATE"),
+                "district": attrs.get("PRIMARYDISTRICTCD"),
+                "longitude": lon,
+                "latitude": lat,
+            }
+        )
+    load_raw(con, "trees", pd.DataFrame(rows))
+
+
 def build_water(con: duckdb.DuckDBPyConnection) -> None:
     """The signature-water-body topic — three raw tables from three feeds.
 
@@ -608,12 +718,15 @@ def build_weather(con: duckdb.DuckDBPyConnection) -> None:
 BUILDERS = {
     "building_permits": build_building_permits,
     "crime": build_crime,
+    "csr_311": build_csr_311,
+    "ntd_ridership": build_ntd_ridership,
     "fire_911": build_fire_911,
     "food_inspections": build_food_inspections,
     "short_term_rentals": build_short_term_rentals,
     "business_licenses": build_business_licenses,
     "public_art": build_public_art,
     "parks": build_parks,
+    "trees": build_trees,
     "weather": build_weather,
     "air_quality": build_air_quality,
     "water": build_water,

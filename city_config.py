@@ -33,17 +33,47 @@ SFD_911 = (SEATTLE_SOCRATA, "kzjm-xkqj")        # Seattle Real-Time Fire 911 Cal
 FOOD_INSPECTIONS = (KINGCOUNTY_SOCRATA, "r878-4sxa")  # PH Seattle-KC food inspections, ~106k rows
 SHORT_TERM_RENTALS = (SEATTLE_SOCRATA, "s7df-xba4")   # Seattle STR licenses, ~11.4k rows (spatial)
 BUSINESS_LICENSES = (SEATTLE_SOCRATA, "wnbq-64tb")    # Active business license certs, ~84k (non-spatial)
+CSR_311 = (SEATTLE_SOCRATA, "5ngg-rpne")        # Customer Service Requests (Find It, Fix It), ~2.46M rows (CSV export)
 
 # SPD crime + Fire 911 are huge (full history is millions of rows); cap the baked
 # warehouse to recent years for lean, fast builds (Elvis precedent). Filter is a
 # SoQL $where on the datetime field.
 CRIME_START = "2019-01-01"   # ~630k rows since 2019
 FIRE_START = "2019-01-01"
+# Customer Service Requests span 2013-present (~2.46M); cap to recent years for a
+# lean build. 2020+ is ~1.65M rows and covers the pandemic + Find-It-Fix-It era.
+CSR_311_START = "2020-01-01"
 
 # SPD crime uses a -1.0 sentinel (not null) for missing lat/lon (~11% of rows);
 # staging must filter these before they plot at (-1, -1). Very recent SPD rows
 # (~last 30 days) arrive with REDACTED geo until finalized.
 SPD_CRIME_GEO_SENTINEL = -1.0
+
+# --------------------------------------------------------------------------- #
+# Federal NTD — National Transit Database monthly ridership (Socrata)          #
+# --------------------------------------------------------------------------- #
+# The FTA's National Transit Database publishes monthly unlinked passenger trips
+# (UPT) for every U.S. transit agency, hosted on the federal Socrata portal. It
+# is the machine-readable source for both Puget Sound transit ridership AND
+# Washington State Ferries ridership (mode FB). We curate the Seattle-metro
+# agencies and give each a friendly label; ferry vs. land transit splits on mode.
+NTD_RIDERSHIP = ("data.transportation.gov", "8bui-9xvu")  # Complete Monthly Ridership
+
+# NTD agency name (exact, as published) -> friendly label. This is the metro's
+# transit + ferry operator set; anything not here is excluded at fetch time.
+NTD_AGENCIES = {
+    "King County": "King County Metro",
+    "Central Puget Sound Regional Transit Authority": "Sound Transit",
+    "Snohomish County Public Transportation Benefit Area Corporation": "Community Transit",
+    "Pierce County Transportation Benefit Area Authority": "Pierce Transit",
+    "City of Everett": "Everett Transit",
+    "City of Seattle": "Seattle Streetcar",
+    "Washington State Ferries": "Washington State Ferries",
+    "King County Ferry District": "King County Water Taxi",
+}
+# Cap to a recent decade — long enough to frame the pre-pandemic peak, the 2020
+# collapse, and the ongoing recovery, while keeping the fetch small.
+NTD_START = "2015-01-01"
 
 # --------------------------------------------------------------------------- #
 # ArcGIS FeatureServers — City of Seattle / King County GIS (spatial layers)   #
@@ -57,6 +87,11 @@ PUBLIC_ART = (SEATTLE_ARCGIS, "PublicArt2", 0)  # (org, service, layer) — ~758
 # Seattle Parks & Recreation park boundaries (ArcGIS, point geometry despite the
 # name — one point per park). NAME + PARKSBND_AREA (square feet). ~511 parks.
 PARK_BOUNDARIES = (SEATTLE_ARCGIS, "Park_Boundaries", 0)
+
+# SDOT active street-tree inventory (ArcGIS, ~212k points). SCIENTIFIC_NAME,
+# CONDITION (GOOD/FAIR), HERITAGE / EXCEPTIONAL (Y/N), PLANTED_DATE (epoch ms),
+# PRIMARYDISTRICTCD (council district). Coordinates from feature geometry.
+SDOT_TREES = (SEATTLE_ARCGIS, "SDOT_Trees_(Active)", 0)
 
 # Substrings (matched case-insensitively against a park's name) that flag a
 # water-associated park. The boundary layer has no amenity attributes, so this
