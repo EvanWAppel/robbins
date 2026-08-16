@@ -1,0 +1,263 @@
+version: 2
+
+# Data tests for the staging layer. Every assertion here was verified against the
+# built warehouse before it was written — natural keys that are NOT unique (crime
+# report_number, food inspection_serial_num, str licenseid, ntd agency/mode/month)
+# are documented as such rather than asserted, and known-dirty columns (crime
+# offense_id dupes, the crime_against '-' sentinel) are tested at `warn` severity
+# so they surface loudly without failing the build. House rule: no hidden errors.
+
+models:
+  # ---- Socrata SODA sources -------------------------------------------------
+  - name: stg_building_permits
+    description: Seattle DCI building permits, one row per permit.
+    columns:
+      - name: permit_number
+        description: Permit number — the natural key (verified unique, no nulls).
+        data_tests:
+          - not_null
+          - unique
+      - name: permit_class_mapped
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ["Residential", "Non-Residential", "N/A"]
+
+  - name: stg_crime
+    description: >
+      SPD offenses, one row per offense. report_number is NOT unique (multiple
+      offenses share a report); offense_id is near-unique but carries a handful of
+      duplicates, so its uniqueness is a `warn`, not a hard failure.
+    columns:
+      - name: report_number
+        data_tests:
+          - not_null
+      - name: offense_id
+        data_tests:
+          - not_null
+          - unique:
+              config:
+                severity: warn
+      - name: report_datetime
+        data_tests:
+          - not_null
+      - name: crime_against
+        description: NIBRS crime-against category; a small number of rows carry a '-' sentinel.
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ["PROPERTY", "PERSON", "NOT_A_CRIME", "SOCIETY", "ANY"]
+              config:
+                severity: warn
+
+  - name: stg_fire_911
+    description: Seattle Fire 911 dispatch, one row per dispatch.
+    columns:
+      - name: incident_number
+        data_tests:
+          - not_null
+          - unique
+      - name: call_datetime
+        data_tests:
+          - not_null
+
+  - name: stg_csr_311
+    description: Seattle 311 / Find-It-Fix-It service requests, one row per request.
+    columns:
+      - name: request_number
+        data_tests:
+          - not_null
+          - unique
+      - name: created_at
+        data_tests:
+          - not_null
+
+  - name: stg_ntd_ridership
+    description: >
+      Puget Sound monthly transit + ferry ridership. (agency, mode, month) is NOT
+      unique — the NTD feed splits some rows by type-of-service, which staging does
+      not carry — so no uniqueness test is asserted on it.
+    columns:
+      - name: ridership_month
+        data_tests:
+          - not_null
+      - name: upt
+        data_tests:
+          - not_null
+
+  - name: stg_food_inspections
+    description: >
+      King County food inspections — ONE ROW PER VIOLATION, so inspection_serial_num
+      is intentionally NOT unique here (it is deduped to one-row-per-inspection in
+      mart_inspections, where uniqueness IS tested).
+    columns:
+      - name: inspection_serial_num
+        data_tests:
+          - not_null
+      - name: inspection_date
+        data_tests:
+          - not_null
+      - name: inspection_result
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ["Satisfactory", "Unsatisfactory", "Complete"]
+      - name: grade
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ["Excellent", "Good", "Okay", "Not Rated", "Needs To Improve", "Rating Not Available"]
+      - name: risk_category
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ["1", "2", "3"]
+
+  - name: stg_short_term_rentals
+    description: >
+      Seattle short-term rental licenses. licenseid is NOT unique — a license
+      appears once per renewal/status change — so only not_null is asserted.
+    columns:
+      - name: licenseid
+        data_tests:
+          - not_null
+      - name: licensestatus
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ["Active", "Inactive", "Expired", "Revoked", "Canceled", "Denied", "In Process"]
+
+  - name: stg_business_licenses
+    description: Active Seattle business license tax certificates, non-spatial.
+    columns:
+      - name: business_legal_name
+        data_tests:
+          - not_null
+
+  # ---- ArcGIS FeatureServer sources ----------------------------------------
+  - name: stg_public_art
+    description: Seattle public art points (ArcGIS). Titles repeat across series, so not unique.
+    columns:
+      - name: title
+        data_tests:
+          - not_null
+
+  - name: stg_parks
+    description: Seattle park points (ArcGIS). Staging filters to positive-area, geocoded rows.
+    columns:
+      - name: name
+        data_tests:
+          - not_null
+      - name: area_acres
+        data_tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+      - name: latitude
+        data_tests:
+          - not_null
+      - name: longitude
+        data_tests:
+          - not_null
+
+  - name: stg_trees
+    description: SDOT active street trees (ArcGIS). Condition is sparse (mostly null).
+    columns:
+      - name: scientific_name
+        data_tests:
+          - not_null
+      - name: condition
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ["GOOD", "FAIR"]
+
+  # ---- Keyless federal / bulk sources --------------------------------------
+  - name: stg_air_quality
+    description: >
+      EPA AQS daily PM2.5 + Ozone for the metro, deduped to one row per
+      site/day/pollutant.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - site
+              - obs_date
+              - pollutant
+    columns:
+      - name: obs_date
+        data_tests:
+          - not_null
+      - name: aqi
+        data_tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                max_value: 500
+      - name: pollutant
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ["PM2.5 - Local Conditions", "Ozone"]
+      - name: aqi_category
+        data_tests:
+          - accepted_values:
+              arguments:
+                values:
+                  - "Good"
+                  - "Moderate"
+                  - "Unhealthy for Sensitive Groups"
+                  - "Unhealthy"
+                  - "Very Unhealthy"
+                  - "Hazardous"
+
+  - name: stg_weather
+    description: Sea-Tac daily weather (NOAA GHCN-Daily), one row per day.
+    columns:
+      - name: obs_date
+        data_tests:
+          - not_null
+          - unique
+
+  - name: stg_snowpack
+    description: Stampede Pass daily snowpack (NRCS SNOTEL), one row per day.
+    columns:
+      - name: obs_date
+        data_tests:
+          - not_null
+          - unique
+      - name: water_year
+        data_tests:
+          - not_null
+
+  - name: stg_cedar_river_flow
+    description: Cedar River daily streamflow (USGS NWIS), one row per day.
+    columns:
+      - name: obs_date
+        data_tests:
+          - not_null
+          - unique
+      - name: discharge_cfs
+        data_tests:
+          - not_null
+
+  - name: stg_seattle_tides
+    description: Seattle (Elliott Bay) monthly tide datums (NOAA CO-OPS), one row per month.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - year
+              - month
+    columns:
+      - name: year
+        data_tests:
+          - not_null
+      - name: month
+        data_tests:
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 1
+                max_value: 12

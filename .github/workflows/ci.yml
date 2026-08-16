@@ -33,3 +33,14 @@ jobs:
 
       - name: Tests (pytest)
         run: uv run pytest -q
+
+      # dbt project validation: install packages and parse the whole project so
+      # bad refs, malformed schema.yml, or missing test macros fail CI. `parse`
+      # does not open the warehouse (built at Docker build time), so this stays
+      # network-light and fast — the data tests themselves run against a locally
+      # built warehouse, not in CI.
+      - name: Install dbt packages
+        run: uv run dbt deps
+
+      - name: Validate dbt project (parse)
+        run: uv run dbt parse --profiles-dir . --no-partial-parse

@@ -9,6 +9,7 @@ __pycache__/
 .ruff_cache/
 target/
 logs/
+dbt_packages/
 
 # Generated warehouse — rebuild with `uv run python build_warehouse.py && uv run dbt build --profiles-dir .`
 *.duckdb
