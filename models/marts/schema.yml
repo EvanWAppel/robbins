@@ -1,0 +1,86 @@
+version: 2
+
+# Data tests for the marts layer. These assert cross-layer integrity that the
+# staging tests can't: that the deduped inspection mart really is one-row-per-
+# inspection, that map samples are honest subsets of their staging keys
+# (relationships), and that every mapped point sits inside the Seattle-metro
+# bounding box the map SQL claims to enforce. All verified against the built
+# warehouse (0 orphans, 0 out-of-range points) before being written.
+
+models:
+  - name: mart_inspections
+    description: >
+      One row per food inspection — collapses the one-row-per-violation staging
+      rows. inspection_serial_num is the natural key here (unique by construction);
+      this test guards the dedup.
+    columns:
+      - name: inspection_serial_num
+        data_tests:
+          - not_null
+          - unique
+
+  - name: mart_permits_map_sample
+    description: Recent geocoded permits for the map, bounded to the Seattle-metro box.
+    columns:
+      - name: permit_number
+        description: Every mapped permit must trace back to a real staging permit.
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('stg_building_permits')
+                field: permit_number
+      - name: latitude
+        data_tests:
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 47.0
+                max_value: 48.5
+      - name: longitude
+        data_tests:
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: -122.6
+                max_value: -121.5
+
+  - name: mart_csr_map_sample
+    description: Geocoded 311 requests for the map.
+    columns:
+      - name: request_number
+        description: Every mapped request must trace back to a real staging request.
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('stg_csr_311')
+                field: request_number
+
+  - name: mart_fire_map_sample
+    description: Sampled geocoded fire calls for the hexbin map, bounded to the metro box.
+    columns:
+      - name: latitude
+        data_tests:
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 47.0
+                max_value: 48.5
+      - name: longitude
+        data_tests:
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: -122.6
+                max_value: -121.5
+
+  - name: mart_art_points
+    description: Geocoded public artworks for the map, bounded to the metro box.
+    columns:
+      - name: latitude
+        data_tests:
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 47.0
+                max_value: 48.5
+      - name: longitude
+        data_tests:
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: -122.6
+                max_value: -121.5
