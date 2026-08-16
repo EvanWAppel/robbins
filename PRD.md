@@ -1,10 +1,15 @@
 # Robbins — PRD
 
-> **Status:** Draft v1 · **Owner:** Evan Appel · **Date:** 2026-08-11
-> A Seattle-metro open-data explorer. A near-exact port of **Elvis** (Las Vegas)
-> to Seattle, WA. See [`PRIMER.md`](./PRIMER.md) for the handoff context and the
-> Vegas→Seattle source mapping; this document specifies the product.
-> Sibling: `groening` (Portland) ports the same architecture.
+> **Status:** Shipped — live on Railway · **Owner:** Evan Appel · **Date:** 2026-08-11
+> (updated 2026-08-16)
+> A Seattle-metro open-data explorer, and the **flagship** of a family of open-data
+> apps that share one engine. The same architecture powers **elvis** (Las Vegas) and
+> **groening** (Portland): re-targeting the whole pipeline to a new metro is a single
+> config-file change (`city_config.py`). elvis and groening prove the engine ports
+> across cities; robbins is the most complete of the three — the shipped, hosted one,
+> and the only one with the third (federal-bulk) ingestion pattern, a dbt data-quality
+> test suite, and full model docs. See [`PRIMER.md`](./PRIMER.md) for the handoff
+> context and the Vegas→Seattle source mapping; this document specifies the product.
 
 ---
 
@@ -26,8 +31,9 @@ modeling, and an interactive app.
 2. **Reproducible, hands-off pipeline** — a single `build_warehouse.py` fetch +
    `dbt build` recreates the entire warehouse from public sources on every deploy.
 3. **Portfolio proof for a Data / Data-Engineering role** — showcase ELT
-   orchestration and multi-source ingestion across **two access patterns** (Socrata
-   SODA + ArcGIS FeatureServer), dbt staging/marts modeling, and deployment.
+   orchestration and multi-source ingestion across **three access patterns** (Socrata
+   SODA + ArcGIS FeatureServer + keyless federal bulk files), a tested dbt
+   staging/marts model, and deployment.
 4. **Cheap to run, easy to redeploy** — embedded DuckDB, no database server, no
    real secrets, warehouse baked into the image at build time.
 
@@ -35,8 +41,8 @@ modeling, and an interactive app.
 
 - **Not a real-time system.** Data is as fresh as the last deploy/build.
 - **Not a new stack.** Identical to Elvis by decision — no reevaluating
-  DuckDB/dbt/Streamlit/Railway. (The only net-new code is a `fetch_socrata()`
-  helper for Seattle's Socrata portals.)
+  DuckDB/dbt/Streamlit/Railway. (The net-new code versus Elvis is the
+  `fetch_socrata()` helper plus a set of keyless federal-feed fetchers.)
 - **Not a shared design system with other portfolio apps.** Robbins has its own
   look, like every other project under `evanappel.me`.
 - **No auth; no real secrets.** Public data only. (A Socrata app token is optional
@@ -153,10 +159,11 @@ robbins/
   uv run dbt build --profiles-dir . && uv run streamlit run streamlit_app.py`
   produces the full app locally.
 - **Deployed:** live on Railway, warehouse baked in the image, serving on `$PORT`.
-- **Coverage:** ≥ 9 working topic pages spanning both Socrata and ArcGIS sources;
-  every dropped topic explicitly logged with its reason.
+- **Coverage:** 15 working topic pages spanning all three ingestion patterns
+  (Socrata, ArcGIS, federal bulk); every dropped topic explicitly logged with its
+  reason.
 - **Portfolio-ready:** README explains the ELT + dbt + Streamlit story and the
-  two-pattern ingestion for a Data/DE audience.
+  three-pattern ingestion for a Data/DE audience.
 
 ## 11. Open questions
 
