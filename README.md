@@ -44,12 +44,53 @@ air quality, USGS streamflow, NOAA tides, NRCS snowpack). All Seattle-specific
 configuration lives in **`city_config.py`**, so re-pointing to another metro is
 ideally a one-file change.
 
+## Data modeling
+
+The warehouse is a **two-tier dbt contract**: 16 `staging/` views normalize each raw
+source (cast text to typed columns, derive fields, dedupe), and 61 `marts/` tables
+aggregate and shape those into exactly what each page renders. The Streamlit app only
+ever reads marts — never `raw.*` or staging — so the SQL that shapes the data lives in
+one place, version-controlled and tested, rather than scattered through the app.
+
+```mermaid
+flowchart LR
+    S["Socrata SODA"] --> RAW
+    A["ArcGIS FeatureServers"] --> RAW
+    F["Federal bulk files"] --> RAW
+    RAW["raw.* — 16 source tables"] --> STG["staging/ — 16 views<br/>cast · derive · dedupe"]
+    STG --> MRT["marts/ — 61 tables<br/>aggregate · shape per page"]
+    MRT --> APP["Streamlit views/*.py<br/>app_db.query()"]
+    STG -. 59 data tests .-> TST(["dbt test"])
+    MRT -. relationships · ranges .-> TST
+```
+
+Example lineage — the Building Permits page: `raw.building_permits` →
+`stg_building_permits` (view) → `mart_permits_by_class`, `mart_permits_monthly`,
+`mart_permits_map_sample` (tables) → the permits view.
+
+**Documentation & tests.** Every source, staging model, and mart is documented in
+`models/**/schema.yml` (source-table docs live in `models/staging/sources.yml`), with
+column-level descriptions for the full marts surface the app consumes. **59 dbt data
+tests** enforce `not_null`/`unique` on verified natural keys, `accepted_values` on
+categoricals, `dbt_utils.accepted_range` (AQI 0–500, metro-bbox lat/lon), and
+`relationships` from the map samples back to their staging keys — with known-dirty
+columns tested at `warn` severity so caveats surface without failing the build. CI
+runs `dbt parse` on every push; `dbt test` runs against a locally built warehouse.
+
+```sh
+uv run dbt deps                              # install dbt-utils (first run)
+uv run dbt test  --profiles-dir .            # run the 59 data tests
+uv run dbt docs generate --profiles-dir .    # build the catalog + lineage
+uv run dbt docs serve                        # browse models, columns, and the DAG
+```
+
 ## Run it locally
 
 ```sh
 uv sync
+uv run dbt deps                             # install dbt packages (dbt-utils)
 uv run python build_warehouse.py            # fetch sources -> raw.* tables
-uv run dbt build --profiles-dir .           # raw -> staging -> marts
+uv run dbt build --profiles-dir .           # raw -> staging -> marts (+ tests)
 uv run streamlit run streamlit_app.py       # serve on :8501
 ```
 
