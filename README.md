@@ -8,9 +8,20 @@ extending to Pierce & Snohomish) — maps, trends, and searchable tables in one 
 
 It's a portfolio piece demonstrating end-to-end data engineering: multi-source
 ingestion across **three access patterns** (Socrata SODA API, ArcGIS FeatureServers,
-and keyless federal bulk files), a reproducible DuckDB warehouse, dbt modeling, and
-an interactive front end. It began as a near-exact port of Elvis (Las Vegas) — same
-stack, different city — then grew a third ingestion pattern for federal data.
+and keyless federal bulk files), a reproducible DuckDB warehouse, a tested two-tier
+dbt model, and an interactive front end.
+
+## Portfolio context
+
+Robbins is the **flagship** of a family of open-data explorers built on one engine.
+The same architecture powers **elvis** (Las Vegas) and **groening** (Portland):
+re-pointing the entire pipeline at a new metro is a **single config-file change** —
+`city_config.py` holds every city-specific value (portal domains and dataset ids, GIS
+orgs, EPA FIPS codes, station codes, year ranges), and nothing else needs to move.
+elvis and groening prove the engine ports across cities; **robbins is where it's most
+complete** — the shipped, hosted one, extending the original two-pattern ingestion
+with a third (keyless federal bulk feeds), a 59-test dbt data-quality layer, and
+full model documentation.
 
 ## Stack
 
