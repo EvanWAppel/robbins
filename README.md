@@ -1,5 +1,8 @@
 # Robbins — Seattle-Metro Open-Data Explorer
 
+[![CI](https://github.com/EvanWAppel/robbins/actions/workflows/ci.yml/badge.svg)](https://github.com/EvanWAppel/robbins/actions/workflows/ci.yml)
+[![Live demo](https://img.shields.io/badge/live-Railway-brightgreen)](https://robbins-production.up.railway.app)
+
 **Robbins** is an interactive, multi-page [Streamlit](https://streamlit.io) app
 that explores free public datasets about the **Seattle metro** (King County core,
 extending to Pierce & Snohomish) — maps, trends, and searchable tables in one place.
