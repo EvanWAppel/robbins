@@ -116,6 +116,26 @@ MetricFlow (which would pin the project back to older dbt/DuckDB) — but it dem
 the same principle: **one metric definition, many consumers**. A test keeps the
 committed model in sync with the registry.
 
+## Ask the data — an agent-ready catalog + natural-language queries
+
+The **Ask the Data** page ships two things:
+
+1. A machine-readable **catalog of the marts** — [`catalog/marts.json`](./catalog/marts.json),
+   generated from the dbt model docs — framed as *context an AI agent can ground on*
+   (it sits alongside dbt's `manifest.json`). Regenerate with
+   `uv run python generate_catalog.py`; a test keeps it in sync with the schema.
+2. An **"Ask the data"** query surface: a natural-language question becomes a
+   **read-only DuckDB SELECT** (Claude — `claude-opus-4-8` — grounded on the catalog
+   via a forced tool call), which is validated read-only, shown to you, and run over
+   the marts. Bad queries **fail loud**; nothing that could write, attach, or read
+   external files is allowed (`sql_safety.py`, defense-in-depth over the already
+   read-only connection).
+
+Applied AI on real modeled data — built on the catalog, not bolted on. It's a
+**personal** feature: it uses your own `ANTHROPIC_API_KEY` and no employer system.
+Set that env var (locally or in Railway) to enable the query box; without it, the
+catalog still renders and the page explains how to turn queries on.
+
 ## Run it locally
 
 ```sh
