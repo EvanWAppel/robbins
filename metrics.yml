@@ -1,0 +1,83 @@
+# The semantic layer — one definition, many consumers.
+#
+# Each metric is declared once here (label, description, source mart, aggregate
+# expression, unit). `generate_metrics_model.py` compiles this into
+# `models/marts/mart_metrics.sql`, so dbt builds, tests, and documents the metric,
+# and the Streamlit Overview reads its value by name from `mart_metrics`. To change
+# a headline number, edit one line here and regenerate:
+#
+#   uv run python generate_metrics_model.py
+#
+# `expression` is a trusted SQL aggregate evaluated against `mart`; it may use
+# FILTER (WHERE …) for per-metric conditions.
+
+metrics:
+  - name: total_permits
+    label: Building permits
+    description: Total building permits issued in the loaded window.
+    mart: mart_permits_monthly
+    expression: sum(permit_count)
+    unit: count
+
+  - name: total_permit_valuation
+    label: Permit valuation
+    description: Summed estimated project cost across issued permits (USD).
+    mart: mart_permits_monthly
+    expression: sum(total_valuation)
+    unit: usd
+
+  - name: total_crime_offenses
+    label: Crime offenses
+    description: Total SPD offenses reported in the loaded window.
+    mart: mart_crime_monthly
+    expression: sum(incident_count)
+    unit: count
+
+  - name: total_fire_calls
+    label: Fire 911 calls
+    description: Total Seattle Fire 911 dispatches in the loaded window.
+    mart: mart_fire_monthly
+    expression: sum(call_count)
+    unit: count
+
+  - name: total_311_requests
+    label: 311 requests
+    description: Total Find-It-Fix-It / customer service requests in the loaded window.
+    mart: mart_csr_monthly
+    expression: sum(request_count)
+    unit: count
+
+  - name: total_inspections
+    label: Food inspections
+    description: Total food-establishment inspections on record.
+    mart: mart_inspections
+    expression: count(*)
+    unit: count
+
+  - name: total_street_trees
+    label: Street trees
+    description: Trees in the SDOT active street-tree inventory.
+    mart: mart_trees_summary
+    expression: max(total_trees)
+    unit: count
+
+  - name: pct_good_or_moderate_air_days
+    label: Good/Moderate air days
+    description: Share of metro-days whose worst PM2.5 reading was Good or Moderate.
+    mart: mart_air_category_days
+    expression: round(100.0 * sum(day_count) filter (where aqi_category in ('Good', 'Moderate')) / nullif(sum(day_count), 0))
+    unit: percent
+
+  - name: total_transit_boardings
+    label: Transit boardings
+    description: Total land-transit boardings (UPT) across Puget Sound agencies.
+    mart: mart_transit_by_agency
+    expression: sum(boardings)
+    unit: count
+
+  - name: total_ferry_boardings
+    label: Ferry boardings
+    description: Total ferry boardings (UPT) across Puget Sound operators.
+    mart: mart_ferry_by_operator
+    expression: sum(boardings)
+    unit: count

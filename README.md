@@ -98,6 +98,24 @@ uv run dbt docs generate --profiles-dir .    # build the catalog + lineage
 uv run dbt docs serve                        # browse models, columns, and the DAG
 ```
 
+## Semantic layer
+
+Headline metrics are defined **once** in [`metrics.yml`](./metrics.yml) — each with a
+label, description, source mart, and aggregate expression — and compiled into the
+`mart_metrics` dbt model by `generate_metrics_model.py`. That single definition then
+has many consumers: dbt builds, tests, and documents the model, and the Overview page
+reads each value **by name** (`metric("total_permits")`) instead of re-deriving it with
+ad-hoc SQL. To change a headline number, edit one line of YAML and regenerate:
+
+```sh
+uv run python generate_metrics_model.py   # metrics.yml -> models/marts/mart_metrics.sql
+```
+
+It's a small, home-grown semantic layer over the marts — deliberately *not* dbt's
+MetricFlow (which would pin the project back to older dbt/DuckDB) — but it demonstrates
+the same principle: **one metric definition, many consumers**. A test keeps the
+committed model in sync with the registry.
+
 ## Run it locally
 
 ```sh

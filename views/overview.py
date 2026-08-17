@@ -23,12 +23,26 @@ def scalar(sql: str):
     return query(sql).iloc[0, 0]
 
 
-# Headline totals.
-permits = scalar("select sum(permit_count) from main.mart_permits_monthly")
-permit_value = scalar("select sum(total_valuation) from main.mart_permits_monthly")
-crime = scalar("select sum(incident_count) from main.mart_crime_monthly")
-fire = scalar("select sum(call_count) from main.mart_fire_monthly")
-csr = scalar("select sum(request_count) from main.mart_csr_monthly")
+# The semantic layer: headline numbers are read by name from mart_metrics (generated
+# from metrics.yml), so each metric is defined in exactly one place — not re-derived
+# with ad-hoc SQL here. See metrics.yml.
+_metrics = query("select metric_name, value from main.mart_metrics")
+_metric_values = dict(zip(_metrics["metric_name"], _metrics["value"], strict=True))
+
+
+def metric(name: str) -> float:
+    """Look up a metric value by name from the semantic layer (mart_metrics)."""
+    if name not in _metric_values:
+        raise KeyError(f"Unknown metric {name!r} — is it defined in metrics.yml?")
+    return _metric_values[name]
+
+
+# Headline totals — the ones below come through the semantic layer (metrics.yml).
+permits = metric("total_permits")
+permit_value = metric("total_permit_valuation")
+crime = metric("total_crime_offenses")
+fire = metric("total_fire_calls")
+csr = metric("total_311_requests")
 csr_app_pct = scalar(
     """
     select round(100.0 * sum(request_count) filter (where method_received ilike '%find it fix it%')
@@ -36,7 +50,7 @@ csr_app_pct = scalar(
     from main.mart_csr_by_method
     """
 )
-inspections = scalar("select count(*) from main.mart_inspections")
+inspections = metric("total_inspections")
 establishments = scalar("select count(distinct establishment) from main.mart_inspections")
 sat_pct = scalar(
     """
@@ -52,17 +66,11 @@ licenses = scalar("select sum(license_count) from main.mart_licenses_by_industry
 art = scalar("select sum(artwork_count) from main.mart_art_by_type")
 parks = scalar("select count(*) from main.mart_parks_points")
 park_acres = scalar("select sum(area_acres) from main.mart_parks_points")
-trees = scalar("select total_trees from main.mart_trees_summary")
+trees = metric("total_street_trees")
 tree_species = scalar("select distinct_species from main.mart_trees_summary")
-transit_total = scalar("select sum(boardings) from main.mart_transit_by_agency")
-ferry_total = scalar("select sum(boardings) from main.mart_ferry_by_operator")
-air_good = scalar(
-    """
-    select round(100.0 * sum(day_count) filter (where aqi_category in ('Good','Moderate'))
-        / sum(day_count))
-    from main.mart_air_category_days
-    """
-)
+transit_total = metric("total_transit_boardings")
+ferry_total = metric("total_ferry_boardings")
+air_good = metric("pct_good_or_moderate_air_days")
 worst_aqi = scalar("select max(max_aqi) from main.mart_air_worst_days")
 annual_rain = scalar(
     "select avg(total_precip_in) from main.mart_weather_annual where year < (select max(year) from main.mart_weather_annual)"

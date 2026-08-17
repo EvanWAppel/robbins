@@ -726,3 +726,32 @@ models:
         description: Date the record was set.
       - name: value
         description: Display-ready value string (e.g. '103 °F').
+
+  # ===== Semantic layer =====================================================
+  - name: mart_metrics
+    description: >
+      The semantic layer — one row per headline metric, GENERATED from metrics.yml
+      by generate_metrics_model.py. Each metric is declared once (label, description,
+      source mart, aggregate expression, unit); dbt builds/tests/documents it here and
+      the Streamlit Overview reads values by name. Regenerate with
+      `uv run python generate_metrics_model.py`.
+    columns:
+      - name: metric_name
+        description: Stable metric key the app looks up (e.g. total_permits).
+        data_tests:
+          - not_null
+          - unique
+      - name: label
+        description: Human-readable metric name for display.
+      - name: description
+        description: One-line definition of the metric.
+      - name: unit
+        description: Value unit — drives app formatting.
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ["count", "usd", "percent"]
+      - name: value
+        description: The computed metric value (cast to double).
+        data_tests:
+          - not_null
