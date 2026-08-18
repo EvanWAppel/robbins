@@ -755,3 +755,25 @@ models:
         description: The computed metric value (cast to double).
         data_tests:
           - not_null
+
+  - name: mart_build_info
+    description: >
+      Warehouse build metadata — the data-freshness surface. One row holding
+      built_at (dbt run_started_at, frozen into the baked warehouse) and
+      total_records (the nine grain counts the Overview headline reports, defined
+      here once). The Overview page reads it for its "Warehouse built <date>"
+      banner. Because production rebuilds the warehouse from scratch every deploy,
+      built_at is an honest "data loaded" timestamp.
+    columns:
+      - name: built_at
+        description: Timestamp this `dbt build` began — the warehouse's build/load time.
+        data_tests:
+          - not_null
+          - unique
+      - name: total_records
+        description: Total records across the nine headline grain tables.
+        data_tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 3000000

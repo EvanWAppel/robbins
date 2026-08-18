@@ -61,7 +61,7 @@ ideally a one-file change.
 ## Data modeling
 
 The warehouse is a **two-tier dbt contract**: 16 `staging/` views normalize each raw
-source (cast text to typed columns, derive fields, dedupe), and 61 `marts/` tables
+source (cast text to typed columns, derive fields, dedupe), and 63 `marts/` tables
 aggregate and shape those into exactly what each page renders. The Streamlit app only
 ever reads marts — never `raw.*` or staging — so the SQL that shapes the data lives in
 one place, version-controlled and tested, rather than scattered through the app.
@@ -72,9 +72,9 @@ flowchart LR
     A["ArcGIS FeatureServers"] --> RAW
     F["Federal bulk files"] --> RAW
     RAW["raw.* — 16 source tables"] --> STG["staging/ — 16 views<br/>cast · derive · dedupe"]
-    STG --> MRT["marts/ — 61 tables<br/>aggregate · shape per page"]
+    STG --> MRT["marts/ — 63 tables<br/>aggregate · shape per page"]
     MRT --> APP["Streamlit views/*.py<br/>app_db.query()"]
-    STG -. 59 data tests .-> TST(["dbt test"])
+    STG -. 67 data tests .-> TST(["dbt test"])
     MRT -. relationships · ranges .-> TST
 ```
 
@@ -84,7 +84,7 @@ Example lineage — the Building Permits page: `raw.building_permits` →
 
 **Documentation & tests.** Every source, staging model, and mart is documented in
 `models/**/schema.yml` (source-table docs live in `models/staging/sources.yml`), with
-column-level descriptions for the full marts surface the app consumes. **59 dbt data
+column-level descriptions for the full marts surface the app consumes. **67 dbt data
 tests** enforce `not_null`/`unique` on verified natural keys, `accepted_values` on
 categoricals, `dbt_utils.accepted_range` (AQI 0–500, metro-bbox lat/lon), and
 `relationships` from the map samples back to their staging keys — with known-dirty
@@ -93,7 +93,7 @@ runs `dbt parse` on every push; `dbt test` runs against a locally built warehous
 
 ```sh
 uv run dbt deps                              # install dbt-utils (first run)
-uv run dbt test  --profiles-dir .            # run the 59 data tests
+uv run dbt test  --profiles-dir .            # run the 67 data tests
 uv run dbt docs generate --profiles-dir .    # build the catalog + lineage
 uv run dbt docs serve                        # browse models, columns, and the DAG
 ```
@@ -115,6 +115,33 @@ It's a small, home-grown semantic layer over the marts — deliberately *not* db
 MetricFlow (which would pin the project back to older dbt/DuckDB) — but it demonstrates
 the same principle: **one metric definition, many consumers**. A test keeps the
 committed model in sync with the registry.
+
+## Incremental models & data freshness
+
+The large time-series rollups — `mart_crime_monthly`, `mart_csr_monthly` (~1.65M source
+rows), and `mart_permits_monthly` — are **`incremental`** models (`delete+insert` on the
+month key). A full refresh builds every month; an incremental run reprocesses only the
+trailing window (the current + prior month, so late-arriving rows are picked up) and
+swaps just those months back in by `unique_key`. The transform is **idempotent** — the
+monthly totals are byte-for-byte identical whether you full-refresh or run the
+incremental path twice.
+
+> **Honest caveat, stated in the model SQL too:** production bakes the warehouse from
+> scratch on every deploy (`build_warehouse.py` + `dbt build` at Docker build time), so
+> these always run as a full refresh in prod. The incremental path is real and exercised
+> locally — it demonstrates the pattern (idempotency, late-data handling, backfills)
+> without pretending prod accumulates state.
+
+A `mart_build_info` model captures the **build timestamp** (dbt's `run_started_at`,
+frozen into the baked warehouse) and the total record count. The Overview page reads it
+for a *"Warehouse built &lt;date&gt; · N records"* freshness banner — and because prod
+rebuilds every deploy, that timestamp is an honest "data loaded" signal. Three sources
+that carry a real event timestamp (`crime`, `csr_311`, `building_permits`) also declare
+dbt **source freshness** thresholds:
+
+```sh
+uv run dbt source freshness --profiles-dir .   # reports reporting-lag vs. now per feed
+```
 
 ## Ask the data — an agent-ready catalog + natural-language queries
 
