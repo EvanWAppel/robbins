@@ -157,6 +157,20 @@
       ]
     },
     {
+      "name": "mart_build_info",
+      "description": "Warehouse build metadata — the data-freshness surface. One row holding built_at (dbt run_started_at, frozen into the baked warehouse) and total_records (the nine grain counts the Overview headline reports, defined here once). The Overview page reads it for its \"Warehouse built <date>\" banner. Because production rebuilds the warehouse from scratch every deploy, built_at is an honest \"data loaded\" timestamp.",
+      "columns": [
+        {
+          "name": "built_at",
+          "description": "Timestamp this `dbt build` began — the warehouse's build/load time."
+        },
+        {
+          "name": "total_records",
+          "description": "Total records across the nine headline grain tables."
+        }
+      ]
+    },
+    {
       "name": "mart_crime_by_category",
       "description": "Offense counts by NIBRS category, most common first.",
       "columns": [

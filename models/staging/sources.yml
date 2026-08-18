@@ -5,17 +5,31 @@ sources:
     database: seattle
     schema: raw
     tables:
+      # Freshness: these three feeds carry a genuine event timestamp, so
+      # `dbt source freshness` measures the reporting lag of the upstream open-data
+      # portal (max event time vs. now). Raw columns land as text from the CSV/JSON
+      # loads, so loaded_at_field is a try_cast expression. Thresholds are generous
+      # because municipal feeds publish with real lag — the point is to detect a
+      # feed that has gone stale, not to chase same-day currency.
       - name: building_permits
         description: >
           Seattle DCI building permits (Socrata 76t5-zqzr, ~192k rows, 1986-present).
           One row per permit: class, type, estimated project cost, applied/issued/
           completed dates, current status, address, and WGS84 coordinates.
+        loaded_at_field: "try_cast(issueddate as timestamp)"
+        freshness:
+          warn_after: {count: 30, period: day}
+          error_after: {count: 90, period: day}
       - name: crime
         description: >
           SPD Crime Data (Socrata tazs-3rd5), capped to recent years via CSV export.
           One row per offense: report/offense datetimes, NIBRS offense category and
           description, block address, neighborhood/beat/precinct, and WGS84 lat/lon.
           Missing geo appears as a '-1.0' sentinel or 'REDACTED' (recent rows).
+        loaded_at_field: "try_cast(report_date_time as timestamp)"
+        freshness:
+          warn_after: {count: 14, period: day}
+          error_after: {count: 45, period: day}
       - name: fire_911
         description: >
           Seattle Real-Time Fire 911 dispatch (Socrata kzjm-xkqj), recent years via
@@ -29,6 +43,10 @@ sources:
           createddate, methodreceivedname (Find It Fix It Apps / web / phone / ...),
           servicerequeststatusname, address, zip, councildistrict, policeprecinct, and
           WGS84 latitude/longitude (all text from the CSV load).
+        loaded_at_field: "try_cast(createddate as timestamp)"
+        freshness:
+          warn_after: {count: 14, period: day}
+          error_after: {count: 45, period: day}
       - name: ntd_ridership
         description: >
           Puget Sound monthly transit + ferry ridership (FTA National Transit

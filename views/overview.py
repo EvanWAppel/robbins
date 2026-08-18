@@ -17,6 +17,16 @@ st.markdown(
     "Socrata SODA API, ArcGIS FeatureServers, and keyless federal bulk files."
 )
 
+# Data-freshness surface: build time + total records come from mart_build_info,
+# frozen in at `dbt build`. In production the warehouse is baked from scratch on
+# every deploy, so built_at is an honest "data loaded" timestamp.
+_build = query("select built_at, total_records from main.mart_build_info").iloc[0]
+_total_records = int(_build["total_records"])
+st.caption(
+    f"🕓 Warehouse built {_build['built_at']:%b %-d, %Y} · "
+    f"{_total_records:,} records · rebuilt fresh on every deploy"
+)
+
 
 def scalar(sql: str):
     """First column of the first row of a query."""
@@ -81,12 +91,9 @@ tides = query("select year, avg_msl_ft, month_count from main.mart_tides_annual 
 tides_full = tides[tides["month_count"] >= 12]
 sea_rise_in = (tides_full.iloc[-1]["avg_msl_ft"] - tides_full.iloc[0]["avg_msl_ft"]) * 12
 
-total_records = (
-    int(permits) + int(crime) + int(fire) + int(inspections)
-    + int(licenses) + int(art) + int(parks) + int(csr) + int(trees)
-)
+# total records come from mart_build_info (the nine grain counts, defined once there)
 c = st.columns(3)
-c[0].metric("Records in the warehouse", f"{total_records / 1e6:.1f}M+")
+c[0].metric("Records in the warehouse", f"{_total_records / 1e6:.1f}M+")
 c[1].metric("Topics", "15")
 c[2].metric("Data sources", "Socrata · ArcGIS · Federal")
 
