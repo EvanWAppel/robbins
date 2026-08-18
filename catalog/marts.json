@@ -1,0 +1,1212 @@
+{
+  "tables": [
+    {
+      "name": "mart_air_category_days",
+      "description": "Count of days in each AQI category, bucketed by the WORST PM2.5 reading anywhere in the metro that day, so rare wildfire-smoke days show up instead of being averaged away. Drives the air-quality category bar chart.",
+      "columns": [
+        {
+          "name": "aqi_category",
+          "description": "EPA AQI band (Good … Hazardous)."
+        },
+        {
+          "name": "day_count",
+          "description": "Number of metro-days whose worst reading fell in this band."
+        },
+        {
+          "name": "severity",
+          "description": "1–6 sort key ordering the bands from Good to Hazardous."
+        }
+      ]
+    },
+    {
+      "name": "mart_air_monthly",
+      "description": "Monthly average and peak AQI by pollutant — surfaces the late-summer smoke spikes.",
+      "columns": [
+        {
+          "name": "obs_month",
+          "description": "Month (first-of-month date)."
+        },
+        {
+          "name": "pollutant",
+          "description": "PM2.5 or Ozone."
+        },
+        {
+          "name": "avg_aqi",
+          "description": "Mean AQI across the month."
+        },
+        {
+          "name": "max_aqi",
+          "description": "Worst single AQI reading in the month."
+        },
+        {
+          "name": "reading_count",
+          "description": "Number of monitor-day readings aggregated."
+        }
+      ]
+    },
+    {
+      "name": "mart_air_sites",
+      "description": "One row per PM2.5 monitor for the map — location plus its average and worst AQI.",
+      "columns": [
+        {
+          "name": "site",
+          "description": "Monitor (local site) name."
+        },
+        {
+          "name": "county",
+          "description": "County the monitor sits in."
+        },
+        {
+          "name": "latitude",
+          "description": "Monitor latitude (fixed per site; averaged defensively)."
+        },
+        {
+          "name": "longitude",
+          "description": "Monitor longitude."
+        },
+        {
+          "name": "avg_aqi",
+          "description": "Mean AQI over the loaded window."
+        },
+        {
+          "name": "max_aqi",
+          "description": "Worst AQI over the loaded window."
+        },
+        {
+          "name": "day_count",
+          "description": "Number of days the monitor reported."
+        }
+      ]
+    },
+    {
+      "name": "mart_air_worst_days",
+      "description": "The metro's 15 worst air days — highest single PM2.5 AQI per date, with the site that recorded it. Almost all smoke days.",
+      "columns": [
+        {
+          "name": "obs_date",
+          "description": "Calendar date."
+        },
+        {
+          "name": "max_aqi",
+          "description": "Highest PM2.5 AQI recorded anywhere in the metro that day."
+        },
+        {
+          "name": "aqi_category",
+          "description": "EPA band for that reading."
+        },
+        {
+          "name": "site",
+          "description": "Monitor that recorded the worst reading."
+        },
+        {
+          "name": "county",
+          "description": "County of that monitor."
+        }
+      ]
+    },
+    {
+      "name": "mart_art_by_type",
+      "description": "Artwork counts by classification (sculpture, mural, …); blanks rolled to 'Unknown'.",
+      "columns": [
+        {
+          "name": "classification",
+          "description": "Artwork type."
+        },
+        {
+          "name": "artwork_count",
+          "description": "Number of artworks of this type."
+        }
+      ]
+    },
+    {
+      "name": "mart_art_points",
+      "description": "Geocoded public artworks for the map, clipped to the Seattle-metro bounding box.",
+      "columns": [
+        {
+          "name": "title",
+          "description": "Artwork title."
+        },
+        {
+          "name": "artist",
+          "description": "Artist name."
+        },
+        {
+          "name": "classification",
+          "description": "Artwork type."
+        },
+        {
+          "name": "medium",
+          "description": "Material / medium."
+        },
+        {
+          "name": "dated",
+          "description": "Year created (free text from the source)."
+        },
+        {
+          "name": "location",
+          "description": "Sited location description."
+        },
+        {
+          "name": "latitude",
+          "description": "Artwork latitude (within the metro box)."
+        },
+        {
+          "name": "longitude",
+          "description": "Artwork longitude."
+        }
+      ]
+    },
+    {
+      "name": "mart_crime_by_category",
+      "description": "Offense counts by NIBRS category, most common first.",
+      "columns": [
+        {
+          "name": "offense_category",
+          "description": "NIBRS offense category."
+        },
+        {
+          "name": "incident_count",
+          "description": "Number of offenses in the category."
+        }
+      ]
+    },
+    {
+      "name": "mart_crime_by_hour_weekday",
+      "description": "Hour-of-day × weekday grid behind the crime heatmap.",
+      "columns": [
+        {
+          "name": "weekday",
+          "description": "Day name (Monday … Sunday)."
+        },
+        {
+          "name": "hour_of_day",
+          "description": "Hour 0–23 of the report time."
+        },
+        {
+          "name": "incident_count",
+          "description": "Offenses in that weekday/hour cell."
+        }
+      ]
+    },
+    {
+      "name": "mart_crime_map_sample",
+      "description": "~12k-row random sample of geolocated offenses for the hexbin map, clipped to the metro box.",
+      "columns": [
+        {
+          "name": "report_number",
+          "description": "SPD report number (not unique — multiple offenses share a report)."
+        },
+        {
+          "name": "offense_category",
+          "description": "NIBRS category."
+        },
+        {
+          "name": "offense_description",
+          "description": "NIBRS offense description."
+        },
+        {
+          "name": "report_datetime",
+          "description": "When the offense was reported."
+        },
+        {
+          "name": "address",
+          "description": "Block-level address."
+        },
+        {
+          "name": "latitude",
+          "description": "Offense latitude (within the metro box)."
+        },
+        {
+          "name": "longitude",
+          "description": "Offense longitude."
+        }
+      ]
+    },
+    {
+      "name": "mart_crime_monthly",
+      "description": "Total offenses per month.",
+      "columns": [
+        {
+          "name": "crime_month",
+          "description": "Month (first-of-month date)."
+        },
+        {
+          "name": "incident_count",
+          "description": "Offenses reported that month."
+        }
+      ]
+    },
+    {
+      "name": "mart_csr_by_department",
+      "description": "Request counts by responsible city department.",
+      "columns": [
+        {
+          "name": "department",
+          "description": "City department that owns the request."
+        },
+        {
+          "name": "request_count",
+          "description": "Requests routed to the department."
+        }
+      ]
+    },
+    {
+      "name": "mart_csr_by_method",
+      "description": "How residents file requests (Find-It-Fix-It app vs. web vs. phone) — the digital-engagement story.",
+      "columns": [
+        {
+          "name": "method_received",
+          "description": "Intake channel."
+        },
+        {
+          "name": "request_count",
+          "description": "Requests received via the channel."
+        }
+      ]
+    },
+    {
+      "name": "mart_csr_by_type",
+      "description": "Request counts by request type (illegal dumping, potholes, …).",
+      "columns": [
+        {
+          "name": "request_type",
+          "description": "Service-request type."
+        },
+        {
+          "name": "request_count",
+          "description": "Requests of the type."
+        }
+      ]
+    },
+    {
+      "name": "mart_csr_map_sample",
+      "description": "~12k-row random sample of geolocated 311 requests for the hexbin map, clipped to the metro box.",
+      "columns": [
+        {
+          "name": "request_number",
+          "description": "Service-request number — traces back to a real staging request."
+        },
+        {
+          "name": "request_type",
+          "description": "Service-request type."
+        },
+        {
+          "name": "department",
+          "description": "Owning department."
+        },
+        {
+          "name": "created_at",
+          "description": "Request creation timestamp."
+        },
+        {
+          "name": "address",
+          "description": "Reported location."
+        },
+        {
+          "name": "latitude",
+          "description": "Latitude (within the metro box)."
+        },
+        {
+          "name": "longitude",
+          "description": "Longitude."
+        }
+      ]
+    },
+    {
+      "name": "mart_csr_monthly",
+      "description": "Total 311 requests per month.",
+      "columns": [
+        {
+          "name": "request_month",
+          "description": "Month (first-of-month date)."
+        },
+        {
+          "name": "request_count",
+          "description": "Requests created that month."
+        }
+      ]
+    },
+    {
+      "name": "mart_ferry_annual",
+      "description": "Annual ferry boardings; the partial current year is flagged via months_reported.",
+      "columns": [
+        {
+          "name": "ridership_year",
+          "description": "Calendar year."
+        },
+        {
+          "name": "boardings",
+          "description": "Total ferry boardings (UPT) for the year."
+        },
+        {
+          "name": "months_reported",
+          "description": "Months of data present — lets the view drop partial years."
+        }
+      ]
+    },
+    {
+      "name": "mart_ferry_by_operator",
+      "description": "Ferry boardings by operator (Washington State Ferries vs. King County Water Taxi).",
+      "columns": [
+        {
+          "name": "operator",
+          "description": "Ferry operator."
+        },
+        {
+          "name": "boardings",
+          "description": "Total boardings (UPT)."
+        }
+      ]
+    },
+    {
+      "name": "mart_ferry_monthly",
+      "description": "Total monthly Puget Sound ferry boardings — summer seasonality plus the pandemic dip.",
+      "columns": [
+        {
+          "name": "ridership_month",
+          "description": "Month (first-of-month date)."
+        },
+        {
+          "name": "boardings",
+          "description": "Total ferry boardings that month."
+        }
+      ]
+    },
+    {
+      "name": "mart_ferry_seasonal",
+      "description": "Average ferry boardings by calendar month — the summer-tourism seasonality curve.",
+      "columns": [
+        {
+          "name": "month_of_year",
+          "description": "Calendar month number (1–12)."
+        },
+        {
+          "name": "avg_boardings",
+          "description": "Mean boardings for that month across years."
+        }
+      ]
+    },
+    {
+      "name": "mart_fire_by_hour_weekday",
+      "description": "Hour-of-day × weekday grid behind the fire-911 heatmap.",
+      "columns": [
+        {
+          "name": "weekday",
+          "description": "Day name."
+        },
+        {
+          "name": "hour_of_day",
+          "description": "Hour 0–23 of the call."
+        },
+        {
+          "name": "call_count",
+          "description": "Calls in that weekday/hour cell."
+        }
+      ]
+    },
+    {
+      "name": "mart_fire_by_type",
+      "description": "Dispatch counts by call type (aid response, fire, …).",
+      "columns": [
+        {
+          "name": "call_type",
+          "description": "Dispatch call type."
+        },
+        {
+          "name": "call_count",
+          "description": "Calls of the type."
+        }
+      ]
+    },
+    {
+      "name": "mart_fire_map_sample",
+      "description": "~12k-row random sample of geolocated fire calls for the hexbin map, clipped to the metro box.",
+      "columns": [
+        {
+          "name": "call_type",
+          "description": "Dispatch call type."
+        },
+        {
+          "name": "call_datetime",
+          "description": "When the call was dispatched."
+        },
+        {
+          "name": "address",
+          "description": "Call address."
+        },
+        {
+          "name": "latitude",
+          "description": "Call latitude (within the metro box)."
+        },
+        {
+          "name": "longitude",
+          "description": "Call longitude."
+        }
+      ]
+    },
+    {
+      "name": "mart_fire_monthly",
+      "description": "Total fire-911 calls per month.",
+      "columns": [
+        {
+          "name": "call_month",
+          "description": "Month (first-of-month date)."
+        },
+        {
+          "name": "call_count",
+          "description": "Calls dispatched that month."
+        }
+      ]
+    },
+    {
+      "name": "mart_inspection_results",
+      "description": "Inspection counts by overall result.",
+      "columns": [
+        {
+          "name": "inspection_result",
+          "description": "Overall inspection result."
+        },
+        {
+          "name": "inspection_count",
+          "description": "Inspections with that result."
+        }
+      ]
+    },
+    {
+      "name": "mart_inspections",
+      "description": "One row per food inspection — collapses the one-row-per-violation staging rows. inspection_serial_num is the natural key here (unique by construction); the unique test guards the dedup.",
+      "columns": [
+        {
+          "name": "inspection_serial_num",
+          "description": "Inspection identifier (unique in this mart)."
+        },
+        {
+          "name": "establishment",
+          "description": "Food establishment name."
+        },
+        {
+          "name": "inspection_date",
+          "description": "Date of the inspection."
+        },
+        {
+          "name": "inspection_result",
+          "description": "Overall result (Satisfactory / Unsatisfactory / Complete)."
+        },
+        {
+          "name": "grade",
+          "description": "Public-facing grade band."
+        },
+        {
+          "name": "inspection_score",
+          "description": "Violation-points score (higher = worse)."
+        },
+        {
+          "name": "violation_count",
+          "description": "Number of violations recorded in the inspection."
+        }
+      ]
+    },
+    {
+      "name": "mart_inspections_over_time",
+      "description": "Monthly inspection volume and average score.",
+      "columns": [
+        {
+          "name": "inspection_month",
+          "description": "Month (first-of-month date)."
+        },
+        {
+          "name": "inspection_count",
+          "description": "Inspections that month."
+        },
+        {
+          "name": "avg_score",
+          "description": "Mean violation-points score (higher = worse)."
+        }
+      ]
+    },
+    {
+      "name": "mart_licenses_by_city",
+      "description": "Active business-license counts by city; blanks rolled to 'Unknown'.",
+      "columns": [
+        {
+          "name": "city",
+          "description": "City on the license."
+        },
+        {
+          "name": "license_count",
+          "description": "Active licenses in the city."
+        }
+      ]
+    },
+    {
+      "name": "mart_licenses_by_industry",
+      "description": "License counts by NAICS industry description.",
+      "columns": [
+        {
+          "name": "naics_description",
+          "description": "NAICS industry description."
+        },
+        {
+          "name": "license_count",
+          "description": "Active licenses in the industry."
+        }
+      ]
+    },
+    {
+      "name": "mart_licenses_by_ownership",
+      "description": "License counts by ownership type (sole proprietor, LLC, …).",
+      "columns": [
+        {
+          "name": "ownership_type",
+          "description": "Legal ownership type."
+        },
+        {
+          "name": "license_count",
+          "description": "Active licenses of that type."
+        }
+      ]
+    },
+    {
+      "name": "mart_licenses_monthly",
+      "description": "New-license starts per month (2005+).",
+      "columns": [
+        {
+          "name": "license_month",
+          "description": "Month (first-of-month date) the license started."
+        },
+        {
+          "name": "license_count",
+          "description": "Licenses started that month."
+        }
+      ]
+    },
+    {
+      "name": "mart_metrics",
+      "description": "The semantic layer — one row per headline metric, GENERATED from metrics.yml by generate_metrics_model.py. Each metric is declared once (label, description, source mart, aggregate expression, unit); dbt builds/tests/documents it here and the Streamlit Overview reads values by name. Regenerate with `uv run python generate_metrics_model.py`.",
+      "columns": [
+        {
+          "name": "metric_name",
+          "description": "Stable metric key the app looks up (e.g. total_permits)."
+        },
+        {
+          "name": "label",
+          "description": "Human-readable metric name for display."
+        },
+        {
+          "name": "description",
+          "description": "One-line definition of the metric."
+        },
+        {
+          "name": "unit",
+          "description": "Value unit — drives app formatting."
+        },
+        {
+          "name": "value",
+          "description": "The computed metric value (cast to double)."
+        }
+      ]
+    },
+    {
+      "name": "mart_parks_largest",
+      "description": "The 15 largest parks by acreage.",
+      "columns": [
+        {
+          "name": "name",
+          "description": "Park name."
+        },
+        {
+          "name": "area_acres",
+          "description": "Park area in acres."
+        },
+        {
+          "name": "is_water_name",
+          "description": "Name-derived flag for water-associated parks."
+        }
+      ]
+    },
+    {
+      "name": "mart_parks_points",
+      "description": "One row per park for the map and browsable list.",
+      "columns": [
+        {
+          "name": "name",
+          "description": "Park name."
+        },
+        {
+          "name": "area_acres",
+          "description": "Park area in acres."
+        },
+        {
+          "name": "latitude",
+          "description": "Park point latitude."
+        },
+        {
+          "name": "longitude",
+          "description": "Park point longitude."
+        },
+        {
+          "name": "is_water_name",
+          "description": "Name-derived water-park flag."
+        }
+      ]
+    },
+    {
+      "name": "mart_parks_size_bands",
+      "description": "Park counts by size band — mostly small neighborhood parks with a few flagships.",
+      "columns": [
+        {
+          "name": "size_band",
+          "description": "Size bucket label (Pocket … Flagship)."
+        },
+        {
+          "name": "park_count",
+          "description": "Parks in the band."
+        },
+        {
+          "name": "sort_order",
+          "description": "1–5 ordering key for the bands."
+        }
+      ]
+    },
+    {
+      "name": "mart_permits_by_class",
+      "description": "Permit counts and valuation by permit class.",
+      "columns": [
+        {
+          "name": "permit_class",
+          "description": "Permit class; blanks rolled to 'Unknown'."
+        },
+        {
+          "name": "permit_count",
+          "description": "Permits in the class."
+        },
+        {
+          "name": "total_valuation",
+          "description": "Summed estimated project cost."
+        },
+        {
+          "name": "avg_valuation",
+          "description": "Mean estimated project cost."
+        }
+      ]
+    },
+    {
+      "name": "mart_permits_map_sample",
+      "description": "5k most recent geocoded permits for the map, clipped to the metro box.",
+      "columns": [
+        {
+          "name": "permit_number",
+          "description": "Permit number — traces back to a real staging permit."
+        },
+        {
+          "name": "permit_class",
+          "description": "Permit class."
+        },
+        {
+          "name": "permit_type_desc",
+          "description": "Permit type description."
+        },
+        {
+          "name": "valuation",
+          "description": "Estimated project cost."
+        },
+        {
+          "name": "issue_date",
+          "description": "Date the permit was issued."
+        },
+        {
+          "name": "address",
+          "description": "Project address."
+        },
+        {
+          "name": "latitude",
+          "description": "Permit latitude (within the metro box)."
+        },
+        {
+          "name": "longitude",
+          "description": "Permit longitude."
+        }
+      ]
+    },
+    {
+      "name": "mart_permits_monthly",
+      "description": "Permit issuance and valuation per month.",
+      "columns": [
+        {
+          "name": "issue_month",
+          "description": "Month (first-of-month date) permits were issued."
+        },
+        {
+          "name": "permit_count",
+          "description": "Permits issued that month."
+        },
+        {
+          "name": "total_valuation",
+          "description": "Summed estimated project cost."
+        },
+        {
+          "name": "avg_valuation",
+          "description": "Mean estimated project cost."
+        }
+      ]
+    },
+    {
+      "name": "mart_river_annual",
+      "description": "Cedar River discharge by year — mean and summer-low minimum. Low-flow years track low-snowpack years.",
+      "columns": [
+        {
+          "name": "year",
+          "description": "Calendar year."
+        },
+        {
+          "name": "avg_discharge_cfs",
+          "description": "Mean daily discharge (cubic feet/second)."
+        },
+        {
+          "name": "min_discharge_cfs",
+          "description": "Minimum daily discharge for the year."
+        }
+      ]
+    },
+    {
+      "name": "mart_river_monthly_normals",
+      "description": "Cedar River's seasonal signature — average discharge by calendar month.",
+      "columns": [
+        {
+          "name": "month_num",
+          "description": "Calendar month number (1–12)."
+        },
+        {
+          "name": "month_name",
+          "description": "Abbreviated month name."
+        },
+        {
+          "name": "avg_discharge_cfs",
+          "description": "Mean daily discharge for the month across the record."
+        }
+      ]
+    },
+    {
+      "name": "mart_snowpack_annual_peak",
+      "description": "Peak snow-water-equivalent per water year at Stampede Pass — the 2015 snow-drought stands out.",
+      "columns": [
+        {
+          "name": "water_year",
+          "description": "Water year (Oct 1 – Sep 30, labeled by the ending year)."
+        },
+        {
+          "name": "peak_swe_in",
+          "description": "Maximum snow-water-equivalent (inches) in the water year."
+        }
+      ]
+    },
+    {
+      "name": "mart_snowpack_recent",
+      "description": "Daily snow-water-equivalent for the most recent three water years — the accumulate/melt cycle.",
+      "columns": [
+        {
+          "name": "obs_date",
+          "description": "Observation date."
+        },
+        {
+          "name": "water_year",
+          "description": "Water year."
+        },
+        {
+          "name": "swe_in",
+          "description": "Snow-water-equivalent (inches)."
+        }
+      ]
+    },
+    {
+      "name": "mart_str_by_region",
+      "description": "STR-license counts by geographic region; blanks rolled to 'Unknown'.",
+      "columns": [
+        {
+          "name": "geographicregion",
+          "description": "Geographic region on the license."
+        },
+        {
+          "name": "license_count",
+          "description": "Licenses in the region."
+        }
+      ]
+    },
+    {
+      "name": "mart_str_by_status",
+      "description": "STR-license counts by status (Active, Inactive, Expired, …).",
+      "columns": [
+        {
+          "name": "licensestatus",
+          "description": "License status."
+        },
+        {
+          "name": "license_count",
+          "description": "Licenses with that status."
+        }
+      ]
+    },
+    {
+      "name": "mart_str_by_type",
+      "description": "STR-license counts by property type; blanks rolled to 'Unknown'.",
+      "columns": [
+        {
+          "name": "propertytype",
+          "description": "Property type."
+        },
+        {
+          "name": "license_count",
+          "description": "Licenses of the type."
+        }
+      ]
+    },
+    {
+      "name": "mart_str_map",
+      "description": "Geocoded STR licenses for the map, clipped to the metro box.",
+      "columns": [
+        {
+          "name": "licenseid",
+          "description": "License id (not unique — a license recurs across renewals)."
+        },
+        {
+          "name": "licensestatus",
+          "description": "License status."
+        },
+        {
+          "name": "propertytype",
+          "description": "Property type."
+        },
+        {
+          "name": "geographicregion",
+          "description": "Geographic region."
+        },
+        {
+          "name": "latitude",
+          "description": "Latitude (within the metro box)."
+        },
+        {
+          "name": "longitude",
+          "description": "Longitude."
+        }
+      ]
+    },
+    {
+      "name": "mart_tides_annual",
+      "description": "Seattle sea level by year — average monthly MSL and great-diurnal range.",
+      "columns": [
+        {
+          "name": "year",
+          "description": "Calendar year."
+        },
+        {
+          "name": "avg_msl_ft",
+          "description": "Average mean-sea-level datum (feet)."
+        },
+        {
+          "name": "avg_range_ft",
+          "description": "Average great-diurnal tidal range (feet)."
+        },
+        {
+          "name": "month_count",
+          "description": "Months present — lets the view drop partial years."
+        }
+      ]
+    },
+    {
+      "name": "mart_top_violations",
+      "description": "Most frequently cited violations across all inspections.",
+      "columns": [
+        {
+          "name": "violation_description",
+          "description": "Violation text."
+        },
+        {
+          "name": "violation_count",
+          "description": "Times the violation was cited."
+        }
+      ]
+    },
+    {
+      "name": "mart_transit_by_agency",
+      "description": "Land-transit boardings by agency (excludes ferries).",
+      "columns": [
+        {
+          "name": "agency_label",
+          "description": "Friendly agency name."
+        },
+        {
+          "name": "boardings",
+          "description": "Total boardings (UPT)."
+        }
+      ]
+    },
+    {
+      "name": "mart_transit_by_mode",
+      "description": "Land-transit boardings by mode (bus, light rail, …).",
+      "columns": [
+        {
+          "name": "mode_label",
+          "description": "Human-readable mode."
+        },
+        {
+          "name": "boardings",
+          "description": "Total boardings (UPT)."
+        }
+      ]
+    },
+    {
+      "name": "mart_transit_light_rail_monthly",
+      "description": "Sound Transit Link light rail monthly boardings — the clearest post-pandemic growth story.",
+      "columns": [
+        {
+          "name": "ridership_month",
+          "description": "Month (first-of-month date)."
+        },
+        {
+          "name": "boardings",
+          "description": "Light-rail boardings that month."
+        }
+      ]
+    },
+    {
+      "name": "mart_transit_monthly",
+      "description": "Total monthly boardings across all Puget Sound land-transit modes (excludes ferries).",
+      "columns": [
+        {
+          "name": "ridership_month",
+          "description": "Month (first-of-month date)."
+        },
+        {
+          "name": "boardings",
+          "description": "Total land-transit boardings that month."
+        }
+      ]
+    },
+    {
+      "name": "mart_trees_by_condition",
+      "description": "Tree counts by recorded condition; unassessed trees kept as 'Not assessed'.",
+      "columns": [
+        {
+          "name": "condition",
+          "description": "Recorded condition, or 'Not assessed'."
+        },
+        {
+          "name": "tree_count",
+          "description": "Trees in the bucket."
+        }
+      ]
+    },
+    {
+      "name": "mart_trees_by_genus",
+      "description": "Tree counts by genus, most common first.",
+      "columns": [
+        {
+          "name": "genus",
+          "description": "Tree genus (name-derived)."
+        },
+        {
+          "name": "tree_count",
+          "description": "Trees of the genus."
+        }
+      ]
+    },
+    {
+      "name": "mart_trees_by_species",
+      "description": "Tree counts by scientific name.",
+      "columns": [
+        {
+          "name": "scientific_name",
+          "description": "Full scientific (binomial) name."
+        },
+        {
+          "name": "tree_count",
+          "description": "Trees of the species."
+        }
+      ]
+    },
+    {
+      "name": "mart_trees_map_sample",
+      "description": "~15k-row random sample of geolocated trees for the hexbin map, clipped to Seattle.",
+      "columns": [
+        {
+          "name": "scientific_name",
+          "description": "Species name."
+        },
+        {
+          "name": "genus",
+          "description": "Genus."
+        },
+        {
+          "name": "condition",
+          "description": "Recorded condition (often null)."
+        },
+        {
+          "name": "is_heritage",
+          "description": "Heritage-tree flag."
+        },
+        {
+          "name": "latitude",
+          "description": "Latitude (within the Seattle box)."
+        },
+        {
+          "name": "longitude",
+          "description": "Longitude."
+        }
+      ]
+    },
+    {
+      "name": "mart_trees_planted_by_year",
+      "description": "Recorded planting year (1970+; only a portion of trees carry a date).",
+      "columns": [
+        {
+          "name": "plant_year",
+          "description": "Year the tree was planted."
+        },
+        {
+          "name": "tree_count",
+          "description": "Trees planted that year."
+        }
+      ]
+    },
+    {
+      "name": "mart_trees_summary",
+      "description": "One-row headline summary for the tree KPI cards.",
+      "columns": [
+        {
+          "name": "total_trees",
+          "description": "Total inventoried trees."
+        },
+        {
+          "name": "distinct_species",
+          "description": "Distinct scientific names."
+        },
+        {
+          "name": "distinct_genera",
+          "description": "Distinct genera."
+        },
+        {
+          "name": "heritage_trees",
+          "description": "Count flagged heritage."
+        },
+        {
+          "name": "exceptional_trees",
+          "description": "Count flagged exceptional."
+        }
+      ]
+    },
+    {
+      "name": "mart_weather_annual",
+      "description": "Annual precip totals, rain-day counts, and average high/low temps.",
+      "columns": [
+        {
+          "name": "year",
+          "description": "Calendar year."
+        },
+        {
+          "name": "total_precip_in",
+          "description": "Total precipitation (inches)."
+        },
+        {
+          "name": "rain_days",
+          "description": "Days with measurable rain (>0.01 in)."
+        },
+        {
+          "name": "avg_tmax_f",
+          "description": "Mean daily high (°F)."
+        },
+        {
+          "name": "avg_tmin_f",
+          "description": "Mean daily low (°F)."
+        }
+      ]
+    },
+    {
+      "name": "mart_weather_monthly_normals",
+      "description": "Climatology — average precip and high/low temps by calendar month (the wet-winter/dry-summer signature).",
+      "columns": [
+        {
+          "name": "month_num",
+          "description": "Calendar month number (1–12)."
+        },
+        {
+          "name": "month_name",
+          "description": "Abbreviated month name."
+        },
+        {
+          "name": "avg_precip_in",
+          "description": "Mean daily precipitation (inches)."
+        },
+        {
+          "name": "avg_tmax_f",
+          "description": "Mean daily high (°F)."
+        },
+        {
+          "name": "avg_tmin_f",
+          "description": "Mean daily low (°F)."
+        }
+      ]
+    },
+    {
+      "name": "mart_weather_recent",
+      "description": "The most recent ~2 years of daily highs, lows, and precip.",
+      "columns": [
+        {
+          "name": "obs_date",
+          "description": "Observation date."
+        },
+        {
+          "name": "tmax_f",
+          "description": "Daily high (°F)."
+        },
+        {
+          "name": "tmin_f",
+          "description": "Daily low (°F)."
+        },
+        {
+          "name": "precip_in",
+          "description": "Daily precipitation (inches)."
+        }
+      ]
+    },
+    {
+      "name": "mart_weather_records",
+      "description": "Notable all-time Sea-Tac extremes — one row per record type with a display-ready value.",
+      "columns": [
+        {
+          "name": "record_type",
+          "description": "Which record (Hottest/Coldest/Wettest/Snowiest day)."
+        },
+        {
+          "name": "obs_date",
+          "description": "Date the record was set."
+        },
+        {
+          "name": "value",
+          "description": "Display-ready value string (e.g. '103 °F')."
+        }
+      ]
+    },
+    {
+      "name": "mart_worst_establishments",
+      "description": "Establishments with the worst average score (≥3 inspections), worst first.",
+      "columns": [
+        {
+          "name": "establishment",
+          "description": "Establishment name."
+        },
+        {
+          "name": "inspections",
+          "description": "Number of inspections on record."
+        },
+        {
+          "name": "avg_score",
+          "description": "Mean violation-points score (higher = worse)."
+        },
+        {
+          "name": "total_violations",
+          "description": "Sum of violations across inspections."
+        }
+      ]
+    }
+  ]
+}
