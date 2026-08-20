@@ -26,6 +26,10 @@ st.caption(
     f"🕓 Warehouse built {_build['built_at']:%b %-d, %Y} · "
     f"{_total_records:,} records · rebuilt fresh on every deploy"
 )
+st.caption(
+    "📊 Browse the modeled warehouse: [dbt docs — model & column descriptions, "
+    "tests, and the interactive lineage DAG](https://evanwappel.github.io/robbins/)."
+)
 
 
 def scalar(sql: str):
