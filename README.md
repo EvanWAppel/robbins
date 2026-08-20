@@ -2,6 +2,7 @@
 
 [![CI](https://github.com/EvanWAppel/robbins/actions/workflows/ci.yml/badge.svg)](https://github.com/EvanWAppel/robbins/actions/workflows/ci.yml)
 [![Live demo](https://img.shields.io/badge/live-Railway-brightgreen)](https://robbins-production.up.railway.app)
+[![dbt docs](https://img.shields.io/badge/dbt%20docs-lineage%20%26%20catalog-FF694B)](https://evanwappel.github.io/robbins/)
 
 **Robbins** is an interactive, multi-page [Streamlit](https://streamlit.io) app
 that explores free public datasets about the **Seattle metro** (King County core,
@@ -97,6 +98,13 @@ uv run dbt test  --profiles-dir .            # run the 67 data tests
 uv run dbt docs generate --profiles-dir .    # build the catalog + lineage
 uv run dbt docs serve                        # browse models, columns, and the DAG
 ```
+
+**Browse it online:** the rendered dbt docs — every model and column description, the
+data tests, and the interactive lineage DAG across all 79 models — are hosted at
+**[evanwappel.github.io/robbins](https://evanwappel.github.io/robbins/)**. The page is a
+single self-contained export (`dbt docs generate --static`) committed under `docs/` and
+served by GitHub Pages; regenerate it after model changes by copying
+`target/static_index.html` to `docs/index.html`.
 
 ## Semantic layer
 
