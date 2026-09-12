@@ -14,3 +14,6 @@ dbt_packages/
 # Generated warehouse — rebuild with `uv run python build_warehouse.py && uv run dbt build --profiles-dir .`
 *.duckdb
 *.duckdb.wal
+
+# Private job-search working brief — internal; must never land in this public repo.
+RECRUITER-PRIMER.md
