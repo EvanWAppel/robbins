@@ -11,7 +11,7 @@ import streamlit as st
 
 from app_db import query
 
-st.title("🌳 Street Trees")
+st.title("Street Trees")
 st.caption(
     "SDOT's active street-tree inventory — the trees the city manages in the "
     "public right-of-way. Points on the map are a random sample; charts use the "
@@ -43,7 +43,7 @@ with col_a:
     )
     species_chart = (
         alt.Chart(species)
-        .mark_bar(color="#27ae60")
+        .mark_bar(color="#496e58")
         .encode(
             x=alt.X("tree_count:Q", title="Trees"),
             y=alt.Y("scientific_name:N", sort="-x", title=None),
@@ -66,7 +66,7 @@ with col_b:
     )
     genera_chart = (
         alt.Chart(genera)
-        .mark_bar(color="#16a085")
+        .mark_bar(color="#638978")
         .encode(
             x=alt.X("tree_count:Q", title="Trees"),
             y=alt.Y("genus:N", sort="-x", title=None),
@@ -89,7 +89,7 @@ st.caption(
 )
 planted_chart = (
     alt.Chart(planted)
-    .mark_area(line={"color": "#27ae60"}, color="#a9dfbf", opacity=0.6)
+    .mark_area(line={"color": "#496e58"}, color="#c8d2b7", opacity=0.6)
     .encode(
         x=alt.X("plant_year:O", title=None),
         y=alt.Y("tree_count:Q", title="Trees planted"),
@@ -112,7 +112,7 @@ st.caption(
 )
 condition_chart = (
     alt.Chart(condition)
-    .mark_bar(color="#2ecc71")
+    .mark_bar(color="#82966b")
     .encode(
         x=alt.X("tree_count:Q", title="Trees"),
         y=alt.Y("condition:N", sort="-x", title=None),

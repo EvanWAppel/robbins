@@ -11,7 +11,7 @@ import streamlit as st
 
 from app_db import query
 
-st.title("🌧️ Rain & Records")
+st.title("Rain & Records")
 st.caption(
     "Daily weather at Seattle-Tacoma International Airport since 1948 "
     "(NOAA GHCN-Daily station USW00024233). The wet-winter / dry-summer pattern, "
@@ -57,7 +57,7 @@ st.subheader("A wet winter and a dry summer")
 st.caption("Average daily precipitation by calendar month, across the full record.")
 precip_chart = (
     alt.Chart(normals)
-    .mark_bar(color="#2980b9")
+    .mark_bar(color="#7697a0")
     .encode(
         x=alt.X("month_name:N", sort=list(normals["month_name"]), title=None),
         y=alt.Y("avg_precip_in:Q", title="Avg precip (in/day)"),
@@ -79,7 +79,7 @@ normals_temp_domain = [
 ]
 band = (
     alt.Chart(normals)
-    .mark_area(opacity=0.3, color="#e67e22")
+    .mark_area(opacity=0.3, color="#b8954e")
     .encode(
         x=alt.X("month_name:N", sort=list(normals["month_name"]), title=None),
         y=alt.Y("avg_tmin_f:Q", title="Temperature (°F)",
@@ -100,7 +100,7 @@ st.caption("The current (partial) year is excluded.")
 annual_full = annual[annual["year"] < annual["year"].max()]
 rain_line = (
     alt.Chart(annual_full)
-    .mark_line(point=True, color="#2980b9")
+    .mark_line(point=True, color="#7697a0")
     .encode(
         x=alt.X("year:O", title=None),
         y=alt.Y("total_precip_in:Q", title="Total precip (in)"),
@@ -118,7 +118,7 @@ st.subheader("The last two years, day by day")
 st.caption("Daily high and low temperature at Sea-Tac.")
 recent_band = (
     alt.Chart(recent)
-    .mark_area(opacity=0.4, color="#e67e22")
+    .mark_area(opacity=0.4, color="#b8954e")
     .encode(
         x=alt.X("obs_date:T", title=None),
         y=alt.Y("tmin_f:Q", title="Temperature (°F)",

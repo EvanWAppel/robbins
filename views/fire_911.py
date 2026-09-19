@@ -7,7 +7,7 @@ import streamlit as st
 
 from app_db import query
 
-st.title("🚒 Fire 911 Calls")
+st.title("Fire 911 Calls")
 st.caption(
     "Seattle Fire Department 911 dispatches. Points on the map are a random "
     "sample; charts use the full dataset."
@@ -45,7 +45,7 @@ monthly = query(
 st.subheader("Calls per month")
 trend = (
     alt.Chart(monthly)
-    .mark_line(point=True, color="#f26419")
+    .mark_line(point=True, color="#af6b50")
     .encode(
         x=alt.X("call_month:T", title=None),
         y=alt.Y("call_count:Q", title="Calls"),
@@ -69,7 +69,7 @@ types = query(
 st.subheader("Most common call types")
 types_chart = (
     alt.Chart(types)
-    .mark_bar(color="#f26419")
+    .mark_bar(color="#af6b50")
     .encode(
         x=alt.X("call_count:Q", title="Calls"),
         y=alt.Y("call_type:N", sort="-x", title=None),

@@ -6,7 +6,7 @@ import streamlit as st
 
 from app_db import query
 
-st.title("🎨 Public Art")
+st.title("Public Art")
 st.caption(
     "The City of Seattle's public art collection (Office of Arts & Culture). "
     "This page is sourced from ArcGIS, not Socrata — the app's second ingestion "
@@ -34,7 +34,7 @@ st.divider()
 st.subheader("Artworks by classification")
 type_chart = (
     alt.Chart(by_type.head(15))
-    .mark_bar(color="#8e44ad")
+    .mark_bar(color="#858063")
     .encode(
         x=alt.X("artwork_count:Q", title="Artworks"),
         y=alt.Y("classification:N", sort="-x", title=None),

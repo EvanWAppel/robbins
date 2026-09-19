@@ -13,7 +13,7 @@ import streamlit as st
 
 from app_db import query
 
-st.title("📱 311 Service Requests")
+st.title("Service Requests")
 st.caption(
     "Seattle Customer Service Requests (Find-It-Fix-It), 2020-present. Residents "
     "report potholes, graffiti, abandoned vehicles and more. Points on the map are "
@@ -63,7 +63,7 @@ monthly = query(
 st.subheader("Requests per month")
 trend = (
     alt.Chart(monthly)
-    .mark_line(point=True, color="#2e86de")
+    .mark_line(point=True, color="#7697a0")
     .encode(
         x=alt.X("request_month:T", title=None),
         y=alt.Y("request_count:Q", title="Requests"),
@@ -87,7 +87,7 @@ types = query(
 st.subheader("What residents report most")
 types_chart = (
     alt.Chart(types)
-    .mark_bar(color="#2e86de")
+    .mark_bar(color="#7697a0")
     .encode(
         x=alt.X("request_count:Q", title="Requests"),
         y=alt.Y("request_type:N", sort="-x", title=None),
@@ -113,7 +113,7 @@ with col_a:
     )
     method_chart = (
         alt.Chart(method)
-        .mark_bar(color="#54a0ff")
+        .mark_bar(color="#9bb3b5")
         .encode(
             x=alt.X("request_count:Q", title="Requests"),
             y=alt.Y("method_received:N", sort="-x", title=None),
@@ -136,7 +136,7 @@ with col_b:
     )
     dept_chart = (
         alt.Chart(dept)
-        .mark_bar(color="#54a0ff")
+        .mark_bar(color="#9bb3b5")
         .encode(
             x=alt.X("request_count:Q", title="Requests"),
             y=alt.Y("department:N", sort="-x", title=None),
