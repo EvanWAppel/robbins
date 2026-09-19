@@ -10,7 +10,7 @@ import streamlit as st
 
 from app_db import query
 
-st.title("⛴️ Ferry Ridership")
+st.title("Ferry Ridership")
 st.caption(
     "Monthly ferry boardings across Puget Sound (FTA National Transit Database), "
     "2015-present. Washington State Ferries dominates; ridership swells every summer "
@@ -53,7 +53,7 @@ st.subheader("Monthly ferry boardings")
 st.caption("Seasonal peaks every summer, the 2020 pandemic collapse, and recovery.")
 trend = (
     alt.Chart(monthly)
-    .mark_area(line={"color": "#2980b9"}, color="#aed6f1", opacity=0.5)
+    .mark_area(line={"color": "#7697a0"}, color="#c9d9d6", opacity=0.5)
     .encode(
         x=alt.X("ridership_month:T", title=None),
         y=alt.Y("boardings:Q", title="Boardings / month"),
@@ -73,7 +73,7 @@ with col_a:
     seasonal = seasonal.assign(month=seasonal["month_of_year"].map(lambda m: month_names[int(m)]))
     seasonal_chart = (
         alt.Chart(seasonal)
-        .mark_bar(color="#2980b9")
+        .mark_bar(color="#7697a0")
         .encode(
             x=alt.X("month:N", sort=month_names[1:], title=None),
             y=alt.Y("avg_boardings:Q", title="Avg boardings"),
@@ -89,7 +89,7 @@ with col_b:
     st.caption("Washington State Ferries vs. the King County Water Taxi.")
     operator_chart = (
         alt.Chart(operator)
-        .mark_bar(color="#5dade2")
+        .mark_bar(color="#9bb3b5")
         .encode(
             x=alt.X("boardings:Q", title="Boardings (2015-present)"),
             y=alt.Y("operator:N", sort="-x", title=None),
@@ -107,7 +107,7 @@ st.caption("Full calendar years only — the current partial year is omitted.")
 annual_full = full_years.assign(year=full_years["ridership_year"].astype(int).astype(str))
 annual_chart = (
     alt.Chart(annual_full)
-    .mark_bar(color="#2980b9")
+    .mark_bar(color="#7697a0")
     .encode(
         x=alt.X("year:N", title=None),
         y=alt.Y("boardings:Q", title="Boardings / year"),

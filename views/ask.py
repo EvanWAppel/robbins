@@ -25,7 +25,7 @@ from sql_safety import assert_read_only
 
 CATALOG_PATH = Path(__file__).parent.parent / "catalog" / "marts.json"
 
-st.title("🤖 Ask the Data")
+st.title("Ask the Data")
 st.markdown(
     "A natural-language query surface over the modeled marts. The **catalog** below is "
     "machine-readable context an AI agent can ground on; the **Ask** box turns a "

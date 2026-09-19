@@ -7,7 +7,7 @@ import streamlit as st
 
 from app_db import query
 
-st.title("🚨 Crime")
+st.title("Crime")
 st.caption(
     "Seattle Police Department reported offenses (recent years). Points on the "
     "map are a random sample; charts use the full recent-years dataset."
@@ -45,7 +45,7 @@ monthly = query(
 st.subheader("Offenses per month")
 trend = (
     alt.Chart(monthly)
-    .mark_line(point=True, color="#e4572e")
+    .mark_line(point=True, color="#af6b50")
     .encode(
         x=alt.X("crime_month:T", title=None),
         y=alt.Y("incident_count:Q", title="Offenses"),
@@ -69,7 +69,7 @@ types = query(
 st.subheader("Most common offense categories")
 types_chart = (
     alt.Chart(types)
-    .mark_bar(color="#e4572e")
+    .mark_bar(color="#af6b50")
     .encode(
         x=alt.X("incident_count:Q", title="Offenses"),
         y=alt.Y("offense_category:N", sort="-x", title=None),

@@ -13,7 +13,7 @@ import streamlit as st
 
 from app_db import query
 
-st.title("🌲 Parks")
+st.title("Parks")
 st.caption(
     "Seattle Parks & Recreation's ~500 parks, sized by acreage and located from "
     "the ArcGIS boundary layer. Parks whose *name* references water (beaches, "
@@ -46,7 +46,7 @@ st.subheader("A system of small parks and a few giants")
 st.caption("Parks by size band.")
 band_chart = (
     alt.Chart(bands)
-    .mark_bar(color="#27ae60")
+    .mark_bar(color="#496e58")
     .encode(
         x=alt.X("park_count:Q", title="Parks"),
         y=alt.Y("size_band:N", sort=alt.EncodingSortField("sort_order"), title=None),

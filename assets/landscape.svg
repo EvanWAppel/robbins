@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 370" role="img" aria-labelledby="landscape-title">
+<title id="landscape-title">Illustrated Pacific Northwest landscape: mountains, evergreen forests, and Puget Sound</title>
+<defs>
+<pattern id="grid" width="26" height="26" patternUnits="userSpaceOnUse"><path d="M26 0H0V26" fill="none" stroke="#c7cebb" stroke-width=".5"/></pattern>
+<pattern id="water" width="18" height="9" patternUnits="userSpaceOnUse"><path d="M0 4h11" stroke="#a5b39d" stroke-width=".7"/></pattern>
+<clipPath id="frame"><rect x="12" y="12" width="496" height="346" rx="170"/></clipPath>
+</defs>
+<g clip-path="url(#frame)">
+<rect x="12" y="12" width="496" height="346" fill="#e9eddc"/>
+<rect x="12" y="12" width="496" height="346" fill="url(#grid)"/>
+<circle cx="357" cy="89" r="33" fill="#d8bd6d"/>
+<circle cx="357" cy="89" r="43" fill="none" stroke="#d8bd6d" stroke-width=".7"/>
+<path d="M0 232L77 180L111 196L235 55L287 125L310 113L403 213L467 178L520 230V370H0Z" fill="#c8d2b7" stroke="#778b6b" stroke-width="1"/>
+<path d="M179 119L235 55L273 106L257 99L242 115L229 90L209 116L206 103Z" fill="#f7f5ed"/>
+<g fill="none" stroke="#859779" stroke-width=".7">
+<path d="M117 207L230 91L263 137L280 132L350 212"/><path d="M127 215L226 111L251 150L273 148L331 215"/><path d="M145 216L220 133L244 168L265 164L310 218"/><path d="M166 221L218 156L238 184L254 180L286 220"/><path d="M184 225L218 179L240 206L252 201L273 229"/>
+</g>
+<path d="M0 229Q80 179 155 225T303 228T520 211V370H0Z" fill="#849a76"/>
+<path d="M0 251Q111 220 182 252T334 250T520 235V370H0Z" fill="#496e58"/>
+<path d="M0 284Q123 239 237 268Q305 285 251 303Q210 321 349 370H0Z" fill="#e6ecdb"/>
+<path d="M0 284Q123 239 237 268Q305 285 251 303Q210 321 349 370H0Z" fill="url(#water)"/>
+<path d="M520 267Q401 246 337 281Q303 299 364 317Q393 328 410 370H520Z" fill="#294e3e"/>
+<g fill="#203f32"><path d="M66 233l11-28 11 28h-7v12h-8v-12zM90 241l15-38 15 38h-10v15h-10v-15zM119 240l10-26 10 26h-6v12h-8v-12zM420 285l17-45 17 45h-12v18h-10v-18zM451 288l22-58 22 58h-16v21h-12v-21zM391 286l11-30 11 30h-7v13h-8v-13z"/></g>
+<g fill="none" stroke="#ced8c0" stroke-width=".65"><path d="M345 337Q409 306 509 331"/><path d="M359 345Q426 317 514 341"/><path d="M380 355Q441 333 520 353"/></g>
+</g>
+<rect x="12" y="12" width="496" height="346" rx="170" fill="none" stroke="#86957a" stroke-width=".75"/>
+<g stroke="#5b725b" stroke-width=".75"><path d="M260 0v22M260 348v22M0 185h22M498 185h22"/></g>
+<g fill="#526b50" font-family="monospace" font-size="9"><text x="24" y="30">PUGET SOUND</text><text x="426" y="346">PNW / 01</text></g>
+</svg>

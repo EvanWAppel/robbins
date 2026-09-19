@@ -10,7 +10,7 @@ import streamlit as st
 
 from app_db import query
 
-st.title("🚌 Transit Ridership")
+st.title("Transit Ridership")
 st.caption(
     "Monthly boardings across Puget Sound transit agencies (FTA National Transit "
     "Database), 2015-present. Buses carry most riders; Sound Transit's Link light "
@@ -43,7 +43,7 @@ st.subheader("Monthly boardings")
 st.caption("The March 2020 collapse and the long climb back.")
 trend = (
     alt.Chart(monthly)
-    .mark_area(line={"color": "#8e44ad"}, color="#d7bde2", opacity=0.5)
+    .mark_area(line={"color": "#858063"}, color="#d5d8bd", opacity=0.5)
     .encode(
         x=alt.X("ridership_month:T", title=None),
         y=alt.Y("boardings:Q", title="Boardings / month"),
@@ -64,7 +64,7 @@ with col_a:
     )
     agency_chart = (
         alt.Chart(agency)
-        .mark_bar(color="#8e44ad")
+        .mark_bar(color="#858063")
         .encode(
             x=alt.X("boardings:Q", title="Boardings (2015-present)"),
             y=alt.Y("agency_label:N", sort="-x", title=None),
@@ -82,7 +82,7 @@ with col_b:
     )
     mode_chart = (
         alt.Chart(mode)
-        .mark_bar(color="#a569bd")
+        .mark_bar(color="#a0ad7a")
         .encode(
             x=alt.X("boardings:Q", title="Boardings (2015-present)"),
             y=alt.Y("mode_label:N", sort="-x", title=None),
@@ -103,7 +103,7 @@ st.caption(
 )
 rail_chart = (
     alt.Chart(rail)
-    .mark_line(color="#1abc9c", point=False)
+    .mark_line(color="#638978", point=False)
     .encode(
         x=alt.X("ridership_month:T", title=None),
         y=alt.Y("boardings:Q", title="Light-rail boardings / month"),

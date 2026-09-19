@@ -6,7 +6,7 @@ import streamlit as st
 
 from app_db import query
 
-st.title("🏠 Short-Term Rentals")
+st.title("Short-Term Rentals")
 st.caption(
     "City of Seattle short-term rental (STR) licenses. "
     "Explore license status, property types, and where licensed rentals are located."
@@ -39,7 +39,7 @@ by_status = query(
 st.subheader("Licenses by status")
 status_chart = (
     alt.Chart(by_status)
-    .mark_bar(color="#ff8c00")
+    .mark_bar(color="#b8954e")
     .encode(
         x=alt.X("license_count:Q", title="Licenses"),
         y=alt.Y("licensestatus:N", sort="-x", title=None),
@@ -63,7 +63,7 @@ by_type = query(
 st.subheader("Licenses by property type")
 type_chart = (
     alt.Chart(by_type)
-    .mark_bar(color="#3f88c5")
+    .mark_bar(color="#7697a0")
     .encode(
         x=alt.X("license_count:Q", title="Licenses"),
         y=alt.Y("propertytype:N", sort="-x", title=None),
@@ -87,7 +87,7 @@ by_region = query(
 st.subheader("Licenses by geographic region")
 region_chart = (
     alt.Chart(by_region)
-    .mark_bar(color="#2e8b57")
+    .mark_bar(color="#496e58")
     .encode(
         x=alt.X("license_count:Q", title="Licenses"),
         y=alt.Y("geographicregion:N", sort="-x", title=None),

@@ -22,7 +22,7 @@ CAT_COLORS = {
     "Hazardous": "#7e0023",
 }
 
-st.title("💨 Air Quality")
+st.title("Air Quality")
 st.caption(
     "Daily PM2.5 and Ozone at EPA monitors across King, Pierce and Snohomish "
     "counties since 2019. Air Quality Index (AQI) is comparable across pollutants: "

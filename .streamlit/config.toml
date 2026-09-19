@@ -2,3 +2,18 @@
 # Railway runs the app headless behind its own proxy; the port/address are
 # passed on the command line (see the Dockerfile CMD).
 headless = true
+
+[theme]
+base = "light"
+primaryColor = "#496e58"
+backgroundColor = "#f7f5ed"
+secondaryBackgroundColor = "#eeefe3"
+textColor = "#203b33"
+font = "sans-serif"
+chartCategoricalColors = ["#496e58", "#b8954e", "#7697a0", "#af6b50", "#858063", "#a0ad7a"]
+
+[theme.sidebar]
+backgroundColor = "#203b33"
+secondaryBackgroundColor = "#345046"
+textColor = "#e7ecde"
+primaryColor = "#dce7bc"
