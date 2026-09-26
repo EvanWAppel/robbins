@@ -129,24 +129,6 @@ models:
       - name: incident_count
         description: Offenses in that weekday/hour cell.
 
-  - name: mart_crime_map_sample
-    description: ~12k-row random sample of geolocated offenses for the hexbin map, clipped to the metro box.
-    columns:
-      - name: report_number
-        description: SPD report number (not unique — multiple offenses share a report).
-      - name: offense_category
-        description: NIBRS category.
-      - name: offense_description
-        description: NIBRS offense description.
-      - name: report_datetime
-        description: When the offense was reported.
-      - name: address
-        description: Block-level address.
-      - name: latitude
-        description: Offense latitude (within the metro box).
-      - name: longitude
-        description: Offense longitude.
-
   - name: mart_crime_monthly
     description: Total offenses per month.
     columns:
@@ -179,29 +161,6 @@ models:
         description: Service-request type.
       - name: request_count
         description: Requests of the type.
-
-  - name: mart_csr_map_sample
-    description: ~12k-row random sample of geolocated 311 requests for the hexbin map, clipped to the metro box.
-    columns:
-      - name: request_number
-        description: Service-request number — traces back to a real staging request.
-        data_tests:
-          - relationships:
-              arguments:
-                to: ref('stg_csr_311')
-                field: request_number
-      - name: request_type
-        description: Service-request type.
-      - name: department
-        description: Owning department.
-      - name: created_at
-        description: Request creation timestamp.
-      - name: address
-        description: Reported location.
-      - name: latitude
-        description: Latitude (within the metro box).
-      - name: longitude
-        description: Longitude.
 
   - name: mart_csr_monthly
     description: Total 311 requests per month.
@@ -264,30 +223,6 @@ models:
         description: Dispatch call type.
       - name: call_count
         description: Calls of the type.
-
-  - name: mart_fire_map_sample
-    description: ~12k-row random sample of geolocated fire calls for the hexbin map, clipped to the metro box.
-    columns:
-      - name: call_type
-        description: Dispatch call type.
-      - name: call_datetime
-        description: When the call was dispatched.
-      - name: address
-        description: Call address.
-      - name: latitude
-        description: Call latitude (within the metro box).
-        data_tests:
-          - dbt_utils.accepted_range:
-              arguments:
-                min_value: 47.0
-                max_value: 48.5
-      - name: longitude
-        description: Call longitude.
-        data_tests:
-          - dbt_utils.accepted_range:
-              arguments:
-                min_value: -122.6
-                max_value: -121.5
 
   - name: mart_fire_monthly
     description: Total fire-911 calls per month.
@@ -777,3 +712,65 @@ models:
           - dbt_utils.accepted_range:
               arguments:
                 min_value: 3000000
+
+  # ===== Neighborhood choropleths (SPD MCPP polygons) =======================
+  # One row per MCPP neighborhood, incidents assigned by point-in-polygon and
+  # normalized by area. Back the crime / fire 911 / 311 choropleth maps.
+  - name: mart_crime_by_neighborhood
+    description: >
+      Offense count and per-square-mile density for each SPD MCPP neighborhood
+      (offenses assigned by point-in-polygon). Drives the Crime choropleth.
+    columns:
+      - name: neighborhood
+        description: MCPP neighborhood name (uppercase), one row each.
+        data_tests:
+          - not_null
+          - unique
+      - name: incident_count
+        description: Geolocated offenses falling inside this neighborhood.
+        data_tests:
+          - not_null
+      - name: incidents_per_sq_mile
+        description: incident_count divided by the neighborhood's area in square miles.
+      - name: area_sq_miles
+        description: Neighborhood area (Shape__Area square feet / 27,878,400).
+      - name: rings_json
+        description: Polygon rings as JSON ([[[lon,lat],…],…]) for the map render.
+
+  - name: mart_fire_911_by_neighborhood
+    description: >
+      Fire 911 dispatch count and per-square-mile density for each SPD MCPP
+      neighborhood (calls assigned by point-in-polygon). Drives the Fire choropleth.
+    columns:
+      - name: neighborhood
+        description: MCPP neighborhood name (uppercase), one row each.
+        data_tests:
+          - not_null
+          - unique
+      - name: incident_count
+        description: Geolocated fire 911 calls falling inside this neighborhood.
+        data_tests:
+          - not_null
+      - name: incidents_per_sq_mile
+        description: incident_count divided by the neighborhood's area in square miles.
+      - name: rings_json
+        description: Polygon rings as JSON for the map render.
+
+  - name: mart_csr_311_by_neighborhood
+    description: >
+      311 request count and per-square-mile density for each SPD MCPP
+      neighborhood (requests assigned by point-in-polygon). Drives the 311 choropleth.
+    columns:
+      - name: neighborhood
+        description: MCPP neighborhood name (uppercase), one row each.
+        data_tests:
+          - not_null
+          - unique
+      - name: incident_count
+        description: Geolocated 311 requests falling inside this neighborhood.
+        data_tests:
+          - not_null
+      - name: incidents_per_sq_mile
+        description: incident_count divided by the neighborhood's area in square miles.
+      - name: rings_json
+        description: Polygon rings as JSON for the map render.

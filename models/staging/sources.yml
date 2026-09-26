@@ -118,3 +118,10 @@ sources:
           Stampede Pass daily snowpack (NRCS SNOTEL 791:WA:SNTL), 2015-present.
           obs_date, swe_in (snow water equivalent), snow_depth_in. Water year = Oct 1
           to Sep 30. Peak SWE per water year is the drought signal (2015 collapse).
+      - name: mcpp
+        description: >
+          SPD Micro Community Policing Plan neighborhoods (ArcGIS MCPP, ~58 polygons).
+          One row per neighborhood: name, precinct, area (sq ft + sq mi), polygon as a
+          GeoJSON MultiPolygon (feeds the point-in-polygon joins) and raw rings (feeds
+          the map render), plus a bounding box (minx/miny/maxx/maxy) and centroid. No
+          event timestamp, so no freshness check.

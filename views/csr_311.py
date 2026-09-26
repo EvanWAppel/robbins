@@ -7,11 +7,10 @@ recent-years dataset.
 """
 
 import altair as alt
-import pandas as pd
-import pydeck as pdk
 import streamlit as st
 
 from app_db import query
+from ui import choropleth_legend, neighborhood_choropleth
 
 st.title("Service Requests")
 st.caption(
@@ -148,71 +147,31 @@ with col_b:
     )
     st.altair_chart(dept_chart, width="stretch")
 
-# --- Map (sampled) ---
-st.subheader("Where requests come from")
+# --- Neighborhood choropleth ---
+st.subheader("Where requests concentrate")
 st.caption(
-    "A random sample of ~12k geolocated requests, binned into a hex grid over the "
-    "city. Click a hexagon to see the requests there."
+    "311 requests per square mile by SPD neighborhood (Micro Community Policing "
+    "Plan areas). Darker = denser. Hover a neighborhood for its totals."
 )
-sample = query(
+nb = query(
     """
-    select latitude, longitude, request_type, department, address
-    from main.mart_csr_map_sample
+    select neighborhood, incident_count, incidents_per_sq_mile,
+           area_sq_miles, rings_json
+    from main.mart_csr_311_by_neighborhood
     """
 )
-layer = pdk.Layer(
-    "HexagonLayer",
-    id="hex",
-    data=sample,
-    get_position=["longitude", "latitude"],
-    radius=250,
-    elevation_scale=5,
-    elevation_range=[0, 700],
-    extruded=True,
-    pickable=True,
-    auto_highlight=True,
-    coverage=0.8,
-)
-view_state = pdk.ViewState(
-    latitude=sample["latitude"].mean(),
-    longitude=sample["longitude"].mean(),
-    zoom=10,
-    pitch=35,
-)
-deck = pdk.Deck(
-    layers=[layer],
-    initial_view_state=view_state,
-    map_style="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
-)
-event = st.pydeck_chart(
-    deck, on_select="rerun", selection_mode="single-object", key="csr_hex"
-)
+st.pydeck_chart(neighborhood_choropleth(nb, unit="requests / sq mi"))
+st.html(choropleth_legend(nb, "requests / sq mi"))
 
-# --- Data card for the clicked hexagon ---
-picked = []
-if event and getattr(event, "selection", None):
-    picked = (event.selection.get("objects") or {}).get("hex", [])
-if picked:
-    obj = picked[0]
-    points = obj.get("points", [])
-    rows = pd.DataFrame([p.get("source", p) for p in points]) if points else pd.DataFrame()
-    count = len(rows) if not rows.empty else int(obj.get("elevationValue", 0))
-    st.markdown(f"### 📍 {count:,} requests in this hexagon")
-    if not rows.empty:
-        top = (
-            rows["request_type"].value_counts().head(8).rename_axis("Request type")
-            .reset_index(name="Requests")
-        )
-        c_a, c_b = st.columns([1, 1])
-        with c_a:
-            st.caption("Top request types here")
-            st.dataframe(top, width="stretch", hide_index=True)
-        with c_b:
-            st.caption("Sample of requests")
-            st.dataframe(
-                rows[["request_type", "address"]].head(12),
-                width="stretch",
-                hide_index=True,
-            )
-else:
-    st.caption("👆 No hexagon selected — click one on the map above.")
+# --- Densest neighborhoods ---
+st.caption("Densest neighborhoods, by requests per square mile")
+top_nb = nb.sort_values("incidents_per_sq_mile", ascending=False).head(12)
+st.dataframe(
+    {
+        "Neighborhood": top_nb["neighborhood"].str.title(),
+        "Requests": top_nb["incident_count"].map("{:,.0f}".format),
+        "Per sq mi": top_nb["incidents_per_sq_mile"].map("{:,.0f}".format),
+    },
+    width="stretch",
+    hide_index=True,
+)

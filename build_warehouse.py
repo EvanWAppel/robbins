@@ -13,6 +13,7 @@ Usage:
 from __future__ import annotations
 
 import io
+import json
 import logging
 import re
 import socket
@@ -391,6 +392,62 @@ def _centroid(geom: dict | None) -> tuple[float | None, float | None]:
     return (None, None)
 
 
+# Square feet per square mile (State Plane WA reports Shape__Area in US survey ft).
+_SQFT_PER_SQMI = 27_878_400.0
+
+
+def _rings_bbox(rings: list[list[list[float]]]) -> tuple[float, float, float, float]:
+    """(minx, miny, maxx, maxy) over every vertex of every ring."""
+    xs = [p[0] for ring in rings for p in ring]
+    ys = [p[1] for ring in rings for p in ring]
+    return (min(xs), min(ys), max(xs), max(ys))
+
+
+def _rings_to_multipolygon_geojson(rings: list[list[list[float]]]) -> str:
+    """ArcGIS rings -> GeoJSON MultiPolygon with each ring as its own polygon.
+
+    We deliberately do NOT model holes: treating every ring as a separate filled
+    polygon means a point counts as "inside" if it falls in any ring, which is
+    correct for multipart neighborhoods and only over-covers the rare hole. Good
+    enough for a density choropleth, and robust to ring-winding quirks.
+    """
+    return json.dumps(
+        {
+            "type": "MultiPolygon",
+            "coordinates": [[[[float(x), float(y)] for x, y in ring]] for ring in rings],
+        }
+    )
+
+
+def mcpp_feature_row(attrs: dict, geom: dict | None) -> dict | None:
+    """Pure transform: one ArcGIS MCPP (attrs, polygon geom) -> a raw.mcpp row.
+
+    Returns None for a feature with no rings. ``geojson`` feeds the point-in-
+    polygon join (spatial extension); ``rings_json`` feeds the map render; the
+    bbox columns prefilter the join so ST_Contains runs on ~one candidate/point.
+    """
+    rings = (geom or {}).get("rings") or []
+    if not rings:
+        return None
+    minx, miny, maxx, maxy = _rings_bbox(rings)
+    area_sqft = float(attrs.get("Shape__Area") or 0.0)
+    lon, lat = _centroid(geom)
+    return {
+        "neighborhood": (attrs.get("neighborhood") or "").strip().upper(),
+        "precinct": attrs.get("precinct"),
+        "area_sqft": area_sqft,
+        "area_sq_miles": area_sqft / _SQFT_PER_SQMI,
+        "geojson": _rings_to_multipolygon_geojson(rings),
+        "rings_json": json.dumps(rings),
+        "minx": minx,
+        "miny": miny,
+        "maxx": maxx,
+        "maxy": maxy,
+        "centroid_lon": lon,
+        "centroid_lat": lat,
+    }
+
+
 def _epoch_to_date(ms) -> str | None:
     """ArcGIS epoch-millisecond timestamp -> ISO date string (None if missing)."""
     if ms is None or (isinstance(ms, float) and pd.isna(ms)):
@@ -555,6 +612,26 @@ def build_public_art(con: duckdb.DuckDBPyConnection) -> None:
         a["longitude"], a["latitude"] = _centroid(geom)
         rows.append(a)
     load_raw(con, "public_art", pd.DataFrame(rows))
+
+
+def build_mcpp(con: duckdb.DuckDBPyConnection) -> None:
+    """Seattle SPD MCPP neighborhoods (ArcGIS MCPP layer, ~58 polygons).
+
+    Backs the neighborhood choropleths. Each row carries the polygon as GeoJSON
+    (for point-in-polygon joins in the dbt marts, via the spatial extension), the
+    raw rings (for the PyDeck map), a bounding box (to prefilter the join), and
+    area in square feet / square miles for the per-area density.
+    """
+    org, service, layer = cfg.MCPP_NEIGHBORHOODS
+    base = f"{org}/{service}/FeatureServer/{layer}"
+    rows = [
+        row
+        for attrs, geom in fetch_features(
+            base, out_fields="neighborhood,precinct,Shape__Area", geometry=True
+        )
+        if (row := mcpp_feature_row(attrs, geom))
+    ]
+    load_raw(con, "mcpp", pd.DataFrame(rows))
 
 
 _WATER_NAME_RE = re.compile(
@@ -725,6 +802,7 @@ BUILDERS = {
     "short_term_rentals": build_short_term_rentals,
     "business_licenses": build_business_licenses,
     "public_art": build_public_art,
+    "mcpp": build_mcpp,
     "parks": build_parks,
     "trees": build_trees,
     "weather": build_weather,

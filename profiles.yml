@@ -8,3 +8,7 @@ robbins:
       path: 'seattle.duckdb'
       schema: main
       threads: 4
+      # Point-in-polygon joins for the neighborhood choropleths (crime/fire/311
+      # assigned to MCPP polygons via ST_Contains). Auto-installed + loaded.
+      extensions:
+        - spatial

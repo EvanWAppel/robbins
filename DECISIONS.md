@@ -35,3 +35,36 @@ Puget Sound** direction (deep blues, slate, one warm brass accent).
 **Why it's safe.** The remap targets only the specific old-palette hexes, which don't
 collide with the AQI or canopy colors, so those survived automatically. All views
 byte-compile and `ruff` passes.
+
+## 2026-09-26 — Replace 3D hexbin maps with MCPP neighborhood choropleths
+
+**Context.** The Crime, Fire 911, and 311 pages each showed a 3D extruded-hexagon
+PyDeck map over a ~12k point sample. Feedback: hard to read, and the towers don't
+convey *where* incidents concentrate. Chose to replace all three with neighborhood
+choropleths shaded by **per-square-mile density**.
+
+**Chosen.**
+- **Geography = SPD MCPP neighborhoods** (ArcGIS `MCPP` FeatureServer, 58 polygons).
+  Crime is already tagged with these names; verified live before wiring (58 polygons,
+  `neighborhood`/`precinct`/`Shape__Area` fields).
+- **Assignment = point-in-polygon for all three**, uniformly, via the DuckDB
+  `spatial` extension (`ST_Contains`) with a bounding-box prefilter, rather than a
+  name-join for crime + spatial for the others. Uniform method, no dependence on
+  name-string matching. Coverage came out 99.4–99.7% (unassigned ≈ points over water).
+- **Shading = per-area density** (incidents ÷ area sq mi), colored by **rank/quantile**
+  so the skewed distribution spreads across the ramp instead of one dark blob.
+- **Geometry handling**: store each polygon as a GeoJSON MultiPolygon with every ring
+  as its own polygon (no hole modeling) — robust to winding/multipart, over-covers the
+  rare hole. Good enough for a density map; MCPP turned out to be single-ring anyway.
+
+**Rejected.**
+- *Density heatmap / flat hexbins* — lower lift but answer "hot spots," not "which
+  neighborhood." *Raw counts* and *quantile-binned raw counts* — rejected in favor of
+  per-area density so large neighborhoods don't dominate purely by size.
+- *Name-join for crime* — avoided to keep one uniform method and dodge name-mismatch bugs.
+- *shapely/geopandas PIP in Python* — DuckDB `spatial` keeps it in the warehouse layer,
+  no heavy new Python dep, and the bbox prefilter makes it run in ~5s per dataset.
+
+**Cost.** New `spatial` extension in the dbt profile; three new marts + a `raw.mcpp`
+fetch. Build-time impact negligible (~5s/mart). The old `mart_*_map_sample` marts are
+now unused by the views (left in place; candidate for later cleanup).
