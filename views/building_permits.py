@@ -100,31 +100,40 @@ st.divider()
 
 # --- Where recent permits land (PyDeck) ---
 st.subheader("Where recent permits are issued")
-st.caption("Most recent 5,000 geocoded permits. Taller/brighter = more permits nearby.")
+st.caption(
+    "Each dot is one of the most recent 5,000 geocoded permits. "
+    "Zoom in and hover for the address, permit type, and issue date. "
+    "Multiple permits at the same location may overlap."
+)
 points = query(
     """
-    select latitude, longitude
+    select latitude, longitude, permit_number,
+           coalesce(address, 'Address unavailable') as address,
+           coalesce(permit_type_desc, 'Type unavailable') as permit_type_desc,
+           cast(issue_date as varchar) as issue_date
     from main.mart_permits_map_sample
     """
 )
 st.pydeck_chart(
     pdk.Deck(
-        map_style=None,
+        map_style="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
         initial_view_state=pdk.ViewState(
-            latitude=47.62, longitude=-122.33, zoom=10, pitch=40
+            latitude=47.62, longitude=-122.33, zoom=10.5, pitch=0
         ),
         layers=[
             pdk.Layer(
-                "HexagonLayer",
+                "ScatterplotLayer",
                 data=points,
                 get_position="[longitude, latitude]",
-                radius=250,
-                elevation_scale=8,
-                extruded=True,
-                coverage=0.9,
+                get_radius=25,
+                radius_min_pixels=3,
+                radius_max_pixels=8,
+                get_fill_color=[79, 136, 166, 160],
                 pickable=True,
             )
         ],
-        tooltip={"text": "{elevationValue} permits"},
+        tooltip={
+            "text": "{address}\n{permit_type_desc}\nPermit: {permit_number}\nIssued: {issue_date}"
+        },
     )
 )

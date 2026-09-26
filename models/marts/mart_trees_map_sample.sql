@@ -1,6 +1,6 @@
 {{ config(materialized='table') }}
 
--- A capped random sample of geolocated trees for the hexbin map. The full table
+-- A capped random sample of geolocated trees for the dot map. The full table
 -- is ~212k points; we down-sample to a representative set clipped to Seattle.
 
 with trees as (

@@ -574,7 +574,7 @@ models:
         description: Trees of the species.
 
   - name: mart_trees_map_sample
-    description: ~15k-row random sample of geolocated trees for the hexbin map, clipped to Seattle.
+    description: ~15k-row random sample of geolocated trees for the dot map, clipped to Seattle.
     columns:
       - name: scientific_name
         description: Species name.

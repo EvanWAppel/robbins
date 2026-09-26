@@ -68,3 +68,15 @@ choropleths shaded by **per-square-mile density**.
 **Cost.** New `spatial` extension in the dbt profile; three new marts + a `raw.mcpp`
 fetch. Build-time impact negligible (~5s/mart). The old `mart_*_map_sample` marts are
 now unused by the views (left in place; candidate for later cleanup).
+
+## 2026-09-26 — Replace remaining hex columns with top-down dots
+
+Following the user's approval of flat maps, Trees and Building Permits now use
+small translucent dots over the labeled light basemap. Tree hovers show species
+and condition; permit hovers show address, type, number, and issue date. Existing
+sample limits remain explicit in captions.
+
+Dots preserve individual locations and hover details; a permit heatmap would
+emphasize concentrations but lose individual inspection. Overlapping permits can
+hide one another, so the caption calls this out. Crime, Fire 911, and 311 keep
+their existing neighborhood density maps.
