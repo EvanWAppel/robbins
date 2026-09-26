@@ -1,4 +1,4 @@
-:root { --ink: #123141; --muted: #5f7078; --paper: #f2f5f6; --rule: #cdd8db; }
+:root { --ink: #123141; --muted: #445159; --paper: #f2f5f6; --rule: #cdd8db; }
 html { scroll-behavior: smooth; }
 [data-testid="stAppViewContainer"] { background: var(--paper); }
 [data-testid="stMainBlockContainer"] { max-width: 1440px; padding: 2.5rem 3.5rem 4rem; }
@@ -46,7 +46,7 @@ h2, h3 { font-weight: 500 !important; letter-spacing: -.035em; }
 .collection { min-height: 180px; padding: .35rem .4rem 0; }
 .collection-index { display: flex; justify-content: space-between; font-family: monospace; font-size: .66rem; color: #6a7d84; padding-bottom: 1rem; }
 .collection h3 { font-family: Georgia, serif; font-size: 1.6rem; margin: 0 0 .5rem; padding: 0; }
-.collection p { font-size: .77rem; line-height: 1.6; color: var(--muted); margin: 0 0 1rem; }
+.collection p { font-size: .82rem; line-height: 1.62; color: var(--muted); margin: 0 0 1rem; }
 .collection-stat { font-family: Georgia, serif; font-size: 2rem; line-height: 1.2; color: var(--ink); }
 .collection-stat small { font-family: sans-serif; font-size: .68rem; color: var(--muted); margin-left: .4rem; }
 [data-testid="stMain"] [data-testid="stPageLink"] a { border-radius: 2px; border-bottom: 1px solid #dbe3e5; font-size: .8rem; padding: .45rem .4rem; }
