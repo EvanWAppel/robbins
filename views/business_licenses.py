@@ -3,6 +3,7 @@
 import altair as alt
 import streamlit as st
 
+import ui
 from app_db import query
 
 st.title("Business Licenses")
@@ -54,7 +55,7 @@ monthly_line = (
         ],
     )
 )
-st.altair_chart(monthly_line, width="stretch")
+ui.chart(monthly_line, width="stretch")
 
 # --- Top industries ---
 top_industries = industries.head(15)
@@ -71,7 +72,7 @@ industry_chart = (
         ],
     )
 )
-st.altair_chart(industry_chart, width="stretch")
+ui.chart(industry_chart, width="stretch")
 st.dataframe(top_industries, width="stretch", hide_index=True)
 
 # --- Ownership breakdown ---
@@ -95,7 +96,7 @@ ownership_chart = (
         ],
     )
 )
-st.altair_chart(ownership_chart, width="stretch")
+ui.chart(ownership_chart, width="stretch")
 
 # --- Top cities ---
 top_cities = cities.head(12)
@@ -112,4 +113,4 @@ city_chart = (
         ],
     )
 )
-st.altair_chart(city_chart, width="stretch")
+ui.chart(city_chart, width="stretch")

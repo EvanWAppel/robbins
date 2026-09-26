@@ -10,6 +10,7 @@ import altair as alt
 import pydeck as pdk
 import streamlit as st
 
+import ui
 from app_db import query
 
 # EPA AQI category colors (adapted for the dark theme).
@@ -77,7 +78,7 @@ cat_chart = (
         ],
     )
 )
-st.altair_chart(cat_chart, width="stretch")
+ui.chart(cat_chart, width="stretch")
 
 # --- Monthly peak AQI (the smoke seasons) ---
 st.subheader("When the smoke rolls in")
@@ -100,7 +101,7 @@ peak_chart = (
         ],
     )
 )
-st.altair_chart(peak_chart, width="stretch")
+ui.chart(peak_chart, width="stretch")
 
 # --- Monitor map ---
 st.subheader("Monitors across the metro")

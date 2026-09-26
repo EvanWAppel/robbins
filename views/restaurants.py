@@ -3,6 +3,7 @@
 import altair as alt
 import streamlit as st
 
+import ui
 from app_db import query
 
 st.title("Restaurant Inspections")
@@ -49,7 +50,7 @@ count_line = (
         ],
     )
 )
-st.altair_chart(count_line, width="stretch")
+ui.chart(count_line, width="stretch")
 
 st.subheader("Average inspection score per month")
 score_line = (
@@ -64,7 +65,7 @@ score_line = (
         ],
     )
 )
-st.altair_chart(score_line, width="stretch")
+ui.chart(score_line, width="stretch")
 
 # --- Results breakdown ---
 results = query(
@@ -87,7 +88,7 @@ results_chart = (
         ],
     )
 )
-st.altair_chart(results_chart, width="stretch")
+ui.chart(results_chart, width="stretch")
 
 # --- Top violations ---
 violations = query(
@@ -111,7 +112,7 @@ violations_chart = (
         ],
     )
 )
-st.altair_chart(violations_chart, width="stretch")
+ui.chart(violations_chart, width="stretch")
 
 st.divider()
 

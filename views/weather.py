@@ -9,6 +9,7 @@ CSV) alongside Socrata and ArcGIS.
 import altair as alt
 import streamlit as st
 
+import ui
 from app_db import query
 
 st.title("Rain & Records")
@@ -67,7 +68,7 @@ precip_chart = (
         ],
     )
 )
-st.altair_chart(precip_chart, width="stretch")
+ui.chart(precip_chart, width="stretch")
 
 # --- Climatology: temperature band by month ---
 # The area spans tmin->tmax; Altair domains the axis from the y (tmin) channel
@@ -92,7 +93,7 @@ band = (
         ],
     )
 )
-st.altair_chart(band, width="stretch")
+ui.chart(band, width="stretch")
 
 # --- Annual rainfall trend ---
 st.subheader("Total rainfall by year")
@@ -111,7 +112,7 @@ rain_line = (
         ],
     )
 )
-st.altair_chart(rain_line, width="stretch")
+ui.chart(rain_line, width="stretch")
 
 # --- Recent daily temperature band ---
 st.subheader("The last two years, day by day")
@@ -133,7 +134,7 @@ recent_band = (
         ],
     )
 )
-st.altair_chart(recent_band, width="stretch")
+ui.chart(recent_band, width="stretch")
 
 # --- Records table ---
 st.subheader("All-time records at Sea-Tac")

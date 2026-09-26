@@ -9,6 +9,7 @@ import altair as alt
 import pydeck as pdk
 import streamlit as st
 
+import ui
 from app_db import query
 
 st.title("Street Trees")
@@ -53,7 +54,7 @@ with col_a:
             ],
         )
     )
-    st.altair_chart(species_chart, width="stretch")
+    ui.chart(species_chart, width="stretch")
 with col_b:
     st.subheader("Most common genera")
     genera = query(
@@ -76,7 +77,7 @@ with col_b:
             ],
         )
     )
-    st.altair_chart(genera_chart, width="stretch")
+    ui.chart(genera_chart, width="stretch")
 
 # --- Planting over time ---
 planted = query(
@@ -99,7 +100,7 @@ planted_chart = (
         ],
     )
 )
-st.altair_chart(planted_chart, width="stretch")
+ui.chart(planted_chart, width="stretch")
 
 # --- Condition ---
 condition = query(
@@ -122,7 +123,7 @@ condition_chart = (
         ],
     )
 )
-st.altair_chart(condition_chart, width="stretch")
+ui.chart(condition_chart, width="stretch")
 
 # --- Map ---
 st.subheader("Where the trees are")

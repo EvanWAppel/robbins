@@ -9,6 +9,7 @@ the decades. A drought year like 2015 shows up in both the snow and the river.
 import altair as alt
 import streamlit as st
 
+import ui
 from app_db import query
 
 st.title("Water")
@@ -76,7 +77,7 @@ peak_chart = (
         ],
     )
 )
-st.altair_chart(peak_chart, width="stretch")
+ui.chart(peak_chart, width="stretch")
 
 # --- Recent daily snowpack ---
 st.subheader("The last three winters, day by day")
@@ -93,7 +94,7 @@ recent_chart = (
         ],
     )
 )
-st.altair_chart(recent_chart, width="stretch")
+ui.chart(recent_chart, width="stretch")
 
 # --- Cedar River seasonal signature ---
 st.subheader("The Cedar River through the year")
@@ -110,7 +111,7 @@ river_chart = (
         ],
     )
 )
-st.altair_chart(river_chart, width="stretch")
+ui.chart(river_chart, width="stretch")
 
 # --- Sea level trend ---
 st.subheader("Puget Sound is rising")
@@ -130,4 +131,4 @@ sea_chart = (
 trend = sea_chart.transform_regression("year", "avg_msl_ft").mark_line(
     color="#b4503f", strokeDash=[5, 5]
 )
-st.altair_chart(sea_chart + trend, width="stretch")
+ui.chart(sea_chart + trend, width="stretch")

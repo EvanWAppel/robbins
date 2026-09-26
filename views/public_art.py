@@ -4,6 +4,7 @@ import altair as alt
 import pydeck as pdk
 import streamlit as st
 
+import ui
 from app_db import query
 
 st.title("Public Art")
@@ -44,7 +45,7 @@ type_chart = (
         ],
     )
 )
-st.altair_chart(type_chart, width="stretch")
+ui.chart(type_chart, width="stretch")
 
 # --- Map ---
 st.subheader("Where the art is")

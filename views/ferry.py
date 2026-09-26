@@ -8,6 +8,7 @@ the FTA National Transit Database; WSF is the largest ferry system in the U.S.
 import altair as alt
 import streamlit as st
 
+import ui
 from app_db import query
 
 st.title("Ferry Ridership")
@@ -63,7 +64,7 @@ trend = (
         ],
     )
 )
-st.altair_chart(trend, width="stretch")
+ui.chart(trend, width="stretch")
 
 # --- Seasonality + operator ---
 col_a, col_b = st.columns(2)
@@ -83,7 +84,7 @@ with col_a:
             ],
         )
     )
-    st.altair_chart(seasonal_chart, width="stretch")
+    ui.chart(seasonal_chart, width="stretch")
 with col_b:
     st.subheader("By operator")
     st.caption("Washington State Ferries vs. the King County Water Taxi.")
@@ -99,7 +100,7 @@ with col_b:
             ],
         )
     )
-    st.altair_chart(operator_chart, width="stretch")
+    ui.chart(operator_chart, width="stretch")
 
 # --- Annual (full years only) ---
 st.subheader("Annual boardings")
@@ -117,4 +118,4 @@ annual_chart = (
         ],
     )
 )
-st.altair_chart(annual_chart, width="stretch")
+ui.chart(annual_chart, width="stretch")
