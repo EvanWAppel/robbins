@@ -93,6 +93,13 @@ PARK_BOUNDARIES = (SEATTLE_ARCGIS, "Park_Boundaries", 0)
 # PRIMARYDISTRICTCD (council district). Coordinates from feature geometry.
 SDOT_TREES = (SEATTLE_ARCGIS, "SDOT_Trees_(Active)", 0)
 
+# SPD Micro Community Policing Plan (MCPP) neighborhoods — 58 polygons, the
+# geography SPD crime is tagged with. We use these polygons for the neighborhood
+# choropleths: crime, fire 911, and 311 incidents are assigned to a neighborhood
+# by point-in-polygon at build time. `neighborhood` (name) + `precinct`, and
+# `Shape__Area` in square feet (State Plane WA). Polygon geometry, out_sr=4326.
+MCPP_NEIGHBORHOODS = (SEATTLE_ARCGIS, "MCPP", 0)
+
 # Substrings (matched case-insensitively against a park's name) that flag a
 # water-associated park. The boundary layer has no amenity attributes, so this
 # name heuristic is our "water feature" signal — approximate, labeled as such.

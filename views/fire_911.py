@@ -1,11 +1,10 @@
 """Seattle Fire 911 dispatch calls — patterns across type, time, and place."""
 
 import altair as alt
-import pandas as pd
-import pydeck as pdk
 import streamlit as st
 
 from app_db import query
+from ui import choropleth_legend, neighborhood_choropleth
 
 st.title("Fire 911 Calls")
 st.caption(
@@ -114,73 +113,31 @@ heatmap = (
 )
 st.altair_chart(heatmap, width="stretch")
 
-# --- Map (sampled) ---
-st.subheader("Where calls happen")
+# --- Neighborhood choropleth ---
+st.subheader("Where calls concentrate")
 st.caption(
-    "A random sample of ~12k geolocated calls, binned into a hex grid over "
-    "the city. Click a hexagon to see the calls there."
+    "Fire 911 dispatches per square mile by SPD neighborhood (Micro Community "
+    "Policing Plan areas). Darker = denser. Hover a neighborhood for its totals."
 )
-sample = query(
+nb = query(
     """
-    select latitude, longitude, call_type, address
-    from main.mart_fire_map_sample
+    select neighborhood, incident_count, incidents_per_sq_mile,
+           area_sq_miles, rings_json
+    from main.mart_fire_911_by_neighborhood
     """
 )
-layer = pdk.Layer(
-    "HexagonLayer",
-    id="hex",
-    data=sample,
-    get_position=["longitude", "latitude"],
-    radius=250,
-    elevation_scale=5,
-    elevation_range=[0, 700],
-    extruded=True,
-    pickable=True,
-    auto_highlight=True,
-    coverage=0.8,
-)
-view_state = pdk.ViewState(
-    latitude=sample["latitude"].mean(),
-    longitude=sample["longitude"].mean(),
-    zoom=10,
-    pitch=35,
-)
-deck = pdk.Deck(
-    layers=[layer],
-    initial_view_state=view_state,
-    # Carto Positron: a light basemap with clear roads and labels, no API token.
-    map_style="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
-)
-event = st.pydeck_chart(
-    deck, on_select="rerun", selection_mode="single-object", key="fire_hex"
-)
+st.pydeck_chart(neighborhood_choropleth(nb, unit="calls / sq mi"))
+st.html(choropleth_legend(nb, "calls / sq mi"))
 
-# --- Data card for the clicked hexagon ---
-picked = []
-if event and getattr(event, "selection", None):
-    picked = (event.selection.get("objects") or {}).get("hex", [])
-if picked:
-    obj = picked[0]
-    points = obj.get("points", [])
-    # deck.gl wraps each binned record as {"source": <row>}; fall back to the row.
-    rows = pd.DataFrame([p.get("source", p) for p in points]) if points else pd.DataFrame()
-    count = len(rows) if not rows.empty else int(obj.get("elevationValue", 0))
-    st.markdown(f"### 📍 {count:,} calls in this hexagon")
-    if not rows.empty:
-        top = (
-            rows["call_type"].value_counts().head(8).rename_axis("Call type")
-            .reset_index(name="Calls")
-        )
-        c_a, c_b = st.columns([1, 1])
-        with c_a:
-            st.caption("Top call types here")
-            st.dataframe(top, width="stretch", hide_index=True)
-        with c_b:
-            st.caption("Sample of calls")
-            st.dataframe(
-                rows[["call_type", "address"]].head(12),
-                width="stretch",
-                hide_index=True,
-            )
-else:
-    st.caption("👆 No hexagon selected — click one on the map above.")
+# --- Densest neighborhoods ---
+st.caption("Densest neighborhoods, by calls per square mile")
+top_nb = nb.sort_values("incidents_per_sq_mile", ascending=False).head(12)
+st.dataframe(
+    {
+        "Neighborhood": top_nb["neighborhood"].str.title(),
+        "Calls": top_nb["incident_count"].map("{:,.0f}".format),
+        "Per sq mi": top_nb["incidents_per_sq_mile"].map("{:,.0f}".format),
+    },
+    width="stretch",
+    hide_index=True,
+)
