@@ -13,7 +13,7 @@ html { scroll-behavior: smooth; }
 [data-testid="stSidebar"] [data-testid="stCaptionContainer"] p { color: #8fa8b2; font-size: .65rem; letter-spacing: .15em; text-transform: uppercase; margin: 1.1rem .75rem .3rem; }
 .brand { padding: 0 .75rem 1.6rem; border-bottom: 1px solid #2c556a; margin-bottom: .5rem; }
 .brand-name { font-family: Georgia, serif; font-size: 2.65rem; letter-spacing: -.09em; line-height: 1.1; }
-.brand-mark { color: #cfe0e6 !important; font-family: Georgia, serif; font-size: 2rem; margin-right: .3rem; }
+.brand-mark { width: 1.7rem; height: 1.7rem; vertical-align: -.26em; margin-right: .4rem; }
 .brand-sub { font-size: .62rem; text-transform: uppercase; letter-spacing: .18em; margin-top: .6rem; color: #a7bfc8 !important; }
 .sidebar-note { padding: 1.5rem .75rem; margin-top: 1rem; border-top: 1px solid #2c556a; font-size: .7rem; line-height: 1.7; color: #9fb8c1 !important; }
 h1, h2, h3 { color: var(--ink); }
@@ -50,7 +50,9 @@ h2, h3 { font-weight: 500 !important; letter-spacing: -.035em; }
 .collection-stat { font-family: Georgia, serif; font-size: 2rem; line-height: 1.2; color: var(--ink); }
 .collection-stat small { font-family: sans-serif; font-size: .68rem; color: var(--muted); margin-left: .4rem; }
 [data-testid="stMain"] [data-testid="stPageLink"] a { border-radius: 2px; border-bottom: 1px solid #dbe3e5; font-size: .8rem; padding: .45rem .4rem; }
+[data-testid="stMain"] [data-testid="stPageLink"] a, [data-testid="stMain"] [data-testid="stPageLink"] a * { color: #2f6285 !important; font-weight: 500; }
 [data-testid="stMain"] [data-testid="stPageLink"] a:hover { background: #e4ebed; }
+[data-testid="stMain"] [data-testid="stPageLink"] a:hover * { color: #123141 !important; }
 [data-testid="stMetric"] { padding: 1.1rem 1.25rem; background: #e4ebed; border-top: 2px solid #4f88a6; border-radius: 2px; }
 [data-testid="stMetricValue"] { font-family: Georgia, serif; color: var(--ink); }
 [data-testid="stMetricLabel"] { color: var(--muted); }

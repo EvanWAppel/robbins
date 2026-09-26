@@ -3,7 +3,7 @@ import streamlit as st
 
 from ui import apply_theme
 
-st.set_page_config(page_title="Robbins | Seattle City Atlas", page_icon="✳", layout="wide")
+st.set_page_config(page_title="Robbins | Seattle City Atlas", page_icon="⚓", layout="wide")
 apply_theme()
 
 # Keep the existing page routes; group the index by the questions people explore.
@@ -38,7 +38,7 @@ sections = {
 }
 page = st.navigation(sections, position="hidden")
 with st.sidebar:
-    st.html('<div class="brand"><div class="brand-name"><span class="brand-mark">✳</span> robbins.</div><div class="brand-sub">The Seattle city atlas</div></div>')
+    st.html('<div class="brand"><div class="brand-name"><svg class="brand-mark" viewBox="0 0 24 24" fill="none" stroke="#cfe0e6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="5" r="3"/><line x1="12" y1="22" x2="12" y2="8"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/></svg> robbins.</div><div class="brand-sub">The Seattle city atlas</div></div>')
     for section, entries in sections.items():
         st.caption(section)
         for entry in entries:
