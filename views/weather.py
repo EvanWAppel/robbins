@@ -57,7 +57,7 @@ st.subheader("A wet winter and a dry summer")
 st.caption("Average daily precipitation by calendar month, across the full record.")
 precip_chart = (
     alt.Chart(normals)
-    .mark_bar(color="#7697a0")
+    .mark_bar(color="#4f88a6")
     .encode(
         x=alt.X("month_name:N", sort=list(normals["month_name"]), title=None),
         y=alt.Y("avg_precip_in:Q", title="Avg precip (in/day)"),
@@ -79,7 +79,7 @@ normals_temp_domain = [
 ]
 band = (
     alt.Chart(normals)
-    .mark_area(opacity=0.3, color="#b8954e")
+    .mark_area(opacity=0.3, color="#c1913f")
     .encode(
         x=alt.X("month_name:N", sort=list(normals["month_name"]), title=None),
         y=alt.Y("avg_tmin_f:Q", title="Temperature (°F)",
@@ -100,7 +100,7 @@ st.caption("The current (partial) year is excluded.")
 annual_full = annual[annual["year"] < annual["year"].max()]
 rain_line = (
     alt.Chart(annual_full)
-    .mark_line(point=True, color="#7697a0")
+    .mark_line(point=True, color="#4f88a6")
     .encode(
         x=alt.X("year:O", title=None),
         y=alt.Y("total_precip_in:Q", title="Total precip (in)"),
@@ -118,7 +118,7 @@ st.subheader("The last two years, day by day")
 st.caption("Daily high and low temperature at Sea-Tac.")
 recent_band = (
     alt.Chart(recent)
-    .mark_area(opacity=0.4, color="#b8954e")
+    .mark_area(opacity=0.4, color="#c1913f")
     .encode(
         x=alt.X("obs_date:T", title=None),
         y=alt.Y("tmin_f:Q", title="Temperature (°F)",

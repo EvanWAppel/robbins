@@ -39,7 +39,7 @@ by_status = query(
 st.subheader("Licenses by status")
 status_chart = (
     alt.Chart(by_status)
-    .mark_bar(color="#b8954e")
+    .mark_bar(color="#c1913f")
     .encode(
         x=alt.X("license_count:Q", title="Licenses"),
         y=alt.Y("licensestatus:N", sort="-x", title=None),
@@ -63,7 +63,7 @@ by_type = query(
 st.subheader("Licenses by property type")
 type_chart = (
     alt.Chart(by_type)
-    .mark_bar(color="#7697a0")
+    .mark_bar(color="#4f88a6")
     .encode(
         x=alt.X("license_count:Q", title="Licenses"),
         y=alt.Y("propertytype:N", sort="-x", title=None),
@@ -87,7 +87,7 @@ by_region = query(
 st.subheader("Licenses by geographic region")
 region_chart = (
     alt.Chart(by_region)
-    .mark_bar(color="#496e58")
+    .mark_bar(color="#2f6285")
     .encode(
         x=alt.X("license_count:Q", title="Licenses"),
         y=alt.Y("geographicregion:N", sort="-x", title=None),
@@ -123,7 +123,7 @@ st.pydeck_chart(
                 "ScatterplotLayer",
                 data=points,
                 get_position="[longitude, latitude]",
-                get_fill_color="[255, 140, 0, 140]",
+                get_fill_color="[193, 145, 63, 170]",
                 get_radius=60,
                 pickable=True,
             )

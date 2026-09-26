@@ -43,7 +43,7 @@ st.subheader("Monthly boardings")
 st.caption("The March 2020 collapse and the long climb back.")
 trend = (
     alt.Chart(monthly)
-    .mark_area(line={"color": "#858063"}, color="#d5d8bd", opacity=0.5)
+    .mark_area(line={"color": "#3f7d86"}, color="#d4e2e6", opacity=0.5)
     .encode(
         x=alt.X("ridership_month:T", title=None),
         y=alt.Y("boardings:Q", title="Boardings / month"),
@@ -64,7 +64,7 @@ with col_a:
     )
     agency_chart = (
         alt.Chart(agency)
-        .mark_bar(color="#858063")
+        .mark_bar(color="#3f7d86")
         .encode(
             x=alt.X("boardings:Q", title="Boardings (2015-present)"),
             y=alt.Y("agency_label:N", sort="-x", title=None),
@@ -82,7 +82,7 @@ with col_b:
     )
     mode_chart = (
         alt.Chart(mode)
-        .mark_bar(color="#a0ad7a")
+        .mark_bar(color="#8fb3b5")
         .encode(
             x=alt.X("boardings:Q", title="Boardings (2015-present)"),
             y=alt.Y("mode_label:N", sort="-x", title=None),
@@ -103,7 +103,7 @@ st.caption(
 )
 rail_chart = (
     alt.Chart(rail)
-    .mark_line(color="#638978", point=False)
+    .mark_line(color="#3f7d86", point=False)
     .encode(
         x=alt.X("ridership_month:T", title=None),
         y=alt.Y("boardings:Q", title="Light-rail boardings / month"),

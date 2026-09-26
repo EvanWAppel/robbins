@@ -39,7 +39,7 @@ monthly = query(
 st.subheader("Inspections per month")
 count_line = (
     alt.Chart(monthly)
-    .mark_area(color="#7697a0", opacity=0.7)
+    .mark_area(color="#4f88a6", opacity=0.7)
     .encode(
         x=alt.X("inspection_month:T", title=None),
         y=alt.Y("inspection_count:Q", title="Inspections"),
@@ -54,7 +54,7 @@ st.altair_chart(count_line, width="stretch")
 st.subheader("Average inspection score per month")
 score_line = (
     alt.Chart(monthly)
-    .mark_line(color="#af6b50")
+    .mark_line(color="#b4503f")
     .encode(
         x=alt.X("inspection_month:T", title=None),
         y=alt.Y("avg_score:Q", title="Avg score (higher = worse)"),
@@ -77,7 +77,7 @@ results = query(
 st.subheader("Inspection results")
 results_chart = (
     alt.Chart(results)
-    .mark_bar(color="#7697a0")
+    .mark_bar(color="#4f88a6")
     .encode(
         x=alt.X("inspection_count:Q", title="Inspections"),
         y=alt.Y("inspection_result:N", sort="-x", title=None),
@@ -101,7 +101,7 @@ violations = query(
 st.subheader("Most common violations")
 violations_chart = (
     alt.Chart(violations)
-    .mark_bar(color="#b8954e")
+    .mark_bar(color="#c1913f")
     .encode(
         x=alt.X("violation_count:Q", title="Occurrences"),
         y=alt.Y("violation_description:N", sort="-x", title=None),

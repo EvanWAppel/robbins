@@ -42,7 +42,7 @@ monthly = query(
 st.subheader("Permits issued per month")
 permits_line = (
     alt.Chart(monthly)
-    .mark_area(color="#7697a0", opacity=0.7)
+    .mark_area(color="#4f88a6", opacity=0.7)
     .encode(
         x=alt.X("issue_month:T", title=None),
         y=alt.Y("permit_count:Q", title="Permits"),
@@ -57,7 +57,7 @@ st.altair_chart(permits_line, width="stretch")
 st.subheader("Estimated project cost per month")
 val_line = (
     alt.Chart(monthly)
-    .mark_line(color="#496e58")
+    .mark_line(color="#2f6285")
     .encode(
         x=alt.X("issue_month:T", title=None),
         y=alt.Y("total_valuation:Q", title="Est. cost ($)", axis=alt.Axis(format="~s")),
@@ -81,7 +81,7 @@ by_class = query(
 st.subheader("Permits by class")
 class_chart = (
     alt.Chart(by_class)
-    .mark_bar(color="#7697a0")
+    .mark_bar(color="#4f88a6")
     .encode(
         x=alt.X("permit_count:Q", title="Permits"),
         y=alt.Y("permit_class:N", sort="-x", title=None),

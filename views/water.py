@@ -100,7 +100,7 @@ st.subheader("The Cedar River through the year")
 st.caption("Average daily streamflow by month — high with winter rain and spring melt, low by late summer.")
 river_chart = (
     alt.Chart(river_normals)
-    .mark_area(color="#638978", opacity=0.7, line={"color": "#638978"})
+    .mark_area(color="#3f7d86", opacity=0.7, line={"color": "#3f7d86"})
     .encode(
         x=alt.X("month_name:N", sort=list(river_normals["month_name"]), title=None),
         y=alt.Y("avg_discharge_cfs:Q", title="Avg discharge (cfs)"),
@@ -117,7 +117,7 @@ st.subheader("Puget Sound is rising")
 st.caption("Average annual sea level at Seattle (NOAA datum, feet). The current partial year is excluded.")
 sea_chart = (
     alt.Chart(tides_full)
-    .mark_line(point=True, color="#7697a0")
+    .mark_line(point=True, color="#4f88a6")
     .encode(
         x=alt.X("year:O", title=None),
         y=alt.Y("avg_msl_ft:Q", title="Mean sea level (ft)", scale=alt.Scale(zero=False)),
@@ -128,6 +128,6 @@ sea_chart = (
     )
 )
 trend = sea_chart.transform_regression("year", "avg_msl_ft").mark_line(
-    color="#af6b50", strokeDash=[5, 5]
+    color="#b4503f", strokeDash=[5, 5]
 )
 st.altair_chart(sea_chart + trend, width="stretch")
