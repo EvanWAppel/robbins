@@ -16,7 +16,7 @@ html { scroll-behavior: smooth; }
 .brand-mark { width: 1.7rem; height: 1.7rem; vertical-align: -.26em; margin-right: .4rem; }
 .brand-sub { font-size: .62rem; text-transform: uppercase; letter-spacing: .18em; margin-top: .6rem; color: #a7bfc8 !important; }
 .sidebar-note { padding: 1.5rem .75rem; margin-top: 1rem; border-top: 1px solid #2c556a; font-size: .7rem; line-height: 1.7; color: #9fb8c1 !important; }
-h1, h2, h3 { color: var(--ink); }
+h1, h2, h3, h4, [data-testid="stHeading"] :is(h1,h2,h3,h4) { color: var(--ink) !important; }
 h1 { font-family: Georgia, 'Times New Roman', serif !important; font-weight: 400 !important; letter-spacing: -.045em !important; font-size: clamp(2.5rem, 4vw, 4rem) !important; }
 h2, h3 { font-weight: 500 !important; letter-spacing: -.035em; }
 [data-testid="stCaptionContainer"] { color: var(--muted); }

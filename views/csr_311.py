@@ -9,6 +9,7 @@ recent-years dataset.
 import altair as alt
 import streamlit as st
 
+import ui
 from app_db import query
 from ui import choropleth_legend, neighborhood_choropleth
 
@@ -72,7 +73,7 @@ trend = (
         ],
     )
 )
-st.altair_chart(trend, width="stretch")
+ui.chart(trend, width="stretch")
 
 # --- Top request types ---
 types = query(
@@ -96,7 +97,7 @@ types_chart = (
         ],
     )
 )
-st.altair_chart(types_chart, width="stretch")
+ui.chart(types_chart, width="stretch")
 
 # --- Reporting channel + owning department ---
 col_a, col_b = st.columns(2)
@@ -122,7 +123,7 @@ with col_a:
             ],
         )
     )
-    st.altair_chart(method_chart, width="stretch")
+    ui.chart(method_chart, width="stretch")
 with col_b:
     st.subheader("Who handles it")
     dept = query(
@@ -145,7 +146,7 @@ with col_b:
             ],
         )
     )
-    st.altair_chart(dept_chart, width="stretch")
+    ui.chart(dept_chart, width="stretch")
 
 # --- Neighborhood choropleth ---
 st.subheader("Where requests concentrate")

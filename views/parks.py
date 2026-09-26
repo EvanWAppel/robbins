@@ -11,6 +11,7 @@ import altair as alt
 import pydeck as pdk
 import streamlit as st
 
+import ui
 from app_db import query
 
 st.title("Parks")
@@ -56,7 +57,7 @@ band_chart = (
         ],
     )
 )
-st.altair_chart(band_chart, width="stretch")
+ui.chart(band_chart, width="stretch")
 
 # --- Map ---
 st.subheader("Every park on the map")

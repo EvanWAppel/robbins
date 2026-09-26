@@ -4,6 +4,7 @@ import altair as alt
 import pydeck as pdk
 import streamlit as st
 
+import ui
 from app_db import query
 
 st.title("Short-Term Rentals")
@@ -49,7 +50,7 @@ status_chart = (
         ],
     )
 )
-st.altair_chart(status_chart, width="stretch")
+ui.chart(status_chart, width="stretch")
 
 # --- By property type ---
 by_type = query(
@@ -73,7 +74,7 @@ type_chart = (
         ],
     )
 )
-st.altair_chart(type_chart, width="stretch")
+ui.chart(type_chart, width="stretch")
 
 # --- By region ---
 by_region = query(
@@ -97,7 +98,7 @@ region_chart = (
         ],
     )
 )
-st.altair_chart(region_chart, width="stretch")
+ui.chart(region_chart, width="stretch")
 
 st.divider()
 

@@ -17,6 +17,35 @@ _RAMP = [
     (18, 49, 65),
 ]
 
+# Categorical chart palette (mirrors chartCategoricalColors in config.toml).
+_CATEGORY = ["#2f6285", "#c1913f", "#4f88a6", "#b4503f", "#3f7d86", "#8fb3b5"]
+
+
+def chart(spec, **kwargs):
+    """Render an Altair chart in the atlas style.
+
+    Streamlit's built-in chart theme paints the plot area a dark fill that
+    conflicts with the light paper. We bypass it (``theme=None``) and set the
+    styling explicitly: a transparent plot over the page, ink/muted axis text,
+    faint gridlines, and the maritime categorical palette. Charts pass no
+    ``.configure`` of their own, so applying it here is safe.
+    """
+    kwargs.setdefault("width", "stretch")
+    styled = (
+        spec.configure(background="transparent")
+        .configure_view(fill="transparent", stroke=None)
+        .configure_axis(
+            labelColor="#445159",
+            titleColor="#123141",
+            gridColor="#dfe6e4",
+            domainColor="#cdd8db",
+            tickColor="#cdd8db",
+        )
+        .configure_legend(labelColor="#445159", titleColor="#123141")
+        .configure_range(category=_CATEGORY)
+    )
+    st.altair_chart(styled, theme=None, **kwargs)
+
 
 def apply_theme():
     """Load the same design system on every page."""

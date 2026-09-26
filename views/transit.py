@@ -8,6 +8,7 @@ Pierce Transit, Everett Transit, Seattle Streetcar). Ferries have their own page
 import altair as alt
 import streamlit as st
 
+import ui
 from app_db import query
 
 st.title("Transit Ridership")
@@ -53,7 +54,7 @@ trend = (
         ],
     )
 )
-st.altair_chart(trend, width="stretch")
+ui.chart(trend, width="stretch")
 
 # --- Agency + mode ---
 col_a, col_b = st.columns(2)
@@ -74,7 +75,7 @@ with col_a:
             ],
         )
     )
-    st.altair_chart(agency_chart, width="stretch")
+    ui.chart(agency_chart, width="stretch")
 with col_b:
     st.subheader("Boardings by mode")
     mode = query(
@@ -92,7 +93,7 @@ with col_b:
             ],
         )
     )
-    st.altair_chart(mode_chart, width="stretch")
+    ui.chart(mode_chart, width="stretch")
 
 # --- Light rail growth ---
 st.subheader("Link light rail is pulling away")
@@ -113,4 +114,4 @@ rail_chart = (
         ],
     )
 )
-st.altair_chart(rail_chart, width="stretch")
+ui.chart(rail_chart, width="stretch")

@@ -3,6 +3,7 @@
 import altair as alt
 import streamlit as st
 
+import ui
 from app_db import query
 from ui import choropleth_legend, neighborhood_choropleth
 
@@ -54,7 +55,7 @@ trend = (
         ],
     )
 )
-st.altair_chart(trend, width="stretch")
+ui.chart(trend, width="stretch")
 
 # --- Top offense categories ---
 types = query(
@@ -78,7 +79,7 @@ types_chart = (
         ],
     )
 )
-st.altair_chart(types_chart, width="stretch")
+ui.chart(types_chart, width="stretch")
 
 # --- Hour x weekday heatmap ---
 heat = query(
@@ -111,7 +112,7 @@ heatmap = (
         ],
     )
 )
-st.altair_chart(heatmap, width="stretch")
+ui.chart(heatmap, width="stretch")
 
 # --- Neighborhood choropleth ---
 st.subheader("Where offenses concentrate")

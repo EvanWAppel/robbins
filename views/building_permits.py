@@ -4,6 +4,7 @@ import altair as alt
 import pydeck as pdk
 import streamlit as st
 
+import ui
 from app_db import query
 
 st.title("Building Permits")
@@ -52,7 +53,7 @@ permits_line = (
         ],
     )
 )
-st.altair_chart(permits_line, width="stretch")
+ui.chart(permits_line, width="stretch")
 
 st.subheader("Estimated project cost per month")
 val_line = (
@@ -67,7 +68,7 @@ val_line = (
         ],
     )
 )
-st.altair_chart(val_line, width="stretch")
+ui.chart(val_line, width="stretch")
 
 # --- By permit class ---
 by_class = query(
@@ -92,7 +93,7 @@ class_chart = (
         ],
     )
 )
-st.altair_chart(class_chart, width="stretch")
+ui.chart(class_chart, width="stretch")
 st.dataframe(by_class, width="stretch", hide_index=True)
 
 st.divider()
