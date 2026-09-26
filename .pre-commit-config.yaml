@@ -23,7 +23,11 @@ repos:
 
       - id: pytest
         name: pytest
-        entry: uv run pytest -q
+        # Invoke via `python -m pytest`, not the bare `pytest` console script:
+        # the venv's `.venv/bin/pytest` shebang can go stale if the venv moves,
+        # and spawning it then fails with ENOENT. The module form execs python
+        # directly and imports pytest, so it survives a relocated venv.
+        entry: uv run python -m pytest -q
         language: system
         pass_filenames: false
         require_serial: true
