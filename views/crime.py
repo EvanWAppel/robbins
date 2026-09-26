@@ -45,7 +45,7 @@ monthly = query(
 st.subheader("Offenses per month")
 trend = (
     alt.Chart(monthly)
-    .mark_line(point=True, color="#af6b50")
+    .mark_line(point=True, color="#b4503f")
     .encode(
         x=alt.X("crime_month:T", title=None),
         y=alt.Y("incident_count:Q", title="Offenses"),
@@ -69,7 +69,7 @@ types = query(
 st.subheader("Most common offense categories")
 types_chart = (
     alt.Chart(types)
-    .mark_bar(color="#af6b50")
+    .mark_bar(color="#b4503f")
     .encode(
         x=alt.X("incident_count:Q", title="Offenses"),
         y=alt.Y("offense_category:N", sort="-x", title=None),

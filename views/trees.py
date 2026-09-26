@@ -43,7 +43,7 @@ with col_a:
     )
     species_chart = (
         alt.Chart(species)
-        .mark_bar(color="#496e58")
+        .mark_bar(color="#2f6285")
         .encode(
             x=alt.X("tree_count:Q", title="Trees"),
             y=alt.Y("scientific_name:N", sort="-x", title=None),
@@ -66,7 +66,7 @@ with col_b:
     )
     genera_chart = (
         alt.Chart(genera)
-        .mark_bar(color="#638978")
+        .mark_bar(color="#3f7d86")
         .encode(
             x=alt.X("tree_count:Q", title="Trees"),
             y=alt.Y("genus:N", sort="-x", title=None),
@@ -89,7 +89,7 @@ st.caption(
 )
 planted_chart = (
     alt.Chart(planted)
-    .mark_area(line={"color": "#496e58"}, color="#c8d2b7", opacity=0.6)
+    .mark_area(line={"color": "#2f6285"}, color="#cfe0e6", opacity=0.6)
     .encode(
         x=alt.X("plant_year:O", title=None),
         y=alt.Y("tree_count:Q", title="Trees planted"),
@@ -112,7 +112,7 @@ st.caption(
 )
 condition_chart = (
     alt.Chart(condition)
-    .mark_bar(color="#82966b")
+    .mark_bar(color="#4f88a6")
     .encode(
         x=alt.X("tree_count:Q", title="Trees"),
         y=alt.Y("condition:N", sort="-x", title=None),

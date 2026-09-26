@@ -44,7 +44,7 @@ monthly = query(
 st.subheader("New licenses per month")
 monthly_line = (
     alt.Chart(monthly)
-    .mark_line(color="#7697a0")
+    .mark_line(color="#4f88a6")
     .encode(
         x=alt.X("license_month:T", title=None),
         y=alt.Y("license_count:Q", title="Licenses"),
@@ -61,7 +61,7 @@ top_industries = industries.head(15)
 st.subheader("Top industries")
 industry_chart = (
     alt.Chart(top_industries)
-    .mark_bar(color="#7697a0")
+    .mark_bar(color="#4f88a6")
     .encode(
         x=alt.X("license_count:Q", title="Licenses"),
         y=alt.Y("naics_description:N", sort="-x", title=None),
@@ -85,7 +85,7 @@ ownership = query(
 st.subheader("Ownership type")
 ownership_chart = (
     alt.Chart(ownership)
-    .mark_bar(color="#496e58")
+    .mark_bar(color="#2f6285")
     .encode(
         x=alt.X("license_count:Q", title="Licenses"),
         y=alt.Y("ownership_type:N", sort="-x", title=None),
@@ -102,7 +102,7 @@ top_cities = cities.head(12)
 st.subheader("Top cities")
 city_chart = (
     alt.Chart(top_cities)
-    .mark_bar(color="#7697a0")
+    .mark_bar(color="#4f88a6")
     .encode(
         x=alt.X("license_count:Q", title="Licenses"),
         y=alt.Y("city:N", sort="-x", title=None),

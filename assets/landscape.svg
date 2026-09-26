@@ -1,29 +1,48 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 370" role="img" aria-labelledby="landscape-title">
-<title id="landscape-title">Illustrated Pacific Northwest landscape: mountains, evergreen forests, and Puget Sound</title>
+<title id="landscape-title">Illustrated Puget Sound: a Washington State ferry crossing calm water beneath distant Olympic peaks</title>
 <defs>
-<pattern id="grid" width="26" height="26" patternUnits="userSpaceOnUse"><path d="M26 0H0V26" fill="none" stroke="#c7cebb" stroke-width=".5"/></pattern>
-<pattern id="water" width="18" height="9" patternUnits="userSpaceOnUse"><path d="M0 4h11" stroke="#a5b39d" stroke-width=".7"/></pattern>
+<pattern id="grid" width="26" height="26" patternUnits="userSpaceOnUse"><path d="M26 0H0V26" fill="none" stroke="#bfccd2" stroke-width=".5"/></pattern>
+<pattern id="swell" width="20" height="9" patternUnits="userSpaceOnUse"><path d="M0 4h12" stroke="#cfe0e6" stroke-width=".7"/></pattern>
 <clipPath id="frame"><rect x="12" y="12" width="496" height="346" rx="170"/></clipPath>
 </defs>
 <g clip-path="url(#frame)">
-<rect x="12" y="12" width="496" height="346" fill="#e9eddc"/>
+<rect x="12" y="12" width="496" height="346" fill="#eef4f5"/>
 <rect x="12" y="12" width="496" height="346" fill="url(#grid)"/>
-<circle cx="357" cy="89" r="33" fill="#d8bd6d"/>
-<circle cx="357" cy="89" r="43" fill="none" stroke="#d8bd6d" stroke-width=".7"/>
-<path d="M0 232L77 180L111 196L235 55L287 125L310 113L403 213L467 178L520 230V370H0Z" fill="#c8d2b7" stroke="#778b6b" stroke-width="1"/>
-<path d="M179 119L235 55L273 106L257 99L242 115L229 90L209 116L206 103Z" fill="#f7f5ed"/>
-<g fill="none" stroke="#859779" stroke-width=".7">
-<path d="M117 207L230 91L263 137L280 132L350 212"/><path d="M127 215L226 111L251 150L273 148L331 215"/><path d="M145 216L220 133L244 168L265 164L310 218"/><path d="M166 221L218 156L238 184L254 180L286 220"/><path d="M184 225L218 179L240 206L252 201L273 229"/>
+<!-- brass sun low over the Sound -->
+<circle cx="360" cy="92" r="30" fill="#c1913f"/>
+<circle cx="360" cy="92" r="40" fill="none" stroke="#c1913f" stroke-width=".7"/>
+<!-- gulls -->
+<g fill="none" stroke="#2f6285" stroke-width="1.1" stroke-linecap="round">
+<path d="M110 78q7-7 14 0q7-7 14 0"/><path d="M150 62q5-5 10 0q5-5 10 0"/><path d="M92 104q6-6 12 0q6-6 12 0"/>
 </g>
-<path d="M0 229Q80 179 155 225T303 228T520 211V370H0Z" fill="#849a76"/>
-<path d="M0 251Q111 220 182 252T334 250T520 235V370H0Z" fill="#496e58"/>
-<path d="M0 284Q123 239 237 268Q305 285 251 303Q210 321 349 370H0Z" fill="#e6ecdb"/>
-<path d="M0 284Q123 239 237 268Q305 285 251 303Q210 321 349 370H0Z" fill="url(#water)"/>
-<path d="M520 267Q401 246 337 281Q303 299 364 317Q393 328 410 370H520Z" fill="#294e3e"/>
-<g fill="#203f32"><path d="M66 233l11-28 11 28h-7v12h-8v-12zM90 241l15-38 15 38h-10v15h-10v-15zM119 240l10-26 10 26h-6v12h-8v-12zM420 285l17-45 17 45h-12v18h-10v-18zM451 288l22-58 22 58h-16v21h-12v-21zM391 286l11-30 11 30h-7v13h-8v-13z"/></g>
-<g fill="none" stroke="#ced8c0" stroke-width=".65"><path d="M345 337Q409 306 509 331"/><path d="M359 345Q426 317 514 341"/><path d="M380 355Q441 333 520 353"/></g>
+<!-- distant Olympic range, hazy -->
+<path d="M12 202L96 150L150 178L214 128L270 170L330 138L392 176L452 150L508 196V210H12Z" fill="#b8ccd2"/>
+<path d="M214 128L241 145L228 150L217 160L206 148Z" fill="#eef4f5"/>
+<path d="M330 138L352 154L340 160L327 150Z" fill="#eef4f5"/>
+<!-- nearer shoreline ridge -->
+<path d="M12 206Q120 176 210 202T360 200T508 190V214H12Z" fill="#8fb3b5"/>
+<!-- water, deepening toward the foreground -->
+<rect x="12" y="205" width="496" height="153" fill="#6fa0b0"/>
+<path d="M12 236Q150 220 260 238T508 230V358H12Z" fill="#4f88a6"/>
+<path d="M12 286Q150 266 268 286T508 278V358H12Z" fill="#2f6285"/>
+<path d="M12 330Q160 312 280 330T508 322V358H12Z" fill="#123141"/>
+<rect x="12" y="205" width="496" height="153" fill="url(#swell)"/>
+<!-- Washington State ferry, double-ended -->
+<g>
+<path d="M150 260q0-12 14-12h172q14 0 14 12v6q0 8-10 8H160q-10 0-10-8Z" fill="#123141"/>
+<rect x="172" y="230" width="156" height="20" rx="2" fill="#1f4a5e"/>
+<rect x="198" y="214" width="104" height="18" rx="2" fill="#2c556a"/>
+<rect x="234" y="204" width="32" height="12" rx="2" fill="#123141"/>
+<line x1="250" y1="204" x2="250" y2="190" stroke="#123141" stroke-width="1.4"/>
+<circle cx="250" cy="189" r="2" fill="#c1913f"/>
+<g fill="#cfe0e6"><rect x="180" y="235" width="9" height="8"/><rect x="195" y="235" width="9" height="8"/><rect x="210" y="235" width="9" height="8"/><rect x="225" y="235" width="9" height="8"/><rect x="240" y="235" width="9" height="8"/><rect x="255" y="235" width="9" height="8"/><rect x="270" y="235" width="9" height="8"/><rect x="285" y="235" width="9" height="8"/><rect x="300" y="235" width="9" height="8"/><rect x="315" y="235" width="9" height="8"/></g>
+<g fill="#cfe0e6"><rect x="206" y="219" width="10" height="8"/><rect x="222" y="219" width="10" height="8"/><rect x="270" y="219" width="10" height="8"/><rect x="286" y="219" width="10" height="8"/></g>
+<rect x="150" y="257" width="200" height="2.4" fill="#c1913f"/>
 </g>
-<rect x="12" y="12" width="496" height="346" rx="170" fill="none" stroke="#86957a" stroke-width=".75"/>
-<g stroke="#5b725b" stroke-width=".75"><path d="M260 0v22M260 348v22M0 185h22M498 185h22"/></g>
-<g fill="#526b50" font-family="monospace" font-size="9"><text x="24" y="30">PUGET SOUND</text><text x="426" y="346">PNW / 01</text></g>
+<!-- wake / reflection -->
+<g fill="none" stroke="#cfe0e6" stroke-width=".8"><path d="M158 300Q250 288 344 302"/><path d="M176 316Q250 306 328 318"/><path d="M198 332Q250 324 306 334"/></g>
+</g>
+<rect x="12" y="12" width="496" height="346" rx="170" fill="none" stroke="#4f88a6" stroke-width=".75"/>
+<g stroke="#2c556a" stroke-width=".75"><path d="M260 0v22M260 348v22M0 185h22M498 185h22"/></g>
+<g fill="#2f6285" font-family="monospace" font-size="9"><text x="24" y="30">PUGET SOUND</text><text x="430" y="346">SND / 01</text></g>
 </svg>

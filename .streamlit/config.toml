@@ -5,15 +5,15 @@ headless = true
 
 [theme]
 base = "light"
-primaryColor = "#496e58"
-backgroundColor = "#f7f5ed"
-secondaryBackgroundColor = "#eeefe3"
-textColor = "#203b33"
+primaryColor = "#2f6285"
+backgroundColor = "#f2f5f6"
+secondaryBackgroundColor = "#e4ebed"
+textColor = "#123141"
 font = "sans-serif"
-chartCategoricalColors = ["#496e58", "#b8954e", "#7697a0", "#af6b50", "#858063", "#a0ad7a"]
+chartCategoricalColors = ["#2f6285", "#c1913f", "#4f88a6", "#b4503f", "#3f7d86", "#8fb3b5"]
 
 [theme.sidebar]
-backgroundColor = "#203b33"
-secondaryBackgroundColor = "#345046"
-textColor = "#e7ecde"
-primaryColor = "#dce7bc"
+backgroundColor = "#123141"
+secondaryBackgroundColor = "#1f4a5e"
+textColor = "#e4edf0"
+primaryColor = "#cfe0e6"

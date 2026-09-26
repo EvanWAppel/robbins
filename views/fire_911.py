@@ -45,7 +45,7 @@ monthly = query(
 st.subheader("Calls per month")
 trend = (
     alt.Chart(monthly)
-    .mark_line(point=True, color="#af6b50")
+    .mark_line(point=True, color="#b4503f")
     .encode(
         x=alt.X("call_month:T", title=None),
         y=alt.Y("call_count:Q", title="Calls"),
@@ -69,7 +69,7 @@ types = query(
 st.subheader("Most common call types")
 types_chart = (
     alt.Chart(types)
-    .mark_bar(color="#af6b50")
+    .mark_bar(color="#b4503f")
     .encode(
         x=alt.X("call_count:Q", title="Calls"),
         y=alt.Y("call_type:N", sort="-x", title=None),

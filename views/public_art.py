@@ -34,7 +34,7 @@ st.divider()
 st.subheader("Artworks by classification")
 type_chart = (
     alt.Chart(by_type.head(15))
-    .mark_bar(color="#858063")
+    .mark_bar(color="#3f7d86")
     .encode(
         x=alt.X("artwork_count:Q", title="Artworks"),
         y=alt.Y("classification:N", sort="-x", title=None),
@@ -63,7 +63,7 @@ st.pydeck_chart(
                 "ScatterplotLayer",
                 data=points,
                 get_position="[longitude, latitude]",
-                get_fill_color=[142, 68, 173, 180],
+                get_fill_color=[193, 145, 63, 200],
                 get_radius=80,
                 pickable=True,
             )

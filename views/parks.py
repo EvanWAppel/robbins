@@ -46,7 +46,7 @@ st.subheader("A system of small parks and a few giants")
 st.caption("Parks by size band.")
 band_chart = (
     alt.Chart(bands)
-    .mark_bar(color="#496e58")
+    .mark_bar(color="#2f6285")
     .encode(
         x=alt.X("park_count:Q", title="Parks"),
         y=alt.Y("size_band:N", sort=alt.EncodingSortField("sort_order"), title=None),
@@ -63,7 +63,7 @@ st.subheader("Every park on the map")
 st.caption("Point size scales with acreage; blue points are water-name parks.")
 points = points.copy()
 points["color"] = points["is_water_name"].map(
-    lambda w: [41, 128, 185, 200] if w else [39, 174, 96, 160]
+    lambda w: [47, 98, 133, 215] if w else [63, 125, 134, 155]
 )
 # Radius from acreage, with a floor so tiny parks stay visible and a cap so the
 # flagships don't swallow the map.
