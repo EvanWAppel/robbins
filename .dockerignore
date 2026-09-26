@@ -10,4 +10,8 @@ seattle.duckdb
 seattle.duckdb.wal
 .dbt
 .DS_Store
-.streamlit
+# Ship .streamlit/config.toml (the theme) into the image, but never a secrets
+# file. Excluding the whole dir stripped the theme, so the deployed app ran with
+# no config and native components (charts, data-grid) followed the browser's dark
+# mode while our CSS only re-lit the HTML surfaces.
+.streamlit/secrets.toml
