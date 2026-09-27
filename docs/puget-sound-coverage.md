@@ -68,3 +68,34 @@ Browser checks verified regional and Kitsap summaries, Island's missing-data
 state, selection persistence across topic navigation, source inventory, and the
 390×844 mobile layout including Kitsap's single-monitor map. Production deployment,
 full Docker rehearsal, and live Ask the Data API validation were not performed.
+
+
+## Mobility continuation — 2026-09-27
+
+The official [FTA monthly ridership feed](https://data.transportation.gov/d/8bui-9xvu)
+was queried for Washington agency names, aggregate record counts, and reporting
+windows before changing configuration. Five additional reporting agencies are
+now integrated: Kitsap Transit, Skagit Transit, Whatcom Transportation Authority,
+Intercity Transit, and County of Pierce (Pierce County Ferry). Official agency
+references include [Kitsap](https://www.transit.dot.gov/ntd/transit-agency-profiles/kitsap-transit),
+[Skagit](https://www.transit.dot.gov/ntd/transit-agency-profiles/skagit-transit),
+[Whatcom](https://www.transit.dot.gov/ntd/transit-agency-profiles/whatcom-transportation-authority),
+and [Pierce County Ferry](https://www.piercecountywa.gov/ferry).
+
+Island Transit, Jefferson Transit Authority, and Mason Transit were absent from
+the monthly feed's 2015+ Washington agency inventory. Their annual reports or
+other datasets require separate discovery; absence from this feed is not zero
+ridership. The T cells above remain agency totals without county allocation.
+
+The local rebuild loaded 6,053 source rows across 13 reporting agencies. Combined
+transit/ferry mart boardings reconcile to the source aggregate. Ferry aggregation
+now preserves WSF, Water Taxi, Kitsap Transit, and Pierce County Ferry separately;
+only the two known King County reporting names share the Water Taxi label.
+Reporting windows and distinct month counts appear in both pages and Data Coverage.
+Twelve observed calendar months do not establish complete reporting by every operator.
+
+Mobility validation: 102 pytest tests, Ruff, and ty passed; 19 selected dbt
+model/test steps plus the source-total reconciliation test passed. The two King
+County ferry reporting names have no overlapping loaded months. Transit, ferry,
+and Data Coverage page smoke checks passed; browser inspection confirmed the
+four-operator ferry chart and coverage labels. No deployment performed.

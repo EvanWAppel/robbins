@@ -647,6 +647,40 @@
       ]
     },
     {
+      "name": "mart_mobility_coverage",
+      "description": "Loaded transit/ferry reporting windows by agency and ferry flag. Counts of distinct reported months do not imply continuous coverage. Agency-wide boardings cannot be allocated to counties or routes from this source.",
+      "columns": [
+        {
+          "name": "agency",
+          "description": "Exact FTA reporting agency name."
+        },
+        {
+          "name": "agency_label",
+          "description": "Friendly agency name; King County ferry records are Water Taxi service."
+        },
+        {
+          "name": "is_ferry",
+          "description": "True for ferry mode; false for land transit modes."
+        },
+        {
+          "name": "first_month",
+          "description": "Earliest loaded reporting month, not retrieval date."
+        },
+        {
+          "name": "last_month",
+          "description": "Latest loaded reporting month, not retrieval date."
+        },
+        {
+          "name": "months_reported",
+          "description": "Number of distinct months with non-null ridership reports."
+        },
+        {
+          "name": "boardings",
+          "description": "Sum of unlinked passenger trips in the loaded period."
+        }
+      ]
+    },
+    {
       "name": "mart_parks_largest",
       "description": "The 15 largest parks by acreage.",
       "columns": [

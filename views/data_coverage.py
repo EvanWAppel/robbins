@@ -4,6 +4,7 @@ import streamlit as st
 
 from app_db import query
 from city_config import DATA_SOURCES
+from mobility import show_mobility_coverage
 from regional_air import air_queries
 
 st.title("Data Coverage")
@@ -24,6 +25,10 @@ st.caption(
     "Dates above are observation dates. Retrieval freshness is not yet tracked. "
     "Monitor observations do not represent uniform coverage of a county."
 )
+st.subheader("Transit and ferry reporting coverage")
+st.caption("The county selector does not allocate these agency-wide totals to a county.")
+show_mobility_coverage(is_ferry=False)
+show_mobility_coverage(is_ferry=True)
 st.subheader("Configured source inventory")
 st.caption(
     "This inventory describes the app's configured integrations, not live endpoint "
@@ -43,7 +48,7 @@ for source in DATA_SOURCES:
 
 st.subheader("Still to come")
 st.write(
-    "City filters, regional weather and water stations, additional transport "
-    "operators, and civic feeds outside Seattle are tracked in the expansion plan. "
+    "City filters, regional weather and water stations, remaining transport "
+    "coverage gaps, and civic feeds outside Seattle are tracked in the expansion plan. "
     "Agency totals cannot currently be split into county or city ridership."
 )
