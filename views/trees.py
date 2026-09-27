@@ -128,11 +128,17 @@ ui.chart(condition_chart, width="stretch")
 # --- Map ---
 st.subheader("Where the trees are")
 st.caption(
-    "A random sample of ~15k trees, binned into a hex grid. Taller/brighter hexes "
-    "have more street trees — the leafy neighborhoods stand out."
+    "Each dot is one tree in a random sample of up to 15,000 street trees. "
+    "Zoom in to explore streets and hover for species and condition. "
+    "The sample does not show every tree."
 )
 sample = query(
-    "select latitude, longitude from main.mart_trees_map_sample"
+    """
+    select latitude, longitude,
+           coalesce(scientific_name, 'Unknown species') as scientific_name,
+           coalesce(condition, 'Not assessed') as condition
+    from main.mart_trees_map_sample
+    """
 )
 st.pydeck_chart(
     pdk.Deck(
@@ -141,28 +147,20 @@ st.pydeck_chart(
             latitude=sample["latitude"].mean(),
             longitude=sample["longitude"].mean(),
             zoom=10.5,
-            pitch=35,
+            pitch=0,
         ),
         layers=[
             pdk.Layer(
-                "HexagonLayer",
+                "ScatterplotLayer",
                 data=sample,
                 get_position=["longitude", "latitude"],
-                radius=200,
-                elevation_scale=4,
-                elevation_range=[0, 600],
-                extruded=True,
+                get_radius=12,
+                radius_min_pixels=2,
+                radius_max_pixels=6,
+                get_fill_color=[69, 126, 99, 150],
                 pickable=True,
-                coverage=0.85,
-                color_range=[
-                    [237, 248, 233],
-                    [199, 233, 192],
-                    [161, 217, 155],
-                    [116, 196, 118],
-                    [49, 163, 84],
-                    [0, 109, 44],
-                ],
             )
         ],
+        tooltip={"text": "{scientific_name}\nCondition: {condition}"},
     )
 )
