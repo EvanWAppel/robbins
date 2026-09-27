@@ -176,13 +176,13 @@ models:
   # ---- Keyless federal / bulk sources --------------------------------------
   - name: stg_air_quality
     description: >
-      EPA AQS daily PM2.5 + Ozone for the metro, deduped to one row per
+      EPA AQS daily PM2.5 + Ozone for the configured Puget Sound counties, deduped to one row per
       site/day/pollutant.
     data_tests:
       - dbt_utils.unique_combination_of_columns:
           arguments:
             combination_of_columns:
-              - site
+              - site_id
               - obs_date
               - pollutant
     columns:

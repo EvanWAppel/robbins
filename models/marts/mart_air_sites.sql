@@ -7,7 +7,8 @@ with pm as (
 )
 
 select
-    site,
+    site_id,
+    max(site) as site,
     county,
     avg(latitude)   as latitude,
     avg(longitude)  as longitude,
@@ -15,5 +16,5 @@ select
     max(aqi)        as max_aqi,
     count(*)        as day_count
 from pm
-group by site, county
+group by site_id, county
 order by avg_aqi desc

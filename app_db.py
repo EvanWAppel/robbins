@@ -21,10 +21,10 @@ def _connection() -> duckdb.DuckDBPyConnection:
 
 
 @st.cache_data(ttl=3600, show_spinner=False)
-def query(sql: str) -> pd.DataFrame:
+def query(sql: str, params: tuple = ()) -> pd.DataFrame:
     """Run a query and return a DataFrame.
 
     A fresh cursor per call keeps concurrent Streamlit reruns thread-safe while
     still sharing the single underlying connection.
     """
-    return _connection().cursor().execute(sql).df()
+    return _connection().cursor().execute(sql, params).df()

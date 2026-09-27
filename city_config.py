@@ -16,6 +16,8 @@ protected secret.
 
 from __future__ import annotations
 
+from source_registry import Source, validate_sources
+
 # --------------------------------------------------------------------------- #
 # Socrata (SODA API) — City of Seattle + King County open-data portals         #
 # --------------------------------------------------------------------------- #
@@ -115,13 +117,17 @@ METRO_BBOX = {"lat": (46.9, 48.4), "lon": (-122.7, -121.3)}
 # --------------------------------------------------------------------------- #
 # EPA AQS — keyless pre-generated daily bulk files                             #
 # --------------------------------------------------------------------------- #
-# Full Seattle metro per the interview: King + Pierce + Snohomish.
-AQS_STATE = "53"  # Washington
-AQS_COUNTIES = {
-    "033": "King",
-    "053": "Pierce",
-    "061": "Snohomish",
+# Administrative launch scope confirmed 2026-09-27. County codes verified at:
+# https://www2.census.gov/geo/docs/reference/codes2020/national_county2020.txt
+REGION_NAME = "Puget Sound"
+REGION_COUNTIES = {
+    "53029": "Island", "53031": "Jefferson", "53033": "King",
+    "53035": "Kitsap", "53045": "Mason", "53053": "Pierce",
+    "53057": "Skagit", "53061": "Snohomish", "53067": "Thurston",
+    "53073": "Whatcom",
 }
+AQS_STATE = "53"
+AQS_COUNTIES = {fips[2:]: name for fips, name in REGION_COUNTIES.items()}
 AQS_PARAMS = {"88101": "PM2.5", "44201": "Ozone"}  # param code -> label
 # The national daily bulk files are large and EPA's server is slow (~20-35s each),
 # so — like crime/fire — the baked warehouse caps to recent years for lean builds.
@@ -175,3 +181,71 @@ UNVERIFIED: tuple[str, ...] = ()
 #     the Port of Seattle does not; BTS T-100 is form/POST-only (not a clean GET).
 #     Checked 2026-08-12. A pivot to WSDOT ferry ridership could stand in for a
 #     Puget Sound travel page if desired.
+
+# Configured coverage, audited from the pipeline on 2026-09-27. These entries
+# describe existing integrations, not newly verified endpoints or launch scope.
+# Keep retrieval timestamps and observed date ranges in build metadata.
+def _soda_page(source: tuple[str, str]) -> str:
+    return f"https://{source[0]}/d/{source[1]}"
+
+
+def _arcgis_layer(source: tuple[str, str, int]) -> str:
+    return f"{source[0]}/{source[1]}/FeatureServer/{source[2]}"
+
+
+DATA_SOURCES = (
+    Source("seattle.permits", "Building Permits", "Seattle DCI", _soda_page(PERMITS),
+           "municipality", "City of Seattle", "One permit",
+           "Issued permits; map shows the most recent 5,000 geocoded records."),
+    Source("seattle.crime", "Crime", "Seattle Police Department", _soda_page(SPD_CRIME),
+           "municipality", "City of Seattle", "Source crime record",
+           "2019 onward; missing/redacted locations are excluded from maps. Not county-wide."),
+    Source("seattle.fire", "Fire 911 Calls", "Seattle Fire Department", _soda_page(SFD_911),
+           "municipality", "Seattle Fire dispatch reporting area", "Source dispatch record",
+           "2019 onward; dispatch records are not a count of unique emergencies."),
+    Source("king.inspections", "Restaurant Inspections", "Public Health — Seattle & King County",
+           _soda_page(FOOD_INSPECTIONS), "county", "King County reporting jurisdiction",
+           "Source inspection record", "Repeat inspections are not unique establishments; scoring is jurisdiction-specific."),
+    Source("seattle.str", "Short-Term Rentals", "City of Seattle", _soda_page(SHORT_TERM_RENTALS),
+           "municipality", "City of Seattle", "Source rental license record",
+           "Licensed inventory does not represent all operating rentals."),
+    Source("seattle.business", "Business Licenses", "City of Seattle", _soda_page(BUSINESS_LICENSES),
+           "municipality", "Seattle business licensing jurisdiction", "Source business license record",
+           "Licensing jurisdiction is not necessarily the business location; not all regional businesses."),
+    Source("seattle.311", "311 Requests", "City of Seattle", _soda_page(CSR_311),
+           "municipality", "City of Seattle", "One service request",
+           "2020 onward; requests reflect reporting behavior, not the prevalence of problems."),
+    Source("seattle.parks", "Parks", "Seattle Parks and Recreation", _arcgis_layer(PARK_BOUNDARIES),
+           "municipality", "Seattle parks inventory", "Source park feature",
+           "Not all regional public lands; water association is inferred from park names."),
+    Source("seattle.art", "Public Art", "Seattle Office of Arts & Culture", _arcgis_layer(PUBLIC_ART),
+           "municipality", "Seattle public art inventory", "Source artwork feature",
+           "Not a comprehensive inventory of art across the region."),
+    Source("seattle.trees", "Street Trees", "Seattle Department of Transportation", _arcgis_layer(SDOT_TREES),
+           "municipality", "Seattle managed street-tree inventory", "One inventory tree",
+           "Not canopy coverage or all trees; map shows a sample of up to 15,000 trees."),
+    Source("epa.air", "Air Quality", "US EPA", "https://aqs.epa.gov/aqsweb/airdata/download_files.html",
+           "station", "EPA monitor search in " + ", ".join(AQS_COUNTIES.values()), "Monitor/pollutant/day observations",
+           "PM2.5 and ozone, 2019 onward; monitoring locations do not provide uniform county coverage."),
+    Source("noaa.weather", "Rain & Records", "NOAA", f"https://www.ncei.noaa.gov/data/global-historical-climatology-network-daily/access/{NOAA_STATION}.csv",
+           "station", f"Sea-Tac station {NOAA_STATION}", "Station/day/measurement",
+           "One weather station; observations cannot be treated as every city's weather."),
+    Source("usgs.water", "Water", "USGS", f"https://waterdata.usgs.gov/monitoring-location/{USGS_CEDAR_RIVER_SITE}/",
+           "station", f"Cedar River at Renton, {USGS_CEDAR_RIVER_SITE}", "Station/day streamflow",
+           "One river gauge; not regional water supply or every watershed."),
+    Source("noaa.tides", "Water", "NOAA", f"https://tidesandcurrents.noaa.gov/stationhome.html?id={NOAA_TIDES_STATION}",
+           "station", f"Seattle tide station {NOAA_TIDES_STATION}", "Station/month tidal datum",
+           "One tide station; datum and observation period matter for comparisons."),
+    Source("nrcs.snow", "Water", "NRCS", "https://wcc.sc.egov.usda.gov/nwcc/site?sitenum=791",
+           "station", f"Stampede Pass SNOTEL {SNOTEL_STATION}", "Station/day snow-water equivalent",
+           "One mountain station; not a regional snowpack average."),
+    Source("federal.ntd", "Transit Ridership", "FTA National Transit Database", _soda_page(NTD_RIDERSHIP),
+           "agency", "Configured NTD operators: " + ", ".join(NTD_AGENCIES.values()),
+           "Agency/mode/month ridership",
+           "Curated operators, 2015 onward; unlinked passenger trips are boardings, not unique people. No county allocation."),
+    Source("federal.ntd.ferry", "Ferry Ridership", "FTA National Transit Database", _soda_page(NTD_RIDERSHIP),
+           "agency", "Ferry-mode records within the configured NTD operator list",
+           "Agency/ferry-mode/month ridership",
+           "Shares the transit source; no route/county allocation. Regional operator completeness has not been verified."),
+)
+validate_sources(DATA_SOURCES)

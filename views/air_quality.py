@@ -1,4 +1,4 @@
-"""Seattle-metro air quality — EPA AQS daily PM2.5 + Ozone (King/Pierce/Snohomish).
+"""Puget Sound air quality — geographically filtered EPA observations.
 
 Puget Sound air is clean most of the year; the story is the handful of wildfire-
 smoke days that spike the AQI into the red. The page leads with how rare bad days
@@ -9,9 +9,13 @@ and the all-time worst days. Sourced from EPA's keyless national daily bulk file
 import altair as alt
 import pydeck as pdk
 import streamlit as st
+from pydeck.data_utils import compute_view
 
 import ui
 from app_db import query
+from city_config import REGION_COUNTIES
+from geography import county_selector
+from regional_air import air_queries
 
 # EPA AQI category colors (adapted for the dark theme).
 CAT_COLORS = {
@@ -25,42 +29,57 @@ CAT_COLORS = {
 
 st.title("Air Quality")
 st.caption(
-    "Daily PM2.5 and Ozone at EPA monitors across King, Pierce and Snohomish "
-    "counties since 2019. Air Quality Index (AQI) is comparable across pollutants: "
-    "0-50 is Good, 300+ is Hazardous."
+    "Daily PM2.5 and ozone observations from EPA monitors. "
+    "Coverage varies by county, pollutant, and reporting period; these are "
+    "historical observations, not current air-quality conditions."
 )
 
-categories = query(
-    "select aqi_category, day_count, severity from main.mart_air_category_days order by severity"
+# The main app renders the shared control; support direct page smoke checks too.
+county = st.session_state.get("selected_county")
+if not st.session_state.get("_regional_navigation"):
+    county = county_selector()
+queries = air_queries(county)
+categories = query(*queries["categories"])
+worst = query(*queries["worst"])
+sites = query(*queries["sites"])
+monthly = query(*queries["monthly"])
+coverage = query(*queries["coverage"])
+label = f"{REGION_COUNTIES[county]} County" if county else "Puget Sound — available monitors"
+st.subheader(label)
+if coverage.empty:
+    st.info("No air-quality observations are loaded for this selection. This is missing coverage, not zero pollution.")
+    st.stop()
+
+st.caption(
+    f"Observed {coverage['first_date'].min():%b %d, %Y}–{coverage['last_date'].max():%b %d, %Y}. "
+    "Observed dates describe the loaded records, not the last retrieval time."
 )
-worst = query(
-    "select obs_date, max_aqi, aqi_category, site, county from main.mart_air_worst_days"
-)
-sites = query(
-    "select site, county, latitude, longitude, avg_aqi, max_aqi, day_count from main.mart_air_sites"
-)
-monthly = query(
-    "select obs_month, pollutant, avg_aqi, max_aqi, reading_count from main.mart_air_monthly order by obs_month"
-)
+if county is None:
+    missing = sorted(set(REGION_COUNTIES.values()) - set(coverage["county"]))
+    if missing:
+        st.info("No loaded observations for: " + ", ".join(missing) + ". Regional summaries use the available monitors only.")
+with st.expander("Monitor coverage and reporting periods"):
+    st.dataframe(coverage, hide_index=True, width="stretch")
 
 # --- KPIs ---
 total_days = int(categories["day_count"].sum())
 good_mod = int(
     categories.loc[categories["aqi_category"].isin(["Good", "Moderate"]), "day_count"].sum()
 )
-worst_row = worst.iloc[0]
+worst_row = worst.iloc[0] if not worst.empty else None
 c1, c2, c3, c4 = st.columns(4)
-c1.metric("Days measured", f"{total_days:,}")
-c2.metric("Good or Moderate", f"{good_mod / total_days * 100:.0f}%")
-c3.metric("Worst day (AQI)", f"{int(worst_row.max_aqi)}",
-          worst_row.obs_date.strftime("%b %-d, %Y"), delta_color="off")
-c4.metric("Monitors", f"{len(sites)}")
+c1.metric("PM2.5 days", f"{total_days:,}")
+c2.metric("Good / Moderate", f"{good_mod / total_days * 100:.0f}%" if total_days else "No PM2.5 data")
+c3.metric("Peak PM2.5 AQI", f"{int(worst_row.max_aqi)}" if worst_row is not None else "No PM2.5 data")
+if worst_row is not None:
+    c3.caption(worst_row.obs_date.strftime("%b %-d, %Y"))
+c4.metric("PM2.5 monitors", f"{len(sites)}")
 
 st.divider()
 
 # --- Category distribution ---
-st.subheader("Most days the air is clean")
-st.caption("Metro days by their worst PM2.5 reading, 2019-present.")
+st.subheader("Daily PM2.5 categories")
+st.caption("Each observed day is counted once, using the highest PM2.5 AQI among the selected monitors.")
 cat_chart = (
     alt.Chart(categories)
     .mark_bar()
@@ -81,10 +100,10 @@ cat_chart = (
 ui.chart(cat_chart, width="stretch")
 
 # --- Monthly peak AQI (the smoke seasons) ---
-st.subheader("When the smoke rolls in")
+st.subheader("Monthly peak AQI")
 st.caption(
-    "Peak AQI recorded each month. The tall spikes are wildfire smoke "
-    "(Sept 2020, Oct 2022); the Ozone bump tracks summer heat."
+    "Peak AQI recorded each month among the selected monitors, by pollutant. "
+    "Available sites and reporting periods may differ between pollutants."
 )
 peak_chart = (
     alt.Chart(monthly)
@@ -104,7 +123,7 @@ peak_chart = (
 ui.chart(peak_chart, width="stretch")
 
 # --- Monitor map ---
-st.subheader("Monitors across the metro")
+st.subheader("PM2.5 monitor locations")
 st.caption("Each point is a PM2.5 monitor, sized and colored by its average AQI.")
 
 
@@ -116,33 +135,36 @@ def _aqi_color(aqi: float) -> list[int]:
     return [231, 126, 34, 200]
 
 
-sites = sites.copy()
-sites["color"] = sites["avg_aqi"].apply(_aqi_color)
-st.pydeck_chart(
-    pdk.Deck(
-        map_style="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
-        initial_view_state=pdk.ViewState(
-            latitude=sites["latitude"].mean(),
-            longitude=sites["longitude"].mean(),
-            zoom=8,
-            pitch=0,
-        ),
-        layers=[
-            pdk.Layer(
-                "ScatterplotLayer",
-                data=sites,
-                get_position="[longitude, latitude]",
-                get_fill_color="color",
-                get_radius="avg_aqi * 40",
-                pickable=True,
-            )
-        ],
-        tooltip={"text": "{site}\n{county} County · avg AQI {avg_aqi}"},
+if not sites.dropna(subset=["latitude", "longitude"]).empty:
+    sites = sites.dropna(subset=["latitude", "longitude"]).copy()
+    sites["color"] = sites["avg_aqi"].apply(_aqi_color)
+    viewport = compute_view(sites[["longitude", "latitude"]])
+    viewport.zoom = min(viewport.zoom - 0.75, 10)
+    viewport.pitch = 0
+    st.pydeck_chart(
+        pdk.Deck(
+            map_style="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
+            initial_view_state=viewport,
+            layers=[
+                pdk.Layer(
+                    "ScatterplotLayer",
+                    data=sites,
+                    get_position="[longitude, latitude]",
+                    get_fill_color="color",
+                    get_radius="avg_aqi * 40",
+                    radius_min_pixels=4,
+                    radius_max_pixels=30,
+                    pickable=True,
+                )
+            ],
+            tooltip={"text": "{site}\n{county} County · avg AQI {avg_aqi}"},
+        )
     )
-)
+else:
+    st.info("No mapped PM2.5 monitors for this selection.")
 
 # --- Worst days ---
-st.subheader("The worst air days on record")
+st.subheader("Highest PM2.5 days in the loaded period")
 worst = worst.copy()
 worst["obs_date"] = worst["obs_date"].dt.date
 worst_display = worst.rename(

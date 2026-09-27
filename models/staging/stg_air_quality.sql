@@ -1,4 +1,4 @@
--- EPA AQS daily PM2.5 + Ozone for the Seattle metro. A monitor can report a few
+-- EPA AQS daily PM2.5 + Ozone for configured Puget Sound counties. A monitor can report a few
 -- rows per day (multiple POCs); collapse to one value per site/day/pollutant by
 -- averaging, then bucket the AQI into the EPA category bands.
 
@@ -8,22 +8,29 @@ with source as (
 
 deduped as (
     select
-        county_name                              as county,
-        local_site_name                          as site,
-        try_cast(latitude as double)             as latitude,
-        try_cast(longitude as double)            as longitude,
+        lpad(cast(try_cast(state_code as integer) as varchar), 2, '0') ||
+        lpad(cast(try_cast(county_code as integer) as varchar), 3, '0') as county_fips,
+        lpad(cast(try_cast(state_code as integer) as varchar), 2, '0') ||
+        lpad(cast(try_cast(county_code as integer) as varchar), 3, '0') ||
+        lpad(cast(try_cast(site_num as integer) as varchar), 4, '0') as site_id,
+        max(county_name)                         as county,
+        max(local_site_name)                     as site,
+        avg(try_cast(latitude as double))        as latitude,
+        avg(try_cast(longitude as double))       as longitude,
         try_cast(date_local as date)             as obs_date,
         parameter_name                           as pollutant,
         max(units)                               as units,
         avg(try_cast(arithmetic_mean as double)) as concentration,
         avg(try_cast(aqi as double))             as aqi
     from source
-    group by 1, 2, 3, 4, 5, 6
+    group by 1, 2, 7, 8
 )
 
 select
+    county_fips,
+    site_id,
     county,
-    site,
+    coalesce(nullif(site, ''), site_id) as site,
     latitude,
     longitude,
     obs_date,
@@ -40,4 +47,4 @@ select
         else 'Hazardous'
     end                                          as aqi_category
 from deduped
-where obs_date is not null
+where obs_date is not null and aqi is not null

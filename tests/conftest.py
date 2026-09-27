@@ -31,3 +31,37 @@ def fake_soda_pages() -> Callable[[list[list[dict]]], Callable]:
         return _get
 
     return _factory
+
+
+@pytest.fixture
+def source_registration():
+    """Synthetic source metadata for regional registry validation."""
+    return {
+        "source_id": "test.permits",
+        "topic": "Building Permits",
+        "publisher": "Example City",
+        "url": "https://example.org/permits",
+        "geography_kind": "municipality",
+        "coverage": "Example City only",
+        "record_grain": "One permit",
+        "limitations": "Does not cover the rest of the county.",
+    }
+
+
+@pytest.fixture
+def air_database():
+    """Synthetic monitor observations spanning counties, days, and pollutants."""
+    import duckdb
+
+    con = duckdb.connect()
+    con.execute('''create table mart_air_observations (
+        county varchar, county_fips varchar, site_id varchar, site varchar,
+        latitude double, longitude double, obs_date date, pollutant varchar,
+        aqi double, aqi_category varchar)''')
+    con.execute('''insert into mart_air_observations values
+        ('King', '53033', '530330001', 'Same name', 47.6, -122.3, '2024-01-01', 'PM2.5', 40, 'Good'),
+        ('Kitsap', '53035', '530350001', 'Same name', 47.5, -122.6, '2024-01-01', 'PM2.5', 160, 'Unhealthy'),
+        ('King', '53033', '530330001', 'Same name', 47.6, -122.3, '2024-01-02', 'PM2.5', 60, 'Moderate'),
+        ('Kitsap', '53035', '530350001', 'Same name', 47.5, -122.6, '2024-01-02', 'Ozone', 20, 'Good')''')
+    yield con
+    con.close()

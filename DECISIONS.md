@@ -80,3 +80,15 @@ Dots preserve individual locations and hover details; a permit heatmap would
 emphasize concentrations but lose individual inspection. Overlapping permits can
 hide one another, so the caption calls this out. Crime, Fire 911, and 311 keep
 their existing neighborhood density maps.
+
+
+## 2026-09-27 — Ten-county Puget Sound expansion
+
+The owner confirmed King, Pierce, Snohomish, Kitsap, Island, Skagit, Thurston,
+Mason, Jefferson, and Whatcom; one regional explorer with county/city filters;
+clearly labeled partial coverage; and environment/mobility first. Partial
+coverage permits useful releases while sources are verified, at the cost of
+requiring explicit gaps and comparison limitations on every topic. Air quality
+is the first implementation slice because the existing EPA feed carries county
+codes. Separate city/county page trees and all-counties-before-launch gating
+were not selected.

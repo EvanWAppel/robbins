@@ -4,6 +4,7 @@ from html import escape
 import streamlit as st
 
 from app_db import query
+from city_config import REGION_COUNTIES
 from ui import landscape
 
 _build = query("select built_at, total_records from main.mart_build_info").iloc[0]
@@ -33,7 +34,7 @@ st.html(f'''
 <div class="facts">
   <div class="fact"><div class="fact-value">{int(_build['total_records']) / 1e6:.1f}M</div><div class="fact-label">Public records to explore</div></div>
   <div class="fact"><div class="fact-value">15</div><div class="fact-label">Ways to see the city</div></div>
-  <div class="fact"><div class="fact-value">3</div><div class="fact-label">Counties in the metro</div></div>
+  <div class="fact"><div class="fact-value">{len(REGION_COUNTIES)}</div><div class="fact-label">Counties in expansion scope</div></div>
   <div class="fact"><div class="fact-value fact-date">{_build['built_at']:%b %d, %Y}</div><div class="fact-label">Warehouse last refreshed</div></div>
 </div>
 <div id="explore" class="section-heading"><h2>Follow your curiosity.</h2><span>Six collections. One connected city.</span></div>
@@ -75,7 +76,7 @@ for offset in range(0, len(collections), 3):
             for slug, title in links:
                 st.page_link(f"views/{slug}.py", label=f"{title}  →")
 
-st.caption("Headline figures reflect each source’s loaded reporting window. Open a topic for dates, definitions, and detail.")
+st.caption("Coverage is expanding across Puget Sound; most civic topics remain Seattle-specific. Headline figures reflect each source’s loaded reporting window. Open a topic for dates, definitions, and detail.")
 st.html('<div class="invitation"><h3>Every good discovery starts with a question.</h3><p>Browse the data catalog, or ask a question in your own words.</p></div>')
 st.page_link("views/ask.py", label="Ask the data  ↗")
 st.html('''<footer class="atlas-footer"><span>ROBBINS &nbsp; / &nbsp; Public data. A shared perspective.</span>
