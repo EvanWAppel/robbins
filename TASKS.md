@@ -1,7 +1,8 @@
 # Robbins — TASKS
 
-Implementation task board for [`PRD.md`](./PRD.md). A near-exact port of **Elvis**
-(Las Vegas) to the Seattle metro. Read [`PRIMER.md`](./PRIMER.md) first for the
+Implementation task board for [`PRD.md`](./PRD.md). Originally a port of **Elvis**
+(Las Vegas) to Seattle; next is the Puget Sound expansion program below.
+Read [`PRIMER.md`](./PRIMER.md) first for the
 Vegas→Seattle source mapping, the `fetch_socrata()` helper, and known gotchas.
 
 ## How to use this board
@@ -220,8 +221,149 @@ source.
 
 ---
 
-## Suggested sequencing
+## Original sequencing (historical)
 
 - **Now:** VS (vertical slice, deployed) → SOCRATA/CONFIG/ETL alongside.
 - **Then:** re-run interview §7.1, record outcomes, fan out Group TOPIC.
 - **Finish:** Overview page, DEPLOY, docs.
+
+## Puget Sound expansion — planned 2026-09-26
+
+Implements PRD §12. Historical completed tasks above describe the original app,
+not regional coverage. Development started 2026-09-27; partial work is marked explicitly.
+
+Sequence: PS-SCOPE → PS-DISCOVERY → PS-FOUNDATION → PS-SLICE → PS-TOPICS →
+PS-RELEASE. Shared contracts settle before topic implementation.
+
+### Group PS-SCOPE — Product boundary and priorities
+
+- [x] **PS-SCOPE-01** — Confirm the county list, geographic navigation, incomplete
+  coverage policy, first topic, and priorities. Record answers in PRD §12 and the
+  decision log; reconcile historical metro claims. Confirmed 2026-09-27: ten
+  counties, shared county/city filters, labeled partial coverage, environment/
+  mobility first; air quality selected for the first slice.
+- [~] **PS-SCOPE-02** — Benchmark build time, image/warehouse size, runtime memory,
+  query latency, and map load times; agree numeric budgets and history windows.
+
+### Group PS-DISCOVERY — Verify sources (after PS-SCOPE)
+
+- [~] **PS-DISCOVERY-01** — Create a county × existing-topic coverage matrix for
+  every target county. Audit current sources/marts; distinguish candidate,
+  verified, implemented, and unavailable coverage.
+- [~] **PS-DISCOVERY-02** — Verify official machine-readable sources and record
+  PRD §12 metadata, reuse terms, extent, dates, units, grain, and exclusions.
+  Recheck historical source-drop claims where relevant to the agreed scope.
+- [ ] **PS-DISCOVERY-03** — Document compatible metrics, periods, classifications,
+  and overlapping feeds. Distinguish city, unincorporated, agency, and station
+  coverage; define source-specific deduplication rules.
+- [ ] **PS-DISCOVERY-04** — Select a verified slice covering Seattle and at least
+  one new jurisdiction; record acceptance examples and unresolved gaps.
+
+### Group PS-FOUNDATION — Shared contracts (after discovery)
+
+Use test-first synthetic fixtures for parsers and transforms.
+
+- [~] **PS-FOUNDATION-01** — Extend centralized configuration for multiple
+  jurisdictions/sources, stable IDs, source-qualified keys, and provenance.
+- [~] **PS-FOUNDATION-02** — Add versioned county/city geography and crosswalks,
+  unincorporated/unknown geography, and agency/station relationships. Test boundary
+  edges and multipart geometry; expose geographic assignment coverage.
+- [~] **PS-FOUNDATION-03** — Add coverage metadata, observation/retrieval dates,
+  and explicit unavailable/stale/zero states. Define required/optional source
+  behavior; expose omissions rather than silently publishing incomplete totals.
+- [~] **PS-FOUNDATION-04** — Build the agreed geographic navigation and selection
+  state. Apply selection to maps/charts/tables/metrics; test persistence across
+  pages and explain unsupported places without falling back to Seattle.
+- [~] **PS-FOUNDATION-05** — Carry geography/coverage through marts, metric
+  definitions/generated models, catalog, and Ask the Data. Preserve read-only SQL
+  safety; test geographic scope and unavailable-data answers.
+- [~] **PS-FOUNDATION-06** — Replace applicable Seattle map bounds/centers with
+  selected geography. Preserve top-down dots/area maps and local MCPP detail;
+  define representative regional samples, point caps, and sample labels.
+
+### Group PS-SLICE — One regional topic end to end (after foundations)
+
+- [~] **PS-SLICE-01** — Implement verified adapters, staging models, regional
+  marts, and the selected topic UI using the shared contracts.
+- [~] **PS-SLICE-02** — Reconcile source aggregate counts and test cross-source
+  ID collisions, overlapping feeds, unknown geography, incompatible dates/units,
+  no-data states, and geographic filters.
+- [~] **PS-SLICE-03** — Pass dbt, pytest, Ruff, ty, page smoke checks, and browser
+  checks for regional and existing Seattle behavior; measure against budgets.
+  This exit gate precedes broad topic implementation.
+
+### Group PS-TOPICS — Regional breadth (after slice acceptance)
+
+Environment/mobility-first order confirmed by the owner on 2026-09-27. Every task
+includes verified sources → tested adapters → staging/marts → geographic UI →
+coverage matrix → aggregate reconciliation. A documented gap is a discovery
+outcome, not implemented coverage.
+
+- [~] **PS-TOPICS-01 — Air quality:** audit county monitor/pollutant coverage;
+  integrate supported sources and distinguish absent monitors from clean air.
+- [ ] **PS-TOPICS-02 — Weather and water:** audit and integrate regional weather,
+  river, tide, and snow stations; preserve station identity, units, datum/baseline,
+  and comparable periods. Do not extrapolate a station across a county.
+- [ ] **PS-TOPICS-03 — Transit and ferries:** audit operators serving the region;
+  integrate verified coverage at agency/mode grain without inventing county or
+  route ridership allocations.
+- [ ] **PS-TOPICS-04 — Permits:** integrate municipal/county feeds; distinguish
+  applications from issued permits, preserve valuation definitions, deduplicate
+  overlapping publishers, and retain multiple legitimate permits at an address.
+- [ ] **PS-TOPICS-05 — Parks, trees, and art:** integrate available inventories,
+  resolve overlapping publishers, and distinguish managed street-tree inventory
+  from canopy coverage or all trees.
+- [ ] **PS-TOPICS-06 — Inspections:** integrate health-jurisdiction feeds;
+  preserve inspection event grain and differences between scoring systems.
+- [ ] **PS-TOPICS-07 — Business and STR licenses:** integrate verified feeds with
+  explicit jurisdiction/status rules; distinguish licenses from all operating
+  businesses or rentals.
+- [ ] **PS-TOPICS-08 — Crime, fire, and 311:** verify agency coverage; harmonize
+  only comparable categories/periods, preserve incident/offense/dispatch/request
+  grain, and use applicable local boundaries. Population rates require documented
+  geographic/year-matched denominators.
+
+### Group PS-RELEASE — Regional completion and operational validation
+
+- [~] **PS-RELEASE-01** — Update overview, navigation, titles, geographic copy,
+  README, source explanations, and generated docs to match actual coverage.
+  Surface the coverage matrix and limitations in the app.
+- [ ] **PS-RELEASE-02** — Audit every county/topic under the selected coverage
+  policy; record implemented coverage, exclusions, and gaps. Verify regional
+  totals and comparisons disclose actual geographic/time coverage.
+- [ ] **PS-RELEASE-03** — Run quality gates and regional UX checks, including
+  mobile, no-data states, map samples, Ask the Data, and Seattle regressions.
+  Measure regional performance against PS-SCOPE-02 budgets.
+- [ ] **PS-RELEASE-04** — Rehearse a clean Docker build and runtime, validate
+  rollback to the prior image, and prepare a release PR with coverage/performance
+  evidence for review.
+- [ ] **PS-RELEASE-05** — After explicit owner approval, deploy to Railway,
+  verify the live regional experience, and record scope and remaining gaps.
+
+
+### Development checkpoint — 2026-09-27
+
+- Confirmed scope is recorded in PRD §12 and DECISIONS.md.
+- Source registry inventories 17 configured integrations across 15 topics;
+  `docs/puget-sound-coverage.md` records all 150 county/topic statuses.
+- Ten-county configuration and stable EPA monitor IDs are implemented.
+- County selection is shared; Air Quality and Data Coverage support it. Other
+  topics explicitly decline county filtering. City filters and geographic boundary
+  dimensions remain unimplemented.
+- Air queries apply selection before each aggregation; missing data and ozone-only
+  coverage have explicit states. The new mart is documented for Ask the Data.
+- Source retrieval timestamps, complete source contracts, benchmarks, broader
+  source discovery, and other regional topic implementations remain open.
+- Regional air rebuild completed: seven counties have observations; Island,
+  Jefferson, and Mason are explicitly unavailable in this configured feed/window.
+  98 tests and all 25 selected dbt model/test steps passed. Local query/build
+  measurements are recorded in `docs/puget-sound-coverage.md`.
+- Partial checkboxes above are not completion claims; city filters and the broader
+  regional rollout remain open.
+
+- Browser verification passed for Kitsap air summaries and its single-monitor map,
+  Island no-data states, selection persistence, unsupported civic-topic guidance,
+  the source inventory, and a 390×844 mobile layout. No deployment performed.
+- Numeric production budgets, independent source reconciliation beyond synthetic
+  fixtures, full Docker rehearsal, and end-to-end Ask the Data verification remain
+  open; the slice exit gate is therefore only partially complete.

@@ -63,7 +63,7 @@ metrics:
 
   - name: pct_good_or_moderate_air_days
     label: Good/Moderate air days
-    description: Share of metro-days whose worst PM2.5 reading was Good or Moderate.
+    description: Share of observed days whose worst PM2.5 reading among available Puget Sound monitors was Good or Moderate; coverage varies.
     mart: mart_air_category_days
     expression: round(100.0 * sum(day_count) filter (where aqi_category in ('Good', 'Moderate')) / nullif(sum(day_count), 0))
     unit: percent

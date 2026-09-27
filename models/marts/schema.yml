@@ -11,6 +11,37 @@ version: 2
 # checks on every mapped point. All verified against the built warehouse first.
 
 models:
+  - name: mart_air_observations
+    description: >
+      Puget Sound monitor/day/pollutant observations with stable EPA site IDs and
+      county FIPS. Configured for ten counties; inspect actual loaded coverage
+      before claiming regional completeness. Missing observations are not zeros.
+      Use this mart for county filters before aggregating daily peaks.
+    columns:
+      - name: county_fips
+        description: Five-digit state/county FIPS; filter here for county comparisons.
+        tests: [not_null]
+      - name: county
+        description: County name reported by EPA.
+      - name: site_id
+        description: Nine-digit EPA state/county/site identifier.
+        tests: [not_null]
+      - name: site
+        description: EPA local monitor name; names alone are not unique IDs.
+      - name: latitude
+        description: Monitor latitude in decimal degrees.
+      - name: longitude
+        description: Monitor longitude in decimal degrees.
+      - name: obs_date
+        description: Observation date, not retrieval date.
+        tests: [not_null]
+      - name: pollutant
+        description: EPA pollutant name.
+      - name: aqi
+        description: Rounded average of AQI-bearing source rows per site/day/pollutant.
+        tests: [not_null]
+      - name: aqi_category
+        description: Category based on the average AQI before rounding.
   # ===== Air quality (EPA AQS) ==============================================
   - name: mart_air_category_days
     description: >
@@ -40,8 +71,11 @@ models:
         description: Number of monitor-day readings aggregated.
 
   - name: mart_air_sites
-    description: One row per PM2.5 monitor for the map — location plus its average and worst AQI.
+    description: One row per stable EPA PM2.5 monitor ID for the map — location plus its average and worst AQI.
     columns:
+      - name: site_id
+        description: Nine-digit EPA state/county/site identifier; stable across name changes.
+        tests: [not_null, unique]
       - name: site
         description: Monitor (local site) name.
       - name: county

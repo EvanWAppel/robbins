@@ -1,6 +1,8 @@
 """Robbins — an open-data atlas of the Seattle metro."""
 import streamlit as st
 
+from city_config import DATA_SOURCES, REGION_COUNTIES
+from geography import county_selector
 from ui import apply_theme
 
 st.set_page_config(page_title="Robbins | Seattle City Atlas", page_icon="⚓", layout="wide")
@@ -11,6 +13,7 @@ sections = {
     "Start here": [
         st.Page("views/overview.py", title="Overview", default=True),
         st.Page("views/ask.py", title="Ask the Data"),
+        st.Page("views/data_coverage.py", title="Data Coverage"),
     ],
     "City & housing": [
         st.Page("views/building_permits.py", title="Building Permits"),
@@ -39,11 +42,25 @@ sections = {
 page = st.navigation(sections, position="hidden")
 with st.sidebar:
     st.html('<div class="brand"><div class="brand-name"><svg class="brand-mark" viewBox="0 0 24 24" fill="none" stroke="#cfe0e6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="5" r="3"/><line x1="12" y1="22" x2="12" y2="8"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/></svg> robbins.</div><div class="brand-sub">The Seattle city atlas</div></div>')
+    selected_county = county_selector()
+    st.caption("Regional filters currently support Air Quality and Data Coverage. Other topics are being expanded.")
     for section, entries in sections.items():
         st.caption(section)
         for entry in entries:
             with st.container(key="nav_current" if entry == page else f"nav_{entry.title}"):
                 st.page_link(entry, label=entry.title)
-    st.html('<div class="sidebar-note">A closer look at the place we call home.<br>Seattle · King · Pierce · Snohomish</div>')
+    st.html('<div class="sidebar-note">A closer look at the place we call home.<br>Seattle roots · Puget Sound expansion</div>')
 
-page.run()
+st.session_state["_regional_navigation"] = True
+if selected_county and page.title not in {"Air Quality", "Data Coverage"}:
+    st.title(page.title)
+    st.info(
+        f"{REGION_COUNTIES[selected_county]} County filtering is not available for this topic yet. "
+        "Choose Air Quality or Data Coverage, or select all available data to see "
+        "this topic's existing coverage."
+    )
+else:
+    sources = [s for s in DATA_SOURCES if s.topic == page.title]
+    if sources:
+        st.caption("Configured source scope: " + "; ".join(s.coverage for s in sources))
+    page.run()

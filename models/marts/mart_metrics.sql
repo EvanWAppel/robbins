@@ -55,7 +55,7 @@ union all
 select
     'pct_good_or_moderate_air_days' as metric_name,
     'Good/Moderate air days' as label,
-    'Share of metro-days whose worst PM2.5 reading was Good or Moderate.' as description,
+    'Share of observed days whose worst PM2.5 reading among available Puget Sound monitors was Good or Moderate; coverage varies.' as description,
     'percent' as unit,
     (select cast(round(100.0 * sum(day_count) filter (where aqi_category in ('Good', 'Moderate')) / nullif(sum(day_count), 0)) as double) from {{ ref('mart_air_category_days') }}) as value
 union all
