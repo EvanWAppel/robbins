@@ -1,8 +1,7 @@
 {{ config(materialized='table') }}
 
--- Ferry ridership by operator. Washington State Ferries is the nation's largest
--- ferry system; everything else here is the King County Water Taxi (some of which
--- NTD reports under the King County agency), so non-WSF ferry rolls up to it.
+-- Preserve each operator; only the two known King County reporting names
+-- map to Water Taxi. Never collapse new ferry systems into that operator.
 
 with ferry as (
     select * from {{ ref('stg_ntd_ridership') }}
@@ -11,8 +10,8 @@ with ferry as (
 
 select
     case
-        when agency = 'Washington State Ferries' then 'Washington State Ferries'
-        else 'King County Water Taxi'
+        when agency in ('King County', 'King County Ferry District') then 'King County Water Taxi'
+        else agency_label
     end      as operator,
     sum(upt) as boardings
 from ferry

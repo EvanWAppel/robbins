@@ -72,10 +72,19 @@ NTD_AGENCIES = {
     "City of Seattle": "Seattle Streetcar",
     "Washington State Ferries": "Washington State Ferries",
     "King County Ferry District": "King County Water Taxi",
+    # Verified in FTA monthly agency coverage on 2026-09-27.
+    "Kitsap County Public Transportation Benefit Area Authority": "Kitsap Transit",
+    "Skagit Transit": "Skagit Transit",
+    "Whatcom Transportation Authority": "Whatcom Transportation Authority",
+    "Intercity Transit": "Intercity Transit",
+    "County of Pierce": "Pierce County Ferry",
 }
 # Cap to a recent decade — long enough to frame the pre-pandemic peak, the 2020
 # collapse, and the ongoing recovery, while keeping the fetch small.
 NTD_START = "2015-01-01"
+# These operators were absent from the WA monthly feed's 2015+ agency inventory.
+# Absence here is not evidence of zero ridership or absence from annual NTD data.
+NTD_MONTHLY_GAPS = ("Island Transit", "Jefferson Transit Authority", "Mason Transit")
 
 # --------------------------------------------------------------------------- #
 # ArcGIS FeatureServers — City of Seattle / King County GIS (spatial layers)   #

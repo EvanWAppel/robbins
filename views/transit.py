@@ -10,13 +10,14 @@ import streamlit as st
 
 import ui
 from app_db import query
+from mobility import show_mobility_coverage
 
 st.title("Transit Ridership")
 st.caption(
-    "Monthly boardings across Puget Sound transit agencies (FTA National Transit "
-    "Database), 2015-present. Buses carry most riders; Sound Transit's Link light "
-    "rail is the region's clearest growth story."
+    "Monthly boardings for the configured Puget Sound transit operators "
+    "from the FTA National Transit Database. Ferries have their own page."
 )
+show_mobility_coverage(is_ferry=False)
 
 # --- KPIs ---
 monthly = query(
@@ -67,7 +68,7 @@ with col_a:
         alt.Chart(agency)
         .mark_bar(color="#3f7d86")
         .encode(
-            x=alt.X("boardings:Q", title="Boardings (2015-present)"),
+            x=alt.X("boardings:Q", title="Boardings (loaded period)"),
             y=alt.Y("agency_label:N", sort="-x", title=None),
             tooltip=[
                 alt.Tooltip("agency_label:N", title="Agency"),
@@ -85,7 +86,7 @@ with col_b:
         alt.Chart(mode)
         .mark_bar(color="#8fb3b5")
         .encode(
-            x=alt.X("boardings:Q", title="Boardings (2015-present)"),
+            x=alt.X("boardings:Q", title="Boardings (loaded period)"),
             y=alt.Y("mode_label:N", sort="-x", title=None),
             tooltip=[
                 alt.Tooltip("mode_label:N", title="Mode"),

@@ -10,24 +10,25 @@ import streamlit as st
 
 import ui
 from app_db import query
+from mobility import operator_share, show_mobility_coverage
 
 st.title("Ferry Ridership")
 st.caption(
-    "Monthly ferry boardings across Puget Sound (FTA National Transit Database), "
-    "2015-present. Washington State Ferries dominates; ridership swells every summer "
-    "— a useful proxy for regional travel and tourism."
+    "Monthly boardings for Washington State Ferries, King County Water Taxi, "
+    "Kitsap Transit ferries, and Pierce County Ferry, from the FTA National Transit Database."
 )
+show_mobility_coverage(is_ferry=True)
 
 # --- KPIs ---
 annual = query(
     "select ridership_year, boardings, months_reported from main.mart_ferry_annual order by ridership_year"
 )
 full_years = annual[annual["months_reported"] == 12]
-latest_full = full_years.iloc[-1]
+latest_full = full_years.iloc[-1] if not full_years.empty else None
 operator = query(
     "select operator, boardings from main.mart_ferry_by_operator order by boardings desc"
 )
-wsf_share = 100 * operator.iloc[0]["boardings"] / operator["boardings"].sum()
+wsf_share = operator_share(operator, "Washington State Ferries")
 seasonal = query(
     "select month_of_year, avg_boardings from main.mart_ferry_seasonal order by month_of_year"
 )
@@ -38,10 +39,10 @@ month_names = [
 
 c1, c2, c3 = st.columns(3)
 c1.metric(
-    f"Boardings ({int(latest_full['ridership_year'])})",
-    f"{latest_full['boardings'] / 1e6:.1f}M",
+    f"Boardings ({int(latest_full['ridership_year'])})" if latest_full is not None else "Annual boardings",
+    f"{latest_full['boardings'] / 1e6:.1f}M" if latest_full is not None else "No 12-month year",
 )
-c2.metric("Washington State Ferries share", f"{wsf_share:.0f}%")
+c2.metric("Washington State Ferries share", f"{wsf_share:.0f}%" if wsf_share is not None else "Not available")
 c3.metric("Busiest month", month_names[int(peak_month)])
 
 st.divider()
@@ -87,12 +88,12 @@ with col_a:
     ui.chart(seasonal_chart, width="stretch")
 with col_b:
     st.subheader("By operator")
-    st.caption("Washington State Ferries vs. the King County Water Taxi.")
+    st.caption("Loaded boardings by operator; reporting periods may differ.")
     operator_chart = (
         alt.Chart(operator)
         .mark_bar(color="#8fb3b5")
         .encode(
-            x=alt.X("boardings:Q", title="Boardings (2015-present)"),
+            x=alt.X("boardings:Q", title="Boardings (loaded period)"),
             y=alt.Y("operator:N", sort="-x", title=None),
             tooltip=[
                 alt.Tooltip("operator:N", title="Operator"),
@@ -104,7 +105,7 @@ with col_b:
 
 # --- Annual (full years only) ---
 st.subheader("Annual boardings")
-st.caption("Full calendar years only — the current partial year is omitted.")
+st.caption("Years with observations in all 12 calendar months. This does not guarantee every operator reported every month; see agency coverage above.")
 annual_full = full_years.assign(year=full_years["ridership_year"].astype(int).astype(str))
 annual_chart = (
     alt.Chart(annual_full)

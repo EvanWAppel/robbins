@@ -65,3 +65,23 @@ def air_database():
         ('Kitsap', '53035', '530350001', 'Same name', 47.5, -122.6, '2024-01-02', 'Ozone', 20, 'Good')''')
     yield con
     con.close()
+
+
+@pytest.fixture
+def ntd_database():
+    """Distinct ferry operators and service types for regional aggregation tests."""
+    import duckdb
+
+    con = duckdb.connect()
+    con.execute('''create table stg_ntd_ridership (
+        agency varchar, agency_label varchar, is_ferry boolean,
+        ridership_month date, upt bigint)''')
+    con.execute('''insert into stg_ntd_ridership values
+        ('Washington State Ferries', 'Washington State Ferries', true, '2024-01-01', 10),
+        ('King County', 'King County Metro', true, '2024-01-01', 3),
+        ('King County Ferry District', 'King County Water Taxi', true, '2015-01-01', 4),
+        ('Kitsap County Public Transportation Benefit Area Authority', 'Kitsap Transit', true, '2024-01-01', 20),
+        ('County of Pierce', 'Pierce County Ferry', true, '2024-01-01', 5),
+        ('King County', 'King County Metro', false, '2024-01-01', 100)''')
+    yield con
+    con.close()

@@ -92,3 +92,13 @@ requiring explicit gaps and comparison limitations on every topic. Air quality
 is the first implementation slice because the existing EPA feed carries county
 codes. Separate city/county page trees and all-counties-before-launch gating
 were not selected.
+
+
+## 2026-09-27 — Expand mobility at agency grain
+
+Use the existing verified FTA monthly feed for five additional regional reporters,
+with explicit agency reporting windows. Preserve separate ferry operators and map
+only the two known King County reporting names to Water Taxi. Retain source service
+type in staging. Do not assign agency-wide totals to counties or join annual-only
+series into monthly charts; alternate sources for monthly-feed gaps remain work
+to verify separately. This implements the approved partial-coverage policy.

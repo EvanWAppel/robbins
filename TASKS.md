@@ -304,7 +304,7 @@ outcome, not implemented coverage.
 - [ ] **PS-TOPICS-02 — Weather and water:** audit and integrate regional weather,
   river, tide, and snow stations; preserve station identity, units, datum/baseline,
   and comparable periods. Do not extrapolate a station across a county.
-- [ ] **PS-TOPICS-03 — Transit and ferries:** audit operators serving the region;
+- [~] **PS-TOPICS-03 — Transit and ferries:** audit operators serving the region;
   integrate verified coverage at agency/mode grain without inventing county or
   route ridership allocations.
 - [ ] **PS-TOPICS-04 — Permits:** integrate municipal/county feeds; distinguish
@@ -367,3 +367,18 @@ outcome, not implemented coverage.
 - Numeric production budgets, independent source reconciliation beyond synthetic
   fixtures, full Docker rehearsal, and end-to-end Ask the Data verification remain
   open; the slice exit gate is therefore only partially complete.
+
+
+### Mobility continuation — 2026-09-27
+
+- Foundations/air slice opened as PR #19. Continuation branch: `puget-sound-mobility`.
+- Verified and integrated five additional FTA reporters: Kitsap, Skagit, Whatcom,
+  Intercity, and Pierce County Ferry. Thirteen reporting agencies now load.
+- Fixed ferry aggregation so new operators are not mislabeled as Water Taxi;
+  retained service-type provenance in staging and added reporting coverage marts/UI.
+- Island/Jefferson/Mason operators are absent from this monthly feed's inventory;
+  alternate/annual source discovery remains open. County/route allocation is not
+  inferred from agency totals. Full regional mobility coverage remains partial.
+- Mobility checks: 102 pytest tests, Ruff, ty, 19 selected dbt steps, and a separate
+  source-total reconciliation test passed. All three affected pages passed smoke
+  checks; the expanded ferry chart was inspected in the browser. No deployment.

@@ -74,9 +74,9 @@ models:
 
   - name: stg_ntd_ridership
     description: >
-      Puget Sound monthly transit + ferry ridership. (agency, mode, month) is NOT
-      unique — the NTD feed splits some rows by type-of-service, which staging does
-      not carry — so no uniqueness test is asserted on it.
+      Puget Sound monthly transit + ferry ridership, retaining service type (tos).
+      Agency/mode/month alone is not unique: multiple service types are additive.
+      County/route allocation is unavailable in this agency-level feed.
     columns:
       - name: ridership_month
         data_tests:
