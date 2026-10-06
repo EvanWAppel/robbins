@@ -26,6 +26,7 @@ import pandas as pd
 import requests
 
 import city_config as cfg
+import stations
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger("build_warehouse")
@@ -252,6 +253,89 @@ def usgs_nwis_dv_url(site: str, param: str, start: str, end: str) -> str:
     )
 
 
+def usgs_nwis_dv_county_url(fips5: str, param: str, start: str, end: str) -> str:
+    """USGS NWIS daily-values JSON for every active gage in one county.
+
+    ``fips5`` is the 5-digit state+county FIPS (e.g. ``53033`` = King). The
+    response carries one ``timeSeries`` per gage; a county with no gage returns
+    an empty ``timeSeries`` list, which :func:`parse_usgs_dv` renders as an empty
+    frame (not an error) — some region counties genuinely have none.
+    """
+    return (
+        "https://waterservices.usgs.gov/nwis/dv/?format=json"
+        f"&countyCd={fips5}&parameterCd={param}&siteStatus=active"
+        f"&startDT={start}&endDT={end}"
+    )
+
+
+# The tidy columns every USGS streamflow frame carries (also the empty-frame shape).
+_USGS_COLUMNS = ["obs_date", "discharge_cfs", "site_no", "station_name", "lat", "lon"]
+
+
+def parse_usgs_dv(payload: dict) -> pd.DataFrame:
+    """USGS NWIS dv JSON -> tidy daily frame, one row per (gage, day).
+
+    Handles the single-site and multi-site (county) responses identically by
+    iterating every ``timeSeries``. Each carries its own gage id, name, and
+    coordinates in ``sourceInfo``. An empty ``timeSeries`` yields an empty frame
+    with the standard columns so callers can treat "no gage" as a normal state.
+    """
+    rows: list[dict] = []
+    for ts in payload.get("value", {}).get("timeSeries", []):
+        info = ts.get("sourceInfo", {})
+        site_no = info.get("siteCode", [{}])[0].get("value", "")
+        name = info.get("siteName", "")
+        geo = info.get("geoLocation", {}).get("geogLocation", {})
+        lat, lon = geo.get("latitude"), geo.get("longitude")
+        for obs in ts.get("values", [{}])[0].get("value", []):
+            rows.append(
+                {
+                    "obs_date": obs.get("dateTime"),
+                    "discharge_cfs": obs.get("value"),
+                    "site_no": site_no,
+                    "station_name": name,
+                    "lat": lat,
+                    "lon": lon,
+                }
+            )
+    return pd.DataFrame(rows, columns=_USGS_COLUMNS)
+
+
+def add_headline_flag(
+    df: pd.DataFrame, station_col: str, years: pd.Series
+) -> pd.DataFrame:
+    """Add an ``is_headline`` bool marking each county's one curated station.
+
+    The headline is the station with the most distinct calendar years of data in
+    its county (ties -> lexicographically smallest id), via the shared
+    :func:`stations.pick_headline_stations` rule — so weather, river, tide, and
+    snow all curate identically. ``years`` is the calendar year per row (aligned
+    to ``df``); the frame must carry a ``county`` column. Every other station
+    still loads (for the density map); only the headline drives a county's charts.
+    """
+    spans = (
+        pd.DataFrame(
+            {"county": df["county"], "station_id": df[station_col], "year": years}
+        )
+        .groupby(["county", "station_id"])["year"]
+        .nunique()
+        .reset_index()
+    )
+    records = [
+        {"county": county, "station_id": station, "record_years": int(count)}
+        for county, station, count in zip(
+            spans["county"], spans["station_id"], spans["year"], strict=True
+        )
+    ]
+    headline = stations.pick_headline_stations(records)
+    out = df.copy()
+    out["is_headline"] = [
+        headline.get(county) == station
+        for county, station in zip(df["county"], df[station_col], strict=True)
+    ]
+    return out
+
+
 def noaa_tides_monthly_url(station: str, begin: str, end: str) -> str:
     """NOAA CO-OPS monthly-mean sea-level datums JSON (dates as YYYYMMDD)."""
     return (
@@ -261,6 +345,51 @@ def noaa_tides_monthly_url(station: str, begin: str, end: str) -> str:
         f"&datum=MSL&station={station}"
         "&time_zone=lst&units=english&format=json"
     )
+
+
+def snotel_stations_url(network: str, state: str) -> str:
+    """NRCS AWDB station-metadata endpoint for one network + state.
+
+    Returns every station (triplet, name, county, elevation); we filter to the
+    region counties client-side in :func:`parse_snotel_stations` because the
+    ``stateCds``/``networkCds`` query filters are unreliable on this API.
+    """
+    return (
+        "https://wcc.sc.egov.usda.gov/awdbRestApi/services/v1/stations"
+        f"?networkCds={network}&stateCds={state}&activeOnly=true"
+    )
+
+
+def parse_snotel_stations(
+    payload: list[dict], region_counties: dict[str, str]
+) -> list[dict]:
+    """Keep only SNOTEL stations whose county is one of our region counties.
+
+    ``region_counties`` maps FIPS -> county name (``city_config.REGION_COUNTIES``).
+    The AWDB response gives ``countyName`` (e.g. "King") but no FIPS, so we
+    resolve the FIPS by name. Stations in non-region counties (Chelan, Klamath,
+    …) drop out. Returns dicts of ``triplet``/``name``/``county``/``elevation``.
+    """
+    name_to_fips = {name: fips for fips, name in region_counties.items()}
+    kept: list[dict] = []
+    for station in payload:
+        triplet = station.get("stationTriplet", "")
+        if not triplet.endswith(":SNTL"):
+            continue
+        fips = name_to_fips.get(station.get("countyName", ""))
+        if fips is None:
+            continue
+        kept.append(
+            {
+                "triplet": triplet,
+                "name": station.get("name", ""),
+                "county": fips,
+                "elevation": station.get("elevation"),
+                "latitude": station.get("latitude"),
+                "longitude": station.get("longitude"),
+            }
+        )
+    return kept
 
 
 def snotel_daily_csv_url(
@@ -727,40 +856,108 @@ def build_trees(con: duckdb.DuckDBPyConnection) -> None:
     load_raw(con, "trees", pd.DataFrame(rows))
 
 
-def build_water(con: duckdb.DuckDBPyConnection) -> None:
-    """The signature-water-body topic — three raw tables from three feeds.
+def build_river(con: duckdb.DuckDBPyConnection) -> None:
+    """Regional daily streamflow — every active USGS gage in each region county.
 
-    Cedar River streamflow (USGS), Seattle sea-level datums (NOAA), and Stampede
-    Pass snowpack (NRCS SNOTEL). One builder, three ``raw`` tables, so the whole
-    topic rebuilds together.
+    One county-scoped NWIS call per county (``countyCd``); counties with no gage
+    (Island, Kitsap) return an empty series and are logged, not treated as an
+    error. Rows carry gage id, county, and coordinates; the county headline is
+    the gage with the longest record.
     """
     today = datetime.now(UTC).date()
-    load_raw(
-        con,
-        "cedar_river_flow",
-        fetch_usgs_dv(
-            cfg.USGS_CEDAR_RIVER_SITE,
-            cfg.USGS_FLOW_PARAM,
-            f"{cfg.WATER_START_YEAR}-01-01",
-            today.isoformat(),
-        ),
+    frames: list[pd.DataFrame] = []
+    for fips, county_name in cfg.REGION_COUNTIES.items():
+        url = usgs_nwis_dv_county_url(
+            fips, cfg.USGS_FLOW_PARAM, f"{cfg.WATER_START_YEAR}-01-01", today.isoformat()
+        )
+        log.info("USGS river fetch %s County (%s)", county_name, fips)
+        resp = requests.get(url, timeout=SODA_TIMEOUT)
+        resp.raise_for_status()
+        df = parse_usgs_dv(resp.json())
+        if df.empty:
+            log.info("  no active streamflow gages in %s County", county_name)
+            continue
+        df["county"] = fips
+        df["county_name"] = county_name
+        frames.append(df)
+        log.info("  %s: %d gages, %d daily rows", county_name, df["site_no"].nunique(), len(df))
+    if not frames:
+        raise ValueError("USGS returned no streamflow gages for any region county")
+    combined = pd.concat(frames, ignore_index=True)
+    years = combined["obs_date"].str.slice(0, 4).astype(int)
+    load_raw(con, "river", add_headline_flag(combined, "site_no", years))
+
+
+def build_tides(con: duckdb.DuckDBPyConnection) -> None:
+    """Regional monthly sea-level datums — the five saltwater-front tide gauges.
+
+    Only the coastal region counties have a long-record CO-OPS gauge (verified
+    crosswalk in :data:`city_config.NOAA_TIDE_STATIONS`); each station's series
+    is tagged with its county so the UI never implies inland tide coverage.
+    """
+    today = datetime.now(UTC).date()
+    frames: list[pd.DataFrame] = []
+    for station_id, (fips, station_name, lat, lon) in cfg.NOAA_TIDE_STATIONS.items():
+        df = fetch_noaa_tides_monthly(
+            station_id, f"{cfg.TIDES_START_YEAR}0101", today.strftime("%Y%m%d")
+        )
+        df["station_id"] = station_id
+        df["station_name"] = station_name
+        df["lat"] = lat
+        df["lon"] = lon
+        df["county"] = fips
+        df["county_name"] = cfg.REGION_COUNTIES[fips]
+        frames.append(df)
+    combined = pd.concat(frames, ignore_index=True)
+    years = combined["year"].astype(int)
+    load_raw(con, "tides", add_headline_flag(combined, "station_id", years))
+
+
+def build_snow(con: duckdb.DuckDBPyConnection) -> None:
+    """Regional daily snowpack — every active WA SNOTEL station in a region county.
+
+    Station discovery filters the AWDB inventory to the region counties by name
+    (:func:`parse_snotel_stations`); each station's SWE/depth series is tagged
+    with its county. Lowland counties (Island, Kitsap, Thurston) have no station.
+    """
+    today = datetime.now(UTC).date()
+    resp = requests.get(
+        snotel_stations_url(cfg.SNOTEL_NETWORK, cfg.SNOTEL_STATE), timeout=SODA_TIMEOUT
     )
-    load_raw(
-        con,
-        "seattle_tides",
-        fetch_noaa_tides_monthly(
-            cfg.NOAA_TIDES_STATION,
-            f"{cfg.TIDES_START_YEAR}0101",
-            today.strftime("%Y%m%d"),
-        ),
-    )
-    load_raw(
-        con,
-        "snowpack",
-        fetch_snotel_daily(
-            cfg.SNOTEL_STATION, f"{cfg.WATER_START_YEAR}-10-01", today.isoformat()
-        ),
-    )
+    resp.raise_for_status()
+    region_stations = parse_snotel_stations(resp.json(), cfg.REGION_COUNTIES)
+    if not region_stations:
+        raise ValueError("No SNOTEL stations resolved to region counties")
+    log.info("snow: %d region SNOTEL stations", len(region_stations))
+    frames: list[pd.DataFrame] = []
+    for station in region_stations:
+        df = fetch_snotel_daily(
+            station["triplet"], f"{cfg.WATER_START_YEAR}-10-01", today.isoformat()
+        )
+        df["station_triplet"] = station["triplet"]
+        df["station_name"] = station["name"]
+        df["lat"] = station["latitude"]
+        df["lon"] = station["longitude"]
+        df["county"] = station["county"]
+        df["county_name"] = cfg.REGION_COUNTIES[station["county"]]
+        frames.append(df)
+        log.info("  snow %s (%s County): %d rows", station["name"], df["county_name"].iloc[0], len(df))
+    combined = pd.concat(frames, ignore_index=True)
+    years = combined["obs_date"].astype(str).str.slice(0, 4).astype(int)
+    load_raw(con, "snow", add_headline_flag(combined, "station_triplet", years))
+
+
+def build_water(con: duckdb.DuckDBPyConnection) -> None:
+    """The regional water topic — river, tide, and snow, each region-wide.
+
+    One builder, three ``raw`` tables (``river``, ``tides``, ``snow``), so the
+    whole topic rebuilds together. Each network carries station identity and a
+    per-county headline; per-county gaps (no gage / no gauge / no station) are
+    real and left absent, never extrapolated from a neighbor.
+    """
+    build_river(con)
+    build_tides(con)
+    build_snow(con)
 
 
 def build_air_quality(con: duckdb.DuckDBPyConnection) -> None:
@@ -781,14 +978,111 @@ def build_air_quality(con: duckdb.DuckDBPyConnection) -> None:
     load_raw(con, "air_quality", combined)
 
 
-def build_weather(con: duckdb.DuckDBPyConnection) -> None:
-    """Sea-Tac daily weather, GHCN-Daily station CSV (~28k days since 1948).
+# The GHCN columns we keep per station (the file is 90+ columns, mostly empty).
+# A per-station access CSV only carries columns for elements that station reports,
+# so we select tolerantly (a station without SNOW simply lacks that column; pandas
+# unions columns on concat, filling the gap with NaN).
+_GHCN_USECOLS = {
+    "STATION", "DATE", "LATITUDE", "LONGITUDE", "NAME",
+    "PRCP", "SNOW", "SNWD", "TMAX", "TMIN",
+}
 
-    The whole station record is one keyless CSV; DuckDB reads it directly. The
-    file is wide (100+ mostly-empty attribute columns) so we read all as text
-    and let the staging layer pick out and unit-convert the fields we chart.
+
+def assign_weather_counties(
+    con: duckdb.DuckDBPyConnection, points: pd.DataFrame
+) -> pd.DataFrame:
+    """Map each weather station to a region county by point-in-polygon.
+
+    ``points`` has distinct ``STATION``/``LATITUDE``/``LONGITUDE``. County
+    polygons come from TIGERweb; the DuckDB ``spatial`` extension runs
+    ``ST_Contains``. Stations outside the ten region counties (the discovery
+    bbox slightly overspills) fall out of the inner join. Returns
+    ``STATION``/``county``/``county_name``.
     """
-    ingest_csv(con, "weather", noaa_ghcn_url(cfg.NOAA_STATION))
+    feats = fetch_features(
+        cfg.COUNTY_BOUNDARY, where="STATE='53'", out_fields="GEOID,NAME", geometry=True
+    )
+    counties = pd.DataFrame(
+        [
+            {
+                "county": attrs["GEOID"],
+                "county_name": (attrs.get("NAME") or "").replace(" County", ""),
+                "geojson": _rings_to_multipolygon_geojson(geom["rings"]),
+            }
+            for attrs, geom in feats
+            if geom and geom.get("rings") and attrs.get("GEOID") in cfg.REGION_COUNTIES
+        ]
+    )
+    pts = points.copy()
+    pts["LATITUDE"] = pts["LATITUDE"].astype(float)
+    pts["LONGITUDE"] = pts["LONGITUDE"].astype(float)
+    con.execute("INSTALL spatial; LOAD spatial;")
+    con.register("_pts", pts)
+    con.register("_cty", counties)
+    result = con.execute(
+        """
+        SELECT p.STATION AS "STATION", c.county, c.county_name
+        FROM _pts p
+        JOIN _cty c
+          ON ST_Contains(
+               ST_GeomFromGeoJSON(c.geojson),
+               ST_Point(p.LONGITUDE, p.LATITUDE)
+             )
+        """
+    ).df()
+    con.unregister("_pts")
+    con.unregister("_cty")
+    log.info("weather: %d/%d stations assigned to a region county", len(result), len(points))
+    return result
+
+
+def build_weather(con: duckdb.DuckDBPyConnection) -> None:
+    """Regional daily weather — every temperature-reporting GHCN station.
+
+    Discovery: filter the national GHCN inventory to the region bounding box,
+    the TMAX element, and a recent last-year (:mod:`stations`). Each surviving
+    station's daily record is clipped to WEATHER_REGIONAL_START_YEAR onward (a
+    uniform window across every station, including Sea-Tac, for a lean build) and
+    concatenated, then assigned to a county by point-in-polygon. Stations that
+    overspill the region drop at the join.
+    """
+    inv = requests.get(cfg.GHCN_INVENTORY_URL, timeout=SODA_TIMEOUT)
+    inv.raise_for_status()
+    station_ids = stations.select_region_weather_stations(
+        stations.parse_ghcn_inventory(inv.text),
+        cfg.REGION_BBOX,
+        cfg.GHCN_ELEMENT,
+        cfg.GHCN_MIN_LAST_YEAR,
+    )
+    if not station_ids:
+        raise ValueError("GHCN inventory yielded no region weather stations")
+    log.info("weather: %d region temperature stations discovered", len(station_ids))
+    frames: list[pd.DataFrame] = []
+    for station_id in station_ids:
+        resp = requests.get(noaa_ghcn_url(station_id), timeout=SODA_TIMEOUT)
+        if resp.status_code == 404:
+            log.warning("weather: no access CSV for %s, skipping", station_id)
+            continue
+        resp.raise_for_status()
+        sdf = pd.read_csv(
+            io.StringIO(resp.text), usecols=lambda c: c in _GHCN_USECOLS, dtype=str
+        )
+        recent = sdf[
+            sdf["DATE"].str.slice(0, 4).astype(int) >= cfg.WEATHER_REGIONAL_START_YEAR
+        ]
+        if not recent.empty:
+            frames.append(recent)
+    if not frames:
+        raise ValueError("GHCN station CSVs yielded no recent weather rows")
+    combined = pd.concat(frames, ignore_index=True)
+    county_map = assign_weather_counties(
+        con, combined[["STATION", "LATITUDE", "LONGITUDE"]].drop_duplicates()
+    )
+    combined = combined.merge(county_map, on="STATION", how="inner")
+    if combined.empty:
+        raise ValueError("No weather stations fell inside a region county")
+    years = combined["DATE"].str.slice(0, 4).astype(int)
+    load_raw(con, "weather", add_headline_flag(combined, "STATION", years))
 
 
 # raw table name -> builder. Add topics here as their sources are verified.

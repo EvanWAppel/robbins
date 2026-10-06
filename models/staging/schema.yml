@@ -214,45 +214,73 @@ models:
                   - "Hazardous"
 
   - name: stg_weather
-    description: Sea-Tac daily weather (NOAA GHCN-Daily), one row per day.
-    columns:
-      - name: obs_date
-        data_tests:
-          - not_null
-          - unique
-
-  - name: stg_snowpack
-    description: Stampede Pass daily snowpack (NRCS SNOTEL), one row per day.
-    columns:
-      - name: obs_date
-        data_tests:
-          - not_null
-          - unique
-      - name: water_year
-        data_tests:
-          - not_null
-
-  - name: stg_cedar_river_flow
-    description: Cedar River daily streamflow (USGS NWIS), one row per day.
-    columns:
-      - name: obs_date
-        data_tests:
-          - not_null
-          - unique
-      - name: discharge_cfs
-        data_tests:
-          - not_null
-
-  - name: stg_seattle_tides
-    description: Seattle (Elliott Bay) monthly tide datums (NOAA CO-OPS), one row per month.
+    description: Regional daily weather (NOAA GHCN-Daily), one row per station-day.
     data_tests:
       - dbt_utils.unique_combination_of_columns:
           arguments:
             combination_of_columns:
+              - station_id
+              - obs_date
+    columns:
+      - name: obs_date
+        data_tests:
+          - not_null
+      - name: county_fips
+        data_tests:
+          - not_null
+
+  - name: stg_snow
+    description: Regional daily snowpack (NRCS SNOTEL), one row per station-day.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - station_triplet
+              - obs_date
+    columns:
+      - name: obs_date
+        data_tests:
+          - not_null
+      - name: water_year
+        data_tests:
+          - not_null
+      - name: county_fips
+        data_tests:
+          - not_null
+
+  - name: stg_river
+    description: Regional daily streamflow (USGS NWIS), one row per gage-day.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - site_no
+              - obs_date
+    columns:
+      - name: obs_date
+        data_tests:
+          - not_null
+      - name: discharge_cfs
+        data_tests:
+          - not_null
+      - name: county_fips
+        data_tests:
+          - not_null
+
+  - name: stg_tides
+    description: Regional monthly tide datums (NOAA CO-OPS), one row per station-month.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - station_id
               - year
               - month
     columns:
       - name: year
+        data_tests:
+          - not_null
+      - name: county_fips
         data_tests:
           - not_null
       - name: month

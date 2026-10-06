@@ -301,7 +301,7 @@ outcome, not implemented coverage.
 
 - [~] **PS-TOPICS-01 — Air quality:** audit county monitor/pollutant coverage;
   integrate supported sources and distinguish absent monitors from clean air.
-- [ ] **PS-TOPICS-02 — Weather and water:** audit and integrate regional weather,
+- [~] **PS-TOPICS-02 — Weather and water:** audit and integrate regional weather,
   river, tide, and snow stations; preserve station identity, units, datum/baseline,
   and comparable periods. Do not extrapolate a station across a county.
 - [~] **PS-TOPICS-03 — Transit and ferries:** audit operators serving the region;
@@ -382,3 +382,18 @@ outcome, not implemented coverage.
 - Mobility checks: 102 pytest tests, Ruff, ty, 19 selected dbt steps, and a separate
   source-total reconciliation test passed. All three affected pages passed smoke
   checks; the expanded ferry chart was inspected in the browser. No deployment.
+
+
+### Weather & water continuation — 2026-10-05
+
+- Branch `puget-sound-weather-water`. Weather, river, tide, and snow now ingest every
+  verified station region-wide (GHCN TMAX stations, USGS gages, NOAA tide gauges,
+  NRCS SNOTEL) with county assignment and a per-county headline station; old
+  Seattle-only marts replaced by `mart_{weather,river,tides,snow}_observations`.
+- Uniform 2014-onward window for every weather station incl. Sea-Tac (see
+  DECISIONS.md); all-time records now span 2014+ only.
+- Honest absences: no USGS gage in Island/Kitsap, tide gauges only in the 5
+  saltwater-front counties, no SNOTEL in Island/Kitsap/Thurston.
+- Checks: 130 pytest tests, Ruff, ty, and `dbt build` (PASS=162, ERROR=0; 2 known
+  crime warnings) passed on the existing warehouse. No full warehouse rebuild or
+  Docker rehearsal on this branch. No deployment.

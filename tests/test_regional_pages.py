@@ -44,3 +44,29 @@ def test_unsupported_county_does_not_query_seattle(monkeypatch):
     app.run()
     assert not app.exception
     assert any('Kitsap County filtering is not available' in info.value for info in app.info)
+
+
+def test_weather_selection_and_missing_coverage(monkeypatch, weather_database):
+    monkeypatch.setattr(app_db, 'query', lambda sql, params=(): weather_database.cursor().execute(sql, params).df())
+    app = AppTest.from_file(str(ROOT / 'views/weather.py')).run()
+    assert not app.exception
+    # Region view: two counties covered.
+    assert app.metric[0].value == '2'
+    app.selectbox[0].set_value('53033').run()
+    assert not app.exception
+    assert app.session_state['selected_county'] == '53033'
+    # Island has no weather station -> missing-coverage info, page stops.
+    app.selectbox[0].set_value('53029').run()
+    assert not app.exception
+    assert any('missing' in info.value.lower() for info in app.info)
+
+
+def test_water_kitsap_shows_network_gaps(monkeypatch, water_database):
+    monkeypatch.setattr(app_db, 'query', lambda sql, params=(): water_database.cursor().execute(sql, params).df())
+    app = AppTest.from_file(str(ROOT / 'views/water.py')).run()
+    assert not app.exception
+    app.selectbox[0].set_value('53035').run()  # Kitsap: tide only
+    assert not app.exception
+    infos = ' '.join(info.value for info in app.info)
+    assert 'SNOTEL' in infos  # no snow station
+    assert 'streamflow' in infos  # no river gage

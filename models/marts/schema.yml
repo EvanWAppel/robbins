@@ -479,56 +479,59 @@ models:
       - name: avg_valuation
         description: Mean estimated project cost.
 
-  # ===== Water: Cedar River, snowpack, tides ================================
-  - name: mart_river_annual
-    description: Cedar River discharge by year — mean and summer-low minimum. Low-flow years track low-snowpack years.
+  # ===== Water: regional river / tide / snow observations ===================
+  - name: mart_river_observations
+    description: >
+      One row per gage-day of regional USGS streamflow (every active daily-discharge
+      gage in the region's counties; Island & Kitsap have none). The Water page
+      aggregates at query time — per-county headline gage for charts, all gages for
+      the map. Carries county_fips + is_headline so filtering stays honest.
     columns:
-      - name: year
-        description: Calendar year.
-      - name: avg_discharge_cfs
-        description: Mean daily discharge (cubic feet/second).
-      - name: min_discharge_cfs
-        description: Minimum daily discharge for the year.
+      - name: obs_date
+        description: Observation date.
+      - name: site_no
+        description: USGS gage id.
+      - name: county_fips
+        description: 5-digit county FIPS.
+      - name: is_headline
+        description: True for the county's longest-record gage.
+      - name: discharge_cfs
+        description: Daily mean discharge (cubic feet/second).
 
-  - name: mart_river_monthly_normals
-    description: Cedar River's seasonal signature — average discharge by calendar month.
+  - name: mart_tides_observations
+    description: >
+      One row per station-month of regional NOAA tide datums (the five saltwater-front
+      county gauges). Aggregated at query time; carries county_fips + is_headline.
     columns:
-      - name: month_num
-        description: Calendar month number (1–12).
-      - name: month_name
-        description: Abbreviated month name.
-      - name: avg_discharge_cfs
-        description: Mean daily discharge for the month across the record.
+      - name: obs_month
+        description: First day of the observation month.
+      - name: station_id
+        description: NOAA CO-OPS station id.
+      - name: county_fips
+        description: 5-digit county FIPS.
+      - name: is_headline
+        description: True for the county's headline gauge.
+      - name: msl_ft
+        description: Mean sea level datum (feet).
 
-  - name: mart_snowpack_annual_peak
-    description: Peak snow-water-equivalent per water year at Stampede Pass — the 2015 snow-drought stands out.
-    columns:
-      - name: water_year
-        description: Water year (Oct 1 – Sep 30, labeled by the ending year).
-      - name: peak_swe_in
-        description: Maximum snow-water-equivalent (inches) in the water year.
-
-  - name: mart_snowpack_recent
-    description: Daily snow-water-equivalent for the most recent three water years — the accumulate/melt cycle.
+  - name: mart_snow_observations
+    description: >
+      One row per station-day of regional NRCS SNOTEL snowpack (mountainous counties;
+      lowland Island/Kitsap/Thurston have none). Aggregated at query time; carries
+      county_fips + is_headline.
     columns:
       - name: obs_date
         description: Observation date.
       - name: water_year
-        description: Water year.
+        description: Water year (Oct 1 – Sep 30, labeled by the ending year).
+      - name: station_triplet
+        description: NRCS SNOTEL station triplet.
+      - name: county_fips
+        description: 5-digit county FIPS.
+      - name: is_headline
+        description: True for the county's headline station.
       - name: swe_in
         description: Snow-water-equivalent (inches).
-
-  - name: mart_tides_annual
-    description: Seattle sea level by year — average monthly MSL and great-diurnal range.
-    columns:
-      - name: year
-        description: Calendar year.
-      - name: avg_msl_ft
-        description: Average mean-sea-level datum (feet).
-      - name: avg_range_ft
-        description: Average great-diurnal tidal range (feet).
-      - name: month_count
-        description: Months present — lets the view drop partial years.
 
   # ===== Short-term rentals =================================================
   - name: mart_str_by_region
@@ -667,56 +670,29 @@ models:
       - name: exceptional_trees
         description: Count flagged exceptional.
 
-  # ===== Weather (NOAA GHCN-Daily, Sea-Tac) =================================
-  - name: mart_weather_annual
-    description: Annual precip totals, rain-day counts, and average high/low temps.
-    columns:
-      - name: year
-        description: Calendar year.
-      - name: total_precip_in
-        description: Total precipitation (inches).
-      - name: rain_days
-        description: Days with measurable rain (>0.01 in).
-      - name: avg_tmax_f
-        description: Mean daily high (°F).
-      - name: avg_tmin_f
-        description: Mean daily low (°F).
-
-  - name: mart_weather_monthly_normals
-    description: Climatology — average precip and high/low temps by calendar month (the wet-winter/dry-summer signature).
-    columns:
-      - name: month_num
-        description: Calendar month number (1–12).
-      - name: month_name
-        description: Abbreviated month name.
-      - name: avg_precip_in
-        description: Mean daily precipitation (inches).
-      - name: avg_tmax_f
-        description: Mean daily high (°F).
-      - name: avg_tmin_f
-        description: Mean daily low (°F).
-
-  - name: mart_weather_recent
-    description: The most recent ~2 years of daily highs, lows, and precip.
+  # ===== Weather (NOAA GHCN-Daily, regional) ================================
+  - name: mart_weather_observations
+    description: >
+      One row per station-day of regional weather across every temperature-reporting
+      GHCN station in the ten-county region (the King headline is Sea-Tac). The Rain
+      & Records page aggregates at query time — per-county headline station for
+      charts, all stations for the map. Carries county_fips + is_headline so county
+      filtering and station labeling stay honest.
     columns:
       - name: obs_date
         description: Observation date.
+      - name: station_id
+        description: GHCN station id.
+      - name: county_fips
+        description: 5-digit county FIPS.
+      - name: is_headline
+        description: True for the county's longest-record station.
+      - name: precip_in
+        description: Daily precipitation (inches).
       - name: tmax_f
         description: Daily high (°F).
       - name: tmin_f
         description: Daily low (°F).
-      - name: precip_in
-        description: Daily precipitation (inches).
-
-  - name: mart_weather_records
-    description: Notable all-time Sea-Tac extremes — one row per record type with a display-ready value.
-    columns:
-      - name: record_type
-        description: Which record (Hottest/Coldest/Wettest/Snowiest day).
-      - name: obs_date
-        description: Date the record was set.
-      - name: value
-        description: Display-ready value string (e.g. '103 °F').
 
   # ===== Semantic layer =====================================================
   - name: mart_metrics

@@ -68,6 +68,60 @@ def air_database():
 
 
 @pytest.fixture
+def weather_database():
+    """Synthetic regional weather: two counties, a non-headline station in King."""
+    import duckdb
+
+    con = duckdb.connect()
+    con.execute('''create table mart_weather_observations (
+        obs_date date, station_id varchar, station_name varchar, county varchar,
+        county_fips varchar, latitude double, longitude double, is_headline boolean,
+        precip_in double, tmax_f double, tmin_f double, snow_in double, snow_depth_in double)''')
+    con.execute('''insert into mart_weather_observations values
+        ('2023-07-15','USW00024233','SEATTLE TACOMA AP','King','53033',47.44,-122.31,true, 0.0,85,60, 0, 0),
+        ('2023-01-10','USW00024233','SEATTLE TACOMA AP','King','53033',47.44,-122.31,true, 0.5,45,35, 0, 0),
+        ('2024-01-10','USW00024233','SEATTLE TACOMA AP','King','53033',47.44,-122.31,true, 1.0,40,30, 2.0, 3.0),
+        ('2023-07-15','USW00099999','KING SECONDARY','King','53033',47.60,-122.20,false, 0.0,99,62, 0, 0),
+        ('2023-07-15','USW00094248','BREMERTON','Kitsap','53035',47.56,-122.62,true, 0.0,80,58, 0, 0),
+        ('2024-01-10','USW00094248','BREMERTON','Kitsap','53035',47.56,-122.62,true, 0.8,42,33, 0, 0)''')
+    yield con
+    con.close()
+
+
+@pytest.fixture
+def water_database():
+    """Synthetic regional water: King has all three networks; Kitsap only tides."""
+    import duckdb
+
+    con = duckdb.connect()
+    con.execute('''create table mart_river_observations (
+        obs_date date, site_no varchar, station_name varchar, county varchar,
+        county_fips varchar, latitude double, longitude double, is_headline boolean,
+        discharge_cfs double)''')
+    con.execute('''insert into mart_river_observations values
+        ('2023-01-10','12119000','CEDAR RIVER','King','53033',47.48,-122.20,true, 500),
+        ('2023-07-15','12119000','CEDAR RIVER','King','53033',47.48,-122.20,true, 120),
+        ('2023-01-10','12113000','GREEN RIVER','King','53033',47.31,-122.20,false, 900)''')
+    con.execute('''create table mart_tides_observations (
+        obs_month date, year integer, month integer, station_id varchar, station_name varchar,
+        county varchar, county_fips varchar, latitude double, longitude double,
+        is_headline boolean, msl_ft double, mhhw_ft double, mllw_ft double,
+        range_ft double, highest_ft double, lowest_ft double)''')
+    con.execute('''insert into mart_tides_observations values
+        ('2023-01-01',2023,1,'9447130','Seattle','King','53033',47.60,-122.34,true, 7.0,11.4,-0.2,11.6,12.0,-1.0),
+        ('2023-01-01',2023,1,'9445958','Bremerton','Kitsap','53035',47.56,-122.62,true, 6.9,11.2,-0.1,11.3,11.9,-0.9)''')
+    con.execute('''create table mart_snow_observations (
+        obs_date date, water_year integer, station_triplet varchar, station_name varchar,
+        county varchar, county_fips varchar, latitude double, longitude double,
+        is_headline boolean, swe_in double, snow_depth_in double)''')
+    con.execute('''insert into mart_snow_observations values
+        ('2023-03-01',2023,'791:WA:SNTL','Stampede Pass','King','53033',47.28,-121.34,true, 40, 90),
+        ('2023-04-01',2023,'791:WA:SNTL','Stampede Pass','King','53033',47.28,-121.34,true, 30, 70)''')
+    yield con
+    con.close()
+
+
+@pytest.fixture
 def ntd_database():
     """Distinct ferry operators and service types for regional aggregation tests."""
     import duckdb
