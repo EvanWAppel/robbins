@@ -102,3 +102,31 @@ only the two known King County reporting names to Water Taxi. Retain source serv
 type in staging. Do not assign agency-wide totals to counties or join annual-only
 series into monthly charts; alternate sources for monthly-feed gaps remain work
 to verify separately. This implements the approved partial-coverage policy.
+
+
+## 2026-09-27 — Regional Weather & Water: all stations, curated headline, four networks
+
+The owner chose to expand Weather & Water (PS-TOPICS-02) across all four keyless
+federal networks already wired for Seattle — GHCN-Daily weather, USGS NWIS
+streamflow, NOAA CO-OPS tides, NRCS SNOTEL snow — ingesting every station for map
+density and honest per-county coverage counts, while designating one curated
+"headline" station per county per network for the KPI/charts. Verified 2026-09-27
+coverage: river gages in 8/10 counties (Island, Kitsap none); tide gauges in the 5
+saltwater-front counties (Jefferson, King, Kitsap, Pierce, Whatcom); SNOTEL snow in
+7/10 (Island, Kitsap, Thurston none); weather in all 10.
+
+Interpretation adopted for build cost: weather "all stations" means the ~142
+TMAX-reporting GHCN stations in the region bbox (discovery filters on the single
+TMAX element), NOT the 554-station set that includes precip-only volunteer gauges —
+the latter add map noise without the temperature story and multiply build-time CSV
+downloads. Every weather station (including the Sea-Tac King headline) is clipped to
+a uniform 2014-onward window for a lean build — chosen 2026-09-27 over preserving
+Sea-Tac's full 1948+ record; the all-time-records feature now spans 2014+ only.
+River, tide, and snow ingest every verified station (pullable by county in a few calls).
+
+Chosen over: one-curated-station-per-county (leaner but loses the density map and
+honest station counts) and all-stations-no-curation (noisy charts, implies
+county-wide coverage the PRD forbids). Cost: ~142 GHCN per-station CSV downloads add
+a few minutes to the build; per-county gaps must be shown explicitly (no station is
+extrapolated across a county); station identity, units, and datum/baseline are
+preserved per the PRD.

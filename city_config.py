@@ -147,24 +147,66 @@ AQS_END_YEAR = 2026  # inclusive; the current year's file is partial but publish
 # --------------------------------------------------------------------------- #
 # NOAA GHCN-Daily — keyless station CSV                                        #
 # --------------------------------------------------------------------------- #
-# Seattle-Tacoma International Airport (Sea-Tac).
+# Seattle-Tacoma International Airport (Sea-Tac) — the original Seattle station,
+# still the King County headline. The regional expansion (PS-TOPICS-02) also
+# discovers every other temperature-reporting GHCN station in the region.
 NOAA_STATION = "USW00024233"
 
+# Ten-county bounding box (min_lat, max_lat, min_lon, max_lon) for discovering
+# GHCN weather stations from the national inventory. NOAA does not county-tag
+# stations, so the build filters the inventory to this box, then assigns each
+# surviving station to a county by a spatial join against county boundaries.
+# Verified 2026-09-27 against the region's outer county extents (Whatcom north,
+# Thurston/Mason south, Pacific coast west, Cascade crest east).
+REGION_BBOX = (46.0, 49.1, -124.8, -120.5)
+GHCN_ELEMENT = "TMAX"                 # the discovery element (temperature stations)
+GHCN_MIN_LAST_YEAR = 2024             # only stations still reporting recently
+GHCN_INVENTORY_URL = (
+    "https://www.ncei.noaa.gov/pub/data/ghcn/daily/ghcnd-inventory.txt"
+)
+WEATHER_REGIONAL_START_YEAR = 2014    # uniform per-station history window across
+                                      # every station (incl. Sea-Tac) for a lean
+                                      # build; older years are not ingested
+
 # --------------------------------------------------------------------------- #
-# Signature water body — three keyless federal feeds (interview: "all three")  #
+# Signature water body — four keyless federal networks, now region-wide        #
 # --------------------------------------------------------------------------- #
-# Cedar River is Seattle's primary drinking-water source; the Renton gage has a
-# long daily streamflow record.
+# River: USGS NWIS streamflow. Cedar River at Renton stays the King headline;
+# the build also pulls every active daily-discharge gage in each county by
+# countyCd (verified 2026-09-27: gages in 8/10 counties; Island & Kitsap none).
 USGS_CEDAR_RIVER_SITE = "12119000"   # USGS NWIS — Cedar River at Renton, WA
 USGS_FLOW_PARAM = "00060"            # discharge, cubic feet per second
+USGS_STATE = "WA"
 
-# NOAA CO-OPS tide station in Elliott Bay; monthly_mean gives sea-level datums
-# (MSL/MHHW/MLLW) — a multi-decade sea-level trend for Puget Sound.
-NOAA_TIDES_STATION = "9447130"       # Seattle, WA
+# Tide: NOAA CO-OPS monthly-mean sea-level datums. Only the five saltwater-front
+# region counties have a long-record water-level gauge (verified 2026-09-27).
+# station_id -> (county_fips, display_name). Seattle 9447130 is the King headline.
+NOAA_TIDES_STATION = "9447130"       # Seattle, WA (King headline; kept for compat)
+# station_id -> (county_fips, display_name, latitude, longitude). Coordinates
+# verified 2026-09-27 from the CO-OPS station list (used for the tide-gauge map).
+NOAA_TIDE_STATIONS = {
+    "9449424": ("53073", "Cherry Point", 48.863, -122.759),   # Whatcom
+    "9444900": ("53031", "Port Townsend", 48.111, -122.760),  # Jefferson
+    "9447130": ("53033", "Seattle", 47.603, -122.339),        # King
+    "9445958": ("53035", "Bremerton", 47.562, -122.623),      # Kitsap
+    "9446484": ("53053", "Tacoma", 47.267, -122.413),         # Pierce
+}
 
-# NRCS SNOTEL snowpack in the Cascades above the Cedar/Green watersheds; peak
-# snow-water-equivalent per water year tells the drought story (e.g. 2015).
-SNOTEL_STATION = "791:WA:SNTL"       # Stampede Pass
+# Snow: NRCS SNOTEL snow-water-equivalent. Stampede Pass stays the King headline;
+# the build pulls every active WA SNTL station and keeps those the AWDB API
+# assigns to a region county (verified 2026-09-27: stations in 7/10 counties;
+# Island, Kitsap & Thurston are lowland, none).
+SNOTEL_STATION = "791:WA:SNTL"       # Stampede Pass (King headline; kept for compat)
+SNOTEL_NETWORK = "SNTL"
+SNOTEL_STATE = "WA"
+
+# Census TIGERweb Counties layer — WGS84 county polygons carrying GEOID (5-digit
+# state+county FIPS). Used to assign GHCN weather stations (which carry no county)
+# to a county by point-in-polygon; stations outside the ten region counties drop.
+COUNTY_BOUNDARY = (
+    "https://tigerweb.geo.census.gov/arcgis/rest/services/"
+    "TIGERweb/State_County/MapServer/13"
+)
 
 WATER_START_YEAR = 2014              # from 2014 so water year 2015 (the historic
                                      # snow-drought) is fully captured; lean enough
@@ -236,18 +278,18 @@ DATA_SOURCES = (
     Source("epa.air", "Air Quality", "US EPA", "https://aqs.epa.gov/aqsweb/airdata/download_files.html",
            "station", "EPA monitor search in " + ", ".join(AQS_COUNTIES.values()), "Monitor/pollutant/day observations",
            "PM2.5 and ozone, 2019 onward; monitoring locations do not provide uniform county coverage."),
-    Source("noaa.weather", "Rain & Records", "NOAA", f"https://www.ncei.noaa.gov/data/global-historical-climatology-network-daily/access/{NOAA_STATION}.csv",
-           "station", f"Sea-Tac station {NOAA_STATION}", "Station/day/measurement",
-           "One weather station; observations cannot be treated as every city's weather."),
-    Source("usgs.water", "Water", "USGS", f"https://waterdata.usgs.gov/monitoring-location/{USGS_CEDAR_RIVER_SITE}/",
-           "station", f"Cedar River at Renton, {USGS_CEDAR_RIVER_SITE}", "Station/day streamflow",
-           "One river gauge; not regional water supply or every watershed."),
-    Source("noaa.tides", "Water", "NOAA", f"https://tidesandcurrents.noaa.gov/stationhome.html?id={NOAA_TIDES_STATION}",
-           "station", f"Seattle tide station {NOAA_TIDES_STATION}", "Station/month tidal datum",
-           "One tide station; datum and observation period matter for comparisons."),
-    Source("nrcs.snow", "Water", "NRCS", "https://wcc.sc.egov.usda.gov/nwcc/site?sitenum=791",
-           "station", f"Stampede Pass SNOTEL {SNOTEL_STATION}", "Station/day snow-water equivalent",
-           "One mountain station; not a regional snowpack average."),
+    Source("noaa.weather", "Rain & Records", "NOAA", "https://www.ncei.noaa.gov/pub/data/ghcn/daily/ghcnd-inventory.txt",
+           "station", "GHCN-Daily temperature stations across the region", "Station/day/measurement",
+           "Every county's charts use its longest-record headline station; 2014 onward. A station is not every city's weather."),
+    Source("usgs.water", "Water", "USGS", "https://waterservices.usgs.gov/nwis/dv/",
+           "station", "USGS streamflow gages, region counties (Island & Kitsap have none)", "Station/day streamflow",
+           "Per-county headline gage; not regional water supply or every watershed. 2014 onward."),
+    Source("noaa.tides", "Water", "NOAA", "https://tidesandcurrents.noaa.gov/",
+           "station", "NOAA tide gauges in the 5 saltwater-front counties", "Station/month tidal datum",
+           "Only coastal counties have a gauge; datum and observation period matter for comparisons."),
+    Source("nrcs.snow", "Water", "NRCS", "https://wcc.sc.egov.usda.gov/awdbRestApi/",
+           "station", "NRCS SNOTEL stations in the mountainous counties (7 of 10)", "Station/day snow-water equivalent",
+           "Lowland counties (Island/Kitsap/Thurston) have no station; not a regional snowpack average."),
     Source("federal.ntd", "Transit Ridership", "FTA National Transit Database", _soda_page(NTD_RIDERSHIP),
            "agency", "Configured NTD operators: " + ", ".join(NTD_AGENCIES.values()),
            "Agency/mode/month ridership",
