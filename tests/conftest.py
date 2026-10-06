@@ -116,7 +116,9 @@ def water_database():
         is_headline boolean, swe_in double, snow_depth_in double)''')
     con.execute('''insert into mart_snow_observations values
         ('2023-03-01',2023,'791:WA:SNTL','Stampede Pass','King','53033',47.28,-121.34,true, 40, 90),
-        ('2023-04-01',2023,'791:WA:SNTL','Stampede Pass','King','53033',47.28,-121.34,true, 30, 70)''')
+        ('2023-04-01',2023,'791:WA:SNTL','Stampede Pass','King','53033',47.28,-121.34,true, 30, 70),
+        -- WY2024 has only just begun (no data through April 1): not a full winter.
+        ('2023-10-05',2024,'791:WA:SNTL','Stampede Pass','King','53033',47.28,-121.34,true, 0.2, 1)''')
     yield con
     con.close()
 

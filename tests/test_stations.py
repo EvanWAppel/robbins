@@ -17,20 +17,20 @@ import stations
 # --------------------------------------------------------------------------- #
 # pick_headline_stations — the shared "one curated station per county" rule    #
 # --------------------------------------------------------------------------- #
-def test_pick_headline_chooses_longest_record_per_county():
+def test_pick_headline_chooses_most_valid_observations_per_county():
     rows = [
-        {"county": "King", "station_id": "A", "record_years": 30},
-        {"county": "King", "station_id": "B", "record_years": 75},
-        {"county": "Pierce", "station_id": "C", "record_years": 12},
+        {"county": "King", "station_id": "A", "valid_obs": 30},
+        {"county": "King", "station_id": "B", "valid_obs": 75},
+        {"county": "Pierce", "station_id": "C", "valid_obs": 12},
     ]
     assert stations.pick_headline_stations(rows) == {"King": "B", "Pierce": "C"}
 
 
 def test_pick_headline_breaks_ties_by_station_id():
-    # Equal record length -> deterministic lexicographic-min station id.
+    # Equal valid-observation count -> deterministic lexicographic-min station id.
     rows = [
-        {"county": "King", "station_id": "USW00024234", "record_years": 50},
-        {"county": "King", "station_id": "USW00024233", "record_years": 50},
+        {"county": "King", "station_id": "USW00024234", "valid_obs": 50},
+        {"county": "King", "station_id": "USW00024233", "valid_obs": 50},
     ]
     assert stations.pick_headline_stations(rows) == {"King": "USW00024233"}
 

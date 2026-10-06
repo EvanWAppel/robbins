@@ -886,7 +886,7 @@
         },
         {
           "name": "is_headline",
-          "description": "True for the county's longest-record gage."
+          "description": "True for the county's headline gage (most valid daily discharge observations)."
         },
         {
           "name": "discharge_cfs",
@@ -1286,7 +1286,7 @@
     },
     {
       "name": "mart_weather_observations",
-      "description": "One row per station-day of regional weather across every temperature-reporting GHCN station in the ten-county region (the King headline is Sea-Tac). The Rain & Records page aggregates at query time — per-county headline station for charts, all stations for the map. Carries county_fips + is_headline so county filtering and station labeling stay honest.",
+      "description": "One row per station-day of regional weather across every temperature-reporting GHCN station in the ten-county region, 2014 onward. The Rain & Records page aggregates at query time — per-county headline station for charts, all stations for the map. Carries county_fips + is_headline so county filtering and station labeling stay honest.",
       "columns": [
         {
           "name": "obs_date",
@@ -1302,7 +1302,7 @@
         },
         {
           "name": "is_headline",
-          "description": "True for the county's longest-record station."
+          "description": "True for the county's headline station: the most days carrying both precipitation and max temperature (ties -> smallest station id)."
         },
         {
           "name": "precip_in",

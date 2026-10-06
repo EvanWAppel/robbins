@@ -66,15 +66,24 @@ def water_queries(county_fips: str | None = None) -> dict[str, tuple[str, tuple]
             one,
         ),
         # ---- Snow (NRCS SNOTEL) -------------------------------------------
+        # A water year (Oct 1 - Sep 30) counts once its data reaches April 1,
+        # around peak snowpack; before then (e.g. an October build) the barely
+        # started year would chart as a near-zero "record drought".
         "snow_annual_peak": (
-            f"""select county_fips, county, station_name, water_year,
+            f"""with h as (select * from {snow} where is_headline{hi} and swe_in is not null)
+                select county_fips, county, station_name, water_year,
                 max(swe_in) as peak_swe_in
-                from {snow} where is_headline{hi} and swe_in is not null
-                group by 1, 2, 3, 4 order by county, water_year""",
+                from h
+                group by 1, 2, 3, 4
+                having max(obs_date) >= make_date(water_year, 4, 1)
+                order by county, water_year""",
             one,
         ),
         "snow_recent": (
-            f"""with h as (select * from {snow} where is_headline{hi} and swe_in is not null),
+            f"""with h0 as (select * from {snow} where is_headline{hi} and swe_in is not null),
+                winters as (select county_fips, water_year from h0
+                    group by 1, 2 having max(obs_date) >= make_date(water_year, 4, 1)),
+                h as (select h0.* from h0 join winters using (county_fips, water_year)),
                 cutoff as (select max(water_year) - 2 as start_wy from h)
                 select county_fips, county, station_name, obs_date, water_year, swe_in
                 from h, cutoff where water_year >= cutoff.start_wy

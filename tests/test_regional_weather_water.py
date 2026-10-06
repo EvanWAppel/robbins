@@ -86,6 +86,14 @@ def test_water_snow_peak_per_water_year(water_database):
     assert peak.iloc[0]["peak_swe_in"] == 40  # max of 40/30
 
 
+def test_water_snow_excludes_water_year_before_april(water_database):
+    # WY2024 holds only an October day: charting it reads as a record drought.
+    peak = run(water_database, water_queries, "snow_annual_peak", "53033")
+    assert list(peak["water_year"]) == [2023]
+    recent = run(water_database, water_queries, "snow_recent", "53033")
+    assert set(recent["water_year"]) == {2023}
+
+
 # --------------------------------------------------------------------------- #
 # Injection safety                                                             #
 # --------------------------------------------------------------------------- #

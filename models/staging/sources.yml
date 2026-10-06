@@ -92,8 +92,9 @@ sources:
       - name: weather
         description: >
           Regional daily weather (NOAA GHCN-Daily), one row per station-day across
-          every temperature-reporting station in the ten-county region (the King
-          headline is Sea-Tac USW00024233); every station is clipped to a uniform
+          every temperature-reporting station in the ten-county region (each county's
+          headline is its station with the most days carrying both PRCP and TMAX);
+          every station is clipped to a uniform
           2014-onward window for a lean build. GHCN-convention
           values: PRCP/SNOW/SNWD in tenths-mm or mm, TMAX/TMIN in tenths of a degree C.
           Each row carries STATION, NAME, LATITUDE/LONGITUDE, county (5-digit FIPS),
@@ -111,8 +112,8 @@ sources:
           Regional daily streamflow (USGS NWIS, param 00060), one row per gage-day
           across every active gage in the region's counties (Island & Kitsap have
           none). obs_date (ISO timestamp text), discharge_cfs, site_no, station_name,
-          lat/lon, county (5-digit FIPS), county_name, is_headline. Cedar River at
-          Renton (12119000) is the King headline.
+          lat/lon, county (5-digit FIPS), county_name, is_headline (the county's gage with
+          the most valid daily discharge observations).
       - name: tides
         description: >
           Regional monthly tide datums (NOAA CO-OPS monthly_mean), one row per

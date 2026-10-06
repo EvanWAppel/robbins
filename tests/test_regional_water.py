@@ -24,6 +24,8 @@ def test_usgs_county_dv_url():
     assert "startDT=2014-01-01" in url
     assert "endDT=2024-12-31" in url
     assert "siteStatus=active" in url
+    # Pin the daily mean; a gage publishing max/min too would otherwise mix stats.
+    assert "statCd=00003" in url
 
 
 # A two-gage county payload in USGS NWIS dv JSON shape.
@@ -106,13 +108,17 @@ _SNOTEL_STATIONS = [
      "stateCode": "WA", "elevation": 4060, "latitude": 47.74, "longitude": -121.09},
     {"stationTriplet": "352:WA:SNTL", "name": "Corral Pass", "countyName": "Pierce",
      "stateCode": "WA", "elevation": 6000, "latitude": 46.93, "longitude": -121.47},
+    # Same county name as a region county, but in Montana — must not map to WA.
+    {"stationTriplet": "123:MT:SNTL", "name": "Elsewhere MT", "countyName": "Jefferson",
+     "stateCode": "MT", "elevation": 7000, "latitude": 46.2, "longitude": -112.1},
 ]
 
 
 def test_parse_snotel_stations_keeps_only_region_counties():
     kept = bw.parse_snotel_stations(_SNOTEL_STATIONS, cfg.REGION_COUNTIES)
     triplets = {s["triplet"] for s in kept}
-    # King + Pierce are region counties; Klamath (OR) and Chelan are not.
+    # King + Pierce are region counties; Klamath (OR) and Chelan are not, and
+    # Jefferson MT shares a name with Jefferson WA but is out of state.
     assert triplets == {"791:WA:SNTL", "352:WA:SNTL"}
 
 
@@ -126,10 +132,10 @@ def test_parse_snotel_stations_resolves_county_fips():
 # --------------------------------------------------------------------------- #
 # add_headline_flag — mark each county's curated headline station              #
 # --------------------------------------------------------------------------- #
-def test_add_headline_flag_marks_longest_record_per_county():
+def test_add_headline_flag_marks_most_valid_observations_per_county():
     import pandas as pd
 
-    # King: station A has 2 distinct years, B has 1 -> A is headline.
+    # King: A has 2 valid rows, B has 1 -> A is headline.
     # Pierce: only C -> C is headline.
     df = pd.DataFrame(
         {
@@ -138,8 +144,8 @@ def test_add_headline_flag_marks_longest_record_per_county():
             "val": [1, 2, 3, 4],
         }
     )
-    years = pd.Series([2014, 2015, 2015, 2016])
-    out = bw.add_headline_flag(df, "site", years)
+    valid = pd.Series([True, True, True, True])
+    out = bw.add_headline_flag(df, "site", valid)
     flags = dict(zip(out["site"], out["is_headline"], strict=True))
     # A appears twice; both rows flagged headline.
     assert flags["A"] is True
@@ -148,3 +154,33 @@ def test_add_headline_flag_marks_longest_record_per_county():
     # Original columns preserved, one new boolean column added.
     assert "is_headline" in out.columns
     assert len(out) == len(df)
+
+
+def test_add_headline_flag_dense_station_beats_sparse_smaller_id():
+    import pandas as pd
+
+    # Both stations span the same years (the old distinct-year score tied them,
+    # handing the headline to the smaller id). The daily station has more valid
+    # observations and must win despite sorting after the sparse co-op id.
+    days = pd.date_range("2014-01-01", "2015-12-31", freq="D")
+    dense = pd.DataFrame({"county": "53033", "site": "USW00024233", "d": days})
+    sparse = pd.DataFrame(
+        {"county": "53033", "site": "USC00451233",
+         "d": pd.to_datetime(["2014-06-01", "2015-06-01"])}
+    )
+    df = pd.concat([dense, sparse], ignore_index=True)
+    out = bw.add_headline_flag(df, "site", pd.Series(True, index=df.index))
+    headline = set(out.loc[out["is_headline"], "site"])
+    assert headline == {"USW00024233"}
+
+
+def test_add_headline_flag_ignores_invalid_rows():
+    import pandas as pd
+
+    # A has more rows, but only one carries the charted measurement; B has two.
+    df = pd.DataFrame(
+        {"county": ["53033"] * 5, "site": ["A", "A", "A", "B", "B"]}
+    )
+    valid = pd.Series([True, False, False, True, True])
+    out = bw.add_headline_flag(df, "site", valid)
+    assert set(out.loc[out["is_headline"], "site"]) == {"B"}

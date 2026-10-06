@@ -5,8 +5,8 @@ Two responsibilities:
 
 * :func:`pick_headline_stations` — the single curation rule shared by all four
   federal networks (weather / river / tide / snow): one headline station per
-  county for the KPI and chart series, chosen as the longest record with a
-  deterministic tie-break. Every other station still loads for the density map;
+  county for the KPI and chart series, chosen as the most valid observations of
+  the charted measurement, with a deterministic tie-break. Every other station still loads for the density map;
   the headline is only the series a county's charts foreground.
 * :func:`parse_ghcn_inventory` + :func:`select_region_weather_stations` — GHCN
   weather station discovery. NOAA does not tag stations with a county, so we
@@ -32,23 +32,25 @@ def pick_headline_stations(
     """Map each county to its one headline ``station_id``.
 
     ``stations`` yields mappings with ``county``, ``station_id`` and
-    ``record_years`` (record length, larger = longer). The winner per county has
-    the longest record; ties break to the lexicographically smallest station id
-    so the choice is stable across rebuilds.
+    ``valid_obs`` (count of observations carrying the charted measurement). The
+    winner per county has the most valid observations; ties break to the
+    lexicographically smallest station id so the choice is stable across rebuilds.
+    Every network is clipped to the same start year, so a distinct-year count
+    would tie almost every station and leave the choice to the id tie-break.
     """
     best: dict[str, tuple[int, str]] = {}
     for row in stations:
         county = str(row["county"])
         station_id = str(row["station_id"])
-        years = int(str(row["record_years"]))
+        valid_obs = int(str(row["valid_obs"]))
         current = best.get(county)
-        # Prefer the longer record; on a tie prefer the smaller station id.
+        # Prefer more valid observations; on a tie prefer the smaller station id.
         if (
             current is None
-            or years > current[0]
-            or (years == current[0] and station_id < current[1])
+            or valid_obs > current[0]
+            or (valid_obs == current[0] and station_id < current[1])
         ):
-            best[county] = (years, station_id)
+            best[county] = (valid_obs, station_id)
     return {county: station_id for county, (_, station_id) in best.items()}
 
 
