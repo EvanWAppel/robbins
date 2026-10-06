@@ -60,10 +60,12 @@ models:
       - name: pollutant
         description: EPA pollutant name.
       - name: aqi
-        description: Rounded average of AQI-bearing source rows per site/day/pollutant.
+        description: >
+          Rounded average of AQI-bearing source rows per site/day/pollutant. EPA AQI is a unitless 0–500 index; bands: Good ≤50, Moderate ≤100, Unhealthy for Sensitive Groups ≤150, Unhealthy ≤200, Very Unhealthy ≤300, Hazardous >300.
         tests: [not_null]
       - name: aqi_category
-        description: Category based on the average AQI before rounding.
+        description: >
+          Category based on the average AQI before rounding. EPA AQI is a unitless 0–500 index; bands: Good ≤50, Moderate ≤100, Unhealthy for Sensitive Groups ≤150, Unhealthy ≤200, Very Unhealthy ≤300, Hazardous >300.
   # ===== Air quality (EPA AQS) ==============================================
   - name: mart_air_category_days
     description: >
@@ -72,25 +74,36 @@ models:
       of being averaged away. Drives the air-quality category bar chart.
     columns:
       - name: aqi_category
-        description: EPA AQI band (Good … Hazardous).
+        description: >
+          EPA AQI band (Good … Hazardous). EPA AQI is a unitless 0–500 index; bands: Good ≤50, Moderate ≤100, Unhealthy for Sensitive Groups ≤150, Unhealthy ≤200, Very Unhealthy ≤300, Hazardous >300.
       - name: day_count
         description: Number of metro-days whose worst reading fell in this band.
       - name: severity
         description: 1–6 sort key ordering the bands from Good to Hazardous.
 
   - name: mart_air_monthly
-    description: Monthly average and peak AQI by pollutant — surfaces the late-summer smoke spikes.
+    description: >
+      Monthly average and peak AQI by pollutant across all loaded Puget Sound
+      monitors (EPA AQS daily files, years 2019–2026 configured) — surfaces the
+      late-summer smoke spikes. One row per month × pollutant.
     columns:
       - name: obs_month
         description: Month (first-of-month date).
       - name: pollutant
-        description: PM2.5 or Ozone.
+        description: >
+          EPA AQS parameter_name, verbatim, for parameter 88101 (PM2.5) or 44201
+          (Ozone); match with like 'PM2.5%' / like 'Ozone%' rather than equality.
       - name: avg_aqi
-        description: Mean AQI across the month.
+        description: >
+          Metro-wide mean AQI for the month: unweighted average over every
+          site-day row (one per monitor per day) across all loaded Puget Sound
+          monitors — not a per-site or population-weighted figure.
       - name: max_aqi
-        description: Worst single AQI reading in the month.
+        description: >
+          Highest site-day AQI at any loaded monitor in the month.
       - name: reading_count
-        description: Number of monitor-day readings aggregated.
+        description: >
+          Number of site-day rows (monitor × day, multiple POCs already averaged) aggregated for the month and pollutant.
 
   - name: mart_air_sites
     description: One row per stable EPA PM2.5 monitor ID for the map — location plus its average and worst AQI.
@@ -121,7 +134,8 @@ models:
       - name: max_aqi
         description: Highest PM2.5 AQI recorded anywhere in the metro that day.
       - name: aqi_category
-        description: EPA band for that reading.
+        description: >
+          EPA band for that reading. EPA AQI is a unitless 0–500 index; bands: Good ≤50, Moderate ≤100, Unhealthy for Sensitive Groups ≤150, Unhealthy ≤200, Very Unhealthy ≤300, Hazardous >300.
       - name: site
         description: Monitor that recorded the worst reading.
       - name: county
@@ -181,7 +195,8 @@ models:
       - name: weekday
         description: Day name (Monday … Sunday).
       - name: hour_of_day
-        description: Hour 0–23 of the report time.
+        description: >
+          Hour 0–23 extracted from the source report_date_time as published (cast to a timezone-naive timestamp; no timezone conversion in code).
       - name: incident_count
         description: Offenses in that weekday/hour cell.
 
@@ -259,7 +274,10 @@ models:
       - name: month_of_year
         description: Calendar month number (1–12).
       - name: avg_boardings
-        description: Mean boardings for that month across years.
+        description: >
+          Mean of monthly ferry boarding totals (sum of UPT over all ferry rows per
+          month) for this calendar month across every loaded year (NTD data from
+          2015-01-01), including pandemic years and any partial current-year month.
 
   # ===== Fire 911 dispatch ==================================================
   - name: mart_fire_by_hour_weekday
@@ -268,7 +286,8 @@ models:
       - name: weekday
         description: Day name.
       - name: hour_of_day
-        description: Hour 0–23 of the call.
+        description: >
+          Hour 0–23 extracted from the source datetime as published (cast to a timezone-naive timestamp; no timezone conversion in code).
       - name: call_count
         description: Calls in that weekday/hour cell.
 
@@ -353,12 +372,14 @@ models:
 
   # ===== Business licenses ==================================================
   - name: mart_licenses_by_city
-    description: Active business-license counts by city; blanks rolled to 'Unknown'.
+    description: >
+      Business-license counts by city; blanks rolled to 'Unknown'. No status filter in code: the loaded dataset (wnbq-64tb) is the city's active business-license certificate extract, so 'active' reflects that source, not a filter here.
     columns:
       - name: city
         description: City on the license.
       - name: license_count
-        description: Active licenses in the city.
+        description: >
+          Licenses in the city. No status filter in code: the loaded dataset (wnbq-64tb) is the city's active business-license certificate extract, so 'active' reflects that source, not a filter here.
 
   - name: mart_licenses_by_industry
     description: License counts by NAICS industry description.
@@ -366,7 +387,8 @@ models:
       - name: naics_description
         description: NAICS industry description.
       - name: license_count
-        description: Active licenses in the industry.
+        description: >
+          Licenses in the industry. No status filter in code: the loaded dataset (wnbq-64tb) is the city's active business-license certificate extract, so 'active' reflects that source, not a filter here.
 
   - name: mart_licenses_by_ownership
     description: License counts by ownership type (sole proprietor, LLC, …).
@@ -374,7 +396,8 @@ models:
       - name: ownership_type
         description: Legal ownership type.
       - name: license_count
-        description: Active licenses of that type.
+        description: >
+          Licenses of that type. No status filter in code: the loaded dataset (wnbq-64tb) is the city's active business-license certificate extract, so 'active' reflects that source, not a filter here.
 
   - name: mart_licenses_monthly
     description: New-license starts per month (2005+).
@@ -428,9 +451,11 @@ models:
       - name: permit_count
         description: Permits in the class.
       - name: total_valuation
-        description: Summed estimated project cost.
+        description: >
+          Summed estimated project cost (USD; source estprojectcost).
       - name: avg_valuation
-        description: Mean estimated project cost.
+        description: >
+          Mean estimated project cost per permit (USD; source estprojectcost).
 
   - name: mart_permits_map_sample
     description: 5k most recent geocoded permits for the map, clipped to the metro box.
@@ -447,7 +472,8 @@ models:
       - name: permit_type_desc
         description: Permit type description.
       - name: valuation
-        description: Estimated project cost.
+        description: >
+          Estimated project cost (USD; source estprojectcost).
       - name: issue_date
         description: Date the permit was issued.
       - name: address
@@ -475,9 +501,11 @@ models:
       - name: permit_count
         description: Permits issued that month.
       - name: total_valuation
-        description: Summed estimated project cost.
+        description: >
+          Summed estimated project cost (USD; source estprojectcost).
       - name: avg_valuation
-        description: Mean estimated project cost.
+        description: >
+          Mean estimated project cost per permit (USD; source estprojectcost).
 
   # ===== Water: regional river / tide / snow observations ===================
   - name: mart_river_observations
@@ -497,6 +525,14 @@ models:
         description: True for the county's longest-record gage.
       - name: discharge_cfs
         description: Daily mean discharge (cubic feet/second).
+      - name: station_name
+        description: Station name as published by the source.
+      - name: county
+        description: Region county name the station is assigned to.
+      - name: latitude
+        description: Station latitude (WGS84 decimal degrees).
+      - name: longitude
+        description: Station longitude (WGS84 decimal degrees).
 
   - name: mart_tides_observations
     description: >
@@ -512,7 +548,31 @@ models:
       - name: is_headline
         description: True for the county's headline gauge.
       - name: msl_ft
-        description: Mean sea level datum (feet).
+        description: >
+          Monthly mean sea level (feet), fetched with datum=MSL, i.e. relative to the
+          station's tidal-epoch MSL datum: near-zero anomalies, NOT elevations.
+      - name: station_name
+        description: Station name as published by the source.
+      - name: county
+        description: Region county name the station is assigned to.
+      - name: latitude
+        description: Station latitude (WGS84 decimal degrees).
+      - name: longitude
+        description: Station longitude (WGS84 decimal degrees).
+      - name: year
+        description: Calendar year of obs_month.
+      - name: month
+        description: Calendar month number (1–12) of obs_month.
+      - name: mhhw_ft
+        description: Monthly mean higher-high water (feet), relative to the station's tidal-epoch MSL datum (fetched with datum=MSL, units=english).
+      - name: mllw_ft
+        description: Monthly mean lower-low water (feet), relative to the station's tidal-epoch MSL datum.
+      - name: range_ft
+        description: Great-diurnal tidal range GT = MHHW − MLLW for the month (feet).
+      - name: highest_ft
+        description: Highest observed water level in the month (feet), relative to the station's MSL datum.
+      - name: lowest_ft
+        description: Lowest observed water level in the month (feet), relative to the station's MSL datum.
 
   - name: mart_snow_observations
     description: >
@@ -532,6 +592,16 @@ models:
         description: True for the county's headline station.
       - name: swe_in
         description: Snow-water-equivalent (inches).
+      - name: station_name
+        description: Station name as published by the source.
+      - name: county
+        description: Region county name the station is assigned to.
+      - name: latitude
+        description: Station latitude (WGS84 decimal degrees).
+      - name: longitude
+        description: Station longitude (WGS84 decimal degrees).
+      - name: snow_depth_in
+        description: Daily snow depth (inches), NRCS SNOTEL element SNWD; distinct from swe_in (water content).
 
   # ===== Short-term rentals =================================================
   - name: mart_str_by_region
@@ -674,7 +744,9 @@ models:
   - name: mart_weather_observations
     description: >
       One row per station-day of regional weather across every temperature-reporting
-      GHCN station in the ten-county region (the King headline is Sea-Tac). The Rain
+      GHCN station in the ten-county region. Sea-Tac is station_id 'USW00024233'; the
+      per-county is_headline station is the one with the most distinct years since
+      2014 (ties go to the lowest station_id), so it is not guaranteed to be Sea-Tac. The Rain
       & Records page aggregates at query time — per-county headline station for
       charts, all stations for the map. Carries county_fips + is_headline so county
       filtering and station labeling stay honest.
@@ -688,11 +760,25 @@ models:
       - name: is_headline
         description: True for the county's longest-record station.
       - name: precip_in
-        description: Daily precipitation (inches).
+        description: >
+          Daily precipitation (inches); null on days the station did not report, so
+          annual sums undercount for stations with missing days.
       - name: tmax_f
         description: Daily high (°F).
       - name: tmin_f
         description: Daily low (°F).
+      - name: station_name
+        description: Station name as published by the source.
+      - name: county
+        description: Region county name the station is assigned to.
+      - name: latitude
+        description: Station latitude (WGS84 decimal degrees).
+      - name: longitude
+        description: Station longitude (WGS84 decimal degrees).
+      - name: snow_in
+        description: Daily snowfall (inches), GHCN element SNOW; null where the station does not report snow.
+      - name: snow_depth_in
+        description: Snow depth on the ground (inches), GHCN element SNWD; null where the station does not report it.
 
   # ===== Semantic layer =====================================================
   - name: mart_metrics
@@ -759,7 +845,11 @@ models:
           - not_null
           - unique
       - name: incident_count
-        description: Geolocated offenses falling inside this neighborhood.
+        description: >
+          All-time count of offenses in the warehouse (loader keeps report_date_time >= 2019-01-01;
+          no date filter in the mart) whose coordinates fall inside the lat 47.0–48.5 /
+          lon -122.6 to -121.5 box AND inside this neighborhood's polygon. Ungeolocated
+          rows are excluded.
         data_tests:
           - not_null
       - name: incidents_per_sq_mile
@@ -768,6 +858,20 @@ models:
         description: Neighborhood area (Shape__Area square feet / 27,878,400).
       - name: rings_json
         description: Polygon rings as JSON ([[[lon,lat],…],…]) for the map render.
+      - name: precinct
+        description: >
+          SPD precinct the MCPP neighborhood belongs to, as published on the ArcGIS
+          MCPP layer (short code, e.g. 'SW'; passed through unnormalized).
+      - name: centroid_lon
+        description: >
+          Approximate neighborhood center longitude (WGS84 decimal degrees): the
+          vertex average of the polygon's first ring, not a true area centroid.
+          For label placement only.
+      - name: centroid_lat
+        description: >
+          Approximate neighborhood center latitude (WGS84 decimal degrees): the
+          vertex average of the polygon's first ring, not a true area centroid.
+          For label placement only.
 
   - name: mart_fire_911_by_neighborhood
     description: >
@@ -780,13 +884,33 @@ models:
           - not_null
           - unique
       - name: incident_count
-        description: Geolocated fire 911 calls falling inside this neighborhood.
+        description: >
+          All-time count of fire 911 calls in the warehouse (loader keeps datetime >= 2019-01-01;
+          no date filter in the mart) whose coordinates fall inside the lat 47.0–48.5 /
+          lon -122.6 to -121.5 box AND inside this neighborhood's polygon. Ungeolocated
+          rows are excluded.
         data_tests:
           - not_null
       - name: incidents_per_sq_mile
         description: incident_count divided by the neighborhood's area in square miles.
       - name: rings_json
         description: Polygon rings as JSON for the map render.
+      - name: precinct
+        description: >
+          SPD precinct the MCPP neighborhood belongs to, as published on the ArcGIS
+          MCPP layer (short code, e.g. 'SW'; passed through unnormalized).
+      - name: area_sq_miles
+        description: Neighborhood area in square miles (Shape__Area square feet / 27,878,400).
+      - name: centroid_lon
+        description: >
+          Approximate neighborhood center longitude (WGS84 decimal degrees): the
+          vertex average of the polygon's first ring, not a true area centroid.
+          For label placement only.
+      - name: centroid_lat
+        description: >
+          Approximate neighborhood center latitude (WGS84 decimal degrees): the
+          vertex average of the polygon's first ring, not a true area centroid.
+          For label placement only.
 
   - name: mart_csr_311_by_neighborhood
     description: >
@@ -799,10 +923,30 @@ models:
           - not_null
           - unique
       - name: incident_count
-        description: Geolocated 311 requests falling inside this neighborhood.
+        description: >
+          All-time count of 311 requests in the warehouse (loader keeps createddate >= 2020-01-01;
+          no date filter in the mart) whose coordinates fall inside the lat 47.0–48.5 /
+          lon -122.6 to -121.5 box AND inside this neighborhood's polygon. Ungeolocated
+          rows are excluded.
         data_tests:
           - not_null
       - name: incidents_per_sq_mile
         description: incident_count divided by the neighborhood's area in square miles.
       - name: rings_json
         description: Polygon rings as JSON for the map render.
+      - name: precinct
+        description: >
+          SPD precinct the MCPP neighborhood belongs to, as published on the ArcGIS
+          MCPP layer (short code, e.g. 'SW'; passed through unnormalized).
+      - name: area_sq_miles
+        description: Neighborhood area in square miles (Shape__Area square feet / 27,878,400).
+      - name: centroid_lon
+        description: >
+          Approximate neighborhood center longitude (WGS84 decimal degrees): the
+          vertex average of the polygon's first ring, not a true area centroid.
+          For label placement only.
+      - name: centroid_lat
+        description: >
+          Approximate neighborhood center latitude (WGS84 decimal degrees): the
+          vertex average of the polygon's first ring, not a true area centroid.
+          For label placement only.

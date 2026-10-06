@@ -78,6 +78,6 @@ for offset in range(0, len(collections), 3):
 
 st.caption("Coverage is expanding across Puget Sound; most civic topics remain Seattle-specific. Headline figures reflect each source’s loaded reporting window. Open a topic for dates, definitions, and detail.")
 st.html('<div class="invitation"><h3>Every good discovery starts with a question.</h3><p>Browse the data catalog, or ask a question in your own words.</p></div>')
-st.page_link("views/ask.py", label="Ask the data  ↗")
+st.page_link("views/ask.py", label="Ask Tiresias  ↗")
 st.html('''<footer class="atlas-footer"><span>ROBBINS &nbsp; / &nbsp; Public data. A shared perspective.</span>
 <span>Socrata · ArcGIS · Federal sources &nbsp; / &nbsp; <a href="https://evanwappel.github.io/robbins/" target="_blank" rel="noopener noreferrer">Sources & methodology ↗</a></span></footer>''')

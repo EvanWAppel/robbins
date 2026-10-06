@@ -1,0 +1,222 @@
+# Tiresias config for robbins (Seattle metro open data). Engine:
+# github.com/EvanWAppel/tiresias, pinned in pyproject.toml / requirements.txt.
+# Check with `uv run tiresias check`; calibrate with `uv run tiresias calibrate`.
+# Excluded: the two map samples (most recent 5k permits; random ~15k trees) would
+# silently undercount, and mart_build_info is pipeline metadata. Map-only: the
+# neighborhood polygon rings and approximate centroids drawn by the choropleths.
+city: Seattle metro
+blurb: City of Seattle permits, crime, fire 911 calls, 311 requests, business and short-term-rental
+  licenses, restaurant inspections, street trees, public art and parks; regional weather,
+  rivers, tides, snowpack and air quality across the ten-county Puget Sound region; transit
+  and ferry ridership
+warehouse: seattle.duckdb
+dbt_target: target
+metrics: tiresias_metrics.yml
+gold:
+  answers: evals/tiresias_gold.yaml
+  retrieval: evals/tiresias_retrieval_gold.yaml
+tables:
+  schemas:
+  - main
+  allowed:
+  - mart_air_category_days
+  - mart_air_monthly
+  - mart_air_observations
+  - mart_air_sites
+  - mart_air_worst_days
+  - mart_art_by_type
+  - mart_art_points
+  - mart_crime_by_category
+  - mart_crime_by_hour_weekday
+  - mart_crime_by_neighborhood
+  - mart_crime_monthly
+  - mart_csr_311_by_neighborhood
+  - mart_csr_by_department
+  - mart_csr_by_method
+  - mart_csr_by_type
+  - mart_csr_monthly
+  - mart_ferry_annual
+  - mart_ferry_by_operator
+  - mart_ferry_monthly
+  - mart_ferry_seasonal
+  - mart_fire_911_by_neighborhood
+  - mart_fire_by_hour_weekday
+  - mart_fire_by_type
+  - mart_fire_monthly
+  - mart_inspection_results
+  - mart_inspections
+  - mart_inspections_over_time
+  - mart_licenses_by_city
+  - mart_licenses_by_industry
+  - mart_licenses_by_ownership
+  - mart_licenses_monthly
+  - mart_metrics
+  - mart_mobility_coverage
+  - mart_parks_largest
+  - mart_parks_points
+  - mart_parks_size_bands
+  - mart_permits_by_class
+  - mart_permits_monthly
+  - mart_river_observations
+  - mart_snow_observations
+  - mart_str_by_region
+  - mart_str_by_status
+  - mart_str_by_type
+  - mart_str_map
+  - mart_tides_observations
+  - mart_top_violations
+  - mart_transit_by_agency
+  - mart_transit_by_mode
+  - mart_transit_light_rail_monthly
+  - mart_transit_monthly
+  - mart_trees_by_condition
+  - mart_trees_by_genus
+  - mart_trees_by_species
+  - mart_trees_planted_by_year
+  - mart_trees_summary
+  - mart_weather_observations
+  - mart_worst_establishments
+  excluded:
+  - mart_build_info
+  - mart_permits_map_sample
+  - mart_trees_map_sample
+  map_only_columns:
+    mart_crime_by_neighborhood:
+    - rings_json
+    - centroid_lon
+    - centroid_lat
+    mart_csr_311_by_neighborhood:
+    - rings_json
+    - centroid_lon
+    - centroid_lat
+    mart_fire_911_by_neighborhood:
+    - rings_json
+    - centroid_lon
+    - centroid_lat
+examples:
+- question: How many building permits were issued each month and what were they worth?
+  guidance: Use mart_permits_monthly (permit_count, total_valuation in USD by issue_month)
+    or mart_permits_by_class.
+  grounds:
+  - mart_permits_monthly
+  - mart_permits_by_class
+- question: What are the most common crime categories?
+  guidance: Use mart_crime_by_category (incident_count by offense_category).
+  grounds:
+  - mart_crime_by_category
+- question: Which neighborhoods have the most crime per square mile?
+  guidance: Use mart_crime_by_neighborhood ordered by incidents_per_sq_mile; counts cover
+    all loaded years.
+  grounds:
+  - mart_crime_by_neighborhood
+- question: What hour of the day has the most fire 911 calls?
+  guidance: Use mart_fire_by_hour_weekday, summing call_count by hour_of_day.
+  grounds:
+  - mart_fire_by_hour_weekday
+- question: What are the most common 311 request types?
+  guidance: Use mart_csr_by_type (request_count by request_type); mart_csr_monthly for trends.
+  grounds:
+  - mart_csr_by_type
+  - mart_csr_monthly
+- question: Which industries have the most business licenses?
+  guidance: Use mart_licenses_by_industry (license_count by naics_description).
+  grounds:
+  - mart_licenses_by_industry
+- question: How many short-term rental licenses are there by property type?
+  guidance: Use mart_str_by_type (license_count by propertytype); mart_str_by_status for status.
+  grounds:
+  - mart_str_by_type
+  - mart_str_by_status
+- question: Which restaurants have the worst inspection records?
+  guidance: Use mart_worst_establishments (establishments with 3+ inspections) or mart_inspections.
+  grounds:
+  - mart_worst_establishments
+  - mart_inspections
+- question: What are the most common health code violations?
+  guidance: Use mart_top_violations ranked by violation_count.
+  grounds:
+  - mart_top_violations
+- question: What are the most common street tree species?
+  guidance: Use mart_trees_by_species (tree_count by scientific_name); mart_trees_summary
+    for totals.
+  grounds:
+  - mart_trees_by_species
+  - mart_trees_summary
+- question: Which parks are the largest?
+  guidance: Use mart_parks_largest (top 15 by area_acres) or mart_parks_points for all parks.
+  grounds:
+  - mart_parks_largest
+  - mart_parks_points
+- question: How much rain fell at Sea-Tac each year?
+  guidance: Use mart_weather_observations; filter the King County headline station (is_headline
+    and county) and sum precip_in by year.
+  grounds:
+  - mart_weather_observations
+- question: How high did the rivers run in each county?
+  guidance: Use mart_river_observations (discharge_cfs by obs_date, county); filter is_headline
+    for one gage per county.
+  grounds:
+  - mart_river_observations
+- question: What was the peak snowpack each winter?
+  guidance: 'Use mart_snow_observations: max(swe_in) by water_year for the county''s headline
+    station.'
+  grounds:
+  - mart_snow_observations
+- question: Is sea level rising at the tide gauges?
+  guidance: Use mart_tides_observations (msl_ft by year); msl_ft is relative to the station's
+    MSL datum, so read trends, not elevations.
+  grounds:
+  - mart_tides_observations
+- question: How many unhealthy air days were there in a county?
+  guidance: Use mart_air_observations filtered on county_fips; count days by aqi_category.
+    Missing observations are not zeros.
+  grounds:
+  - mart_air_observations
+- question: How has light rail ridership changed?
+  guidance: Use mart_transit_light_rail_monthly (boardings by ridership_month).
+  grounds:
+  - mart_transit_light_rail_monthly
+- question: How many people ride the ferries each year?
+  guidance: Use mart_ferry_annual (boardings by ridership_year; check months_reported for
+    partial years).
+  grounds:
+  - mart_ferry_annual
+- question: What kinds of public art are most common?
+  guidance: Use mart_art_by_type (artwork_count by classification).
+  grounds:
+  - mart_art_by_type
+planner_notes:
+- City feeds (permits, crime, fire 911, 311, licenses, short-term rentals, inspections, trees,
+  art, parks) cover the City of Seattle, not the region; never substitute Seattle data for
+  another county.
+- Regional weather, river, tide, snow and air tables have one row per station per day (or
+  month) with county_fips and is_headline; filter county_fips for a county and is_headline
+  for one series per county. Missing observations are not zeros.
+- Transit agency and ferry ridership cannot be allocated to counties.
+- Neighborhood marts count all loaded years and only geocoded rows inside the city box.
+- Sea-Tac is mart_weather_observations.station_id = 'USW00024233'; a county's is_headline station is the longest-record one and may be a different station.
+- mart_air_worst_days, mart_parks_largest and mart_worst_establishments are top-N lists; do
+  not total them.
+- Air pollutant names are verbatim EPA labels; match with like 'PM2.5%' or like 'Ozone%'.
+grounding:
+  threshold: 0.63
+  calibration: >-
+    fastembed BAAI/bge-small-en-v1.5 on the draft gold set (2026-10-05): generic
+    off-topic 0.461-0.560 (schools, bitcoin, rent, live traffic); answerable
+    0.704-0.819; subtle unanswerable (forecast, ridership by county, another
+    city's permits) 0.620-0.647. 0.63 sits midway between the generic band and the
+    lowest answerable (~0.07 margin); the planner refuses the subtle ones.
+    Recalibrate after Evan reviews the gold set.
+limits:
+  max_rows: 1000
+  max_result_bytes: 256000
+  statement_timeout_s: 15
+  max_question_chars: 500
+  max_per_session: 15
+  max_per_day: 200
+chat:
+  example_questions:
+  - Which month had the most 311 requests?
+  - Which neighborhoods have the most crime per square mile?
+  - What was the peak snowpack each winter?
+  - How has light rail ridership changed?

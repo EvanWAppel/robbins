@@ -151,25 +151,18 @@ dbt **source freshness** thresholds:
 uv run dbt source freshness --profiles-dir .   # reports reporting-lag vs. now per feed
 ```
 
-## Ask the data — an agent-ready catalog + natural-language queries
+## Ask Tiresias — grounded natural-language queries
 
-The **Ask the Data** page ships two things:
+The **Ask Tiresias** page runs [Tiresias](https://github.com/EvanWAppel/tiresias), a
+grounded text-to-SQL agent, over the marts. It retrieves the real schema (the dbt
+column docs), drafts one read-only DuckDB SELECT, validates it against an explicit
+table allowlist and the live catalog, runs it under a row cap and timeout, and
+answers **with the SQL and citations shown**, or **abstains** when the marts can't
+answer. Robbins keeps only its city config in [`tiresias.yml`](./tiresias.yml) plus
+gold sets in `evals/`; see [`TIRESIAS.md`](./TIRESIAS.md).
 
-1. A machine-readable **catalog of the marts** — [`catalog/marts.json`](./catalog/marts.json),
-   generated from the dbt model docs — framed as *context an AI agent can ground on*
-   (it sits alongside dbt's `manifest.json`). Regenerate with
-   `uv run python generate_catalog.py`; a test keeps it in sync with the schema.
-2. An **"Ask the data"** query surface: a natural-language question becomes a
-   **read-only DuckDB SELECT** (Claude — `claude-opus-4-8` — grounded on the catalog
-   via a forced tool call), which is validated read-only, shown to you, and run over
-   the marts. Bad queries **fail loud**; nothing that could write, attach, or read
-   external files is allowed (`sql_safety.py`, defense-in-depth over the already
-   read-only connection).
-
-Applied AI on real modeled data — built on the catalog, not bolted on. It's a
-**personal** feature: it uses your own `ANTHROPIC_API_KEY` and no employer system.
-Set that env var (locally or in Railway) to enable the query box; without it, the
-catalog still renders and the page explains how to turn queries on.
+The page needs `ANTHROPIC_API_KEY` from a **dedicated, spend-capped workspace key**
+(never a personal one); without it the page shows a notice and stops.
 
 ## Run it locally
 
@@ -178,6 +171,7 @@ uv sync
 uv run dbt deps                             # install dbt packages (dbt-utils)
 uv run python build_warehouse.py            # fetch sources -> raw.* tables
 uv run dbt build --profiles-dir .           # raw -> staging -> marts (+ tests)
+uv run dbt docs generate --profiles-dir .   # catalog.json for the Ask Tiresias page
 uv run streamlit run streamlit_app.py       # serve on :8501
 ```
 
