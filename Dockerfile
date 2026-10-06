@@ -15,6 +15,10 @@ COPY . .
 # DB stays out of git and is rebuilt fresh on every deploy.
 RUN dbt deps && python build_warehouse.py && dbt build --profiles-dir .
 
+# catalog.json (column types) for the Ask Tiresias page; manifest.json comes from
+# the build above.
+RUN dbt docs generate --profiles-dir .
+
 # Railway injects $PORT at runtime; default to 8501 for local runs.
 EXPOSE 8501
 CMD streamlit run streamlit_app.py --server.port ${PORT:-8501} --server.address 0.0.0.0

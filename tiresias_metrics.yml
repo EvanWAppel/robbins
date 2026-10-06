@@ -1,0 +1,5 @@
+# Governed metric registry for Tiresias. Empty for now: robbins' metrics.yml drives
+# the dbt mart_metrics model (headline totals, which Tiresias can query directly)
+# and has a different shape. Add Tiresias metrics here as canonical ratios emerge.
+version: 1
+metrics: []
