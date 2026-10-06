@@ -194,6 +194,7 @@ planner_notes:
   for one series per county. Missing observations are not zeros.
 - Transit agency and ferry ridership cannot be allocated to counties.
 - Neighborhood marts count all loaded years and only geocoded rows inside the city box.
+- Sea-Tac is mart_weather_observations.station_id = 'USW00024233'; a county's is_headline station is the longest-record one and may be a different station.
 - mart_air_worst_days, mart_parks_largest and mart_worst_establishments are top-N lists; do
   not total them.
 - Air pollutant names are verbatim EPA labels; match with like 'PM2.5%' or like 'Ozone%'.

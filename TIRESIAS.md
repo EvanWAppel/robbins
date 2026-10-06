@@ -39,3 +39,8 @@ the 26 regional-mart columns were written from code. To check:
    NOAA's page.
 5. `mart_weather_observations.snow_in` / `snow_depth_in`: null where a station
    doesn't report snow. Check null share by station.
+6. Which station is each county's `is_headline`: the rule is "most distinct years
+   since 2014, ties to the lowest station_id", so King's may not be Sea-Tac (which
+   the Rain & Records page labels it). Check:
+   `select distinct county, station_id, station_name from mart_weather_observations where is_headline`
+   (same question for river and snow headlines).

@@ -744,7 +744,9 @@ models:
   - name: mart_weather_observations
     description: >
       One row per station-day of regional weather across every temperature-reporting
-      GHCN station in the ten-county region (the King headline is Sea-Tac). The Rain
+      GHCN station in the ten-county region. Sea-Tac is station_id 'USW00024233'; the
+      per-county is_headline station is the one with the most distinct years since
+      2014 (ties go to the lowest station_id), so it is not guaranteed to be Sea-Tac. The Rain
       & Records page aggregates at query time — per-county headline station for
       charts, all stations for the map. Carries county_fips + is_headline so county
       filtering and station labeling stay honest.
@@ -758,7 +760,9 @@ models:
       - name: is_headline
         description: True for the county's longest-record station.
       - name: precip_in
-        description: Daily precipitation (inches).
+        description: >
+          Daily precipitation (inches); null on days the station did not report, so
+          annual sums undercount for stations with missing days.
       - name: tmax_f
         description: Daily high (°F).
       - name: tmin_f

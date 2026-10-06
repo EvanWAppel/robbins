@@ -171,6 +171,7 @@ uv sync
 uv run dbt deps                             # install dbt packages (dbt-utils)
 uv run python build_warehouse.py            # fetch sources -> raw.* tables
 uv run dbt build --profiles-dir .           # raw -> staging -> marts (+ tests)
+uv run dbt docs generate --profiles-dir .   # catalog.json for the Ask Tiresias page
 uv run streamlit run streamlit_app.py       # serve on :8501
 ```
 
