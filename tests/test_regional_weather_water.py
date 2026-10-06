@@ -83,15 +83,22 @@ def test_water_coverage_spans_three_networks(water_database):
 
 def test_water_snow_peak_per_water_year(water_database):
     peak = run(water_database, water_queries, "snow_annual_peak", "53033")
-    assert peak.iloc[0]["peak_swe_in"] == 40  # max of 40/30
+    wy2023 = peak[peak["water_year"] == 2023].iloc[0]
+    assert wy2023["peak_swe_in"] == 40  # max of 40/30
 
 
-def test_water_snow_excludes_water_year_before_april(water_database):
-    # WY2024 holds only an October day: charting it reads as a record drought.
+def test_water_snow_peak_skips_only_the_newest_unfinished_water_year(water_database):
+    # WY2024 is the newest year and holds only an October day: charting its
+    # "peak" reads as a record drought, so it is skipped. WY2022 also ends before
+    # April 1 (a past sensor gap), but it is not the newest year, so it charts.
     peak = run(water_database, water_queries, "snow_annual_peak", "53033")
-    assert list(peak["water_year"]) == [2023]
+    assert list(peak["water_year"]) == [2022, 2023]
+
+
+def test_water_snow_recent_keeps_the_winter_in_progress(water_database):
+    # The daily trace is not a peak, so the in-progress winter stays visible.
     recent = run(water_database, water_queries, "snow_recent", "53033")
-    assert set(recent["water_year"]) == {2023}
+    assert set(recent["water_year"]) == {2022, 2023, 2024}
 
 
 # --------------------------------------------------------------------------- #

@@ -757,8 +757,8 @@ models:
         description: 5-digit county FIPS.
       - name: is_headline
         description: >
-          True for the county's headline station: the most days carrying both
-          precipitation and max temperature (ties -> smallest station id).
+          True for the county's headline station: the most days carrying
+          precipitation, max and min temperature (ties -> smallest station id).
       - name: precip_in
         description: Daily precipitation (inches).
       - name: tmax_f

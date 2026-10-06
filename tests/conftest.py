@@ -115,6 +115,8 @@ def water_database():
         county varchar, county_fips varchar, latitude double, longitude double,
         is_headline boolean, swe_in double, snow_depth_in double)''')
     con.execute('''insert into mart_snow_observations values
+        -- WY2022's data stops in February (sensor gap): a past winter still charts.
+        ('2022-02-01',2022,'791:WA:SNTL','Stampede Pass','King','53033',47.28,-121.34,true, 25, 60),
         ('2023-03-01',2023,'791:WA:SNTL','Stampede Pass','King','53033',47.28,-121.34,true, 40, 90),
         ('2023-04-01',2023,'791:WA:SNTL','Stampede Pass','King','53033',47.28,-121.34,true, 30, 70),
         -- WY2024 has only just begun (no data through April 1): not a full winter.

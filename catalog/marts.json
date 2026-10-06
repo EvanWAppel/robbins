@@ -1302,7 +1302,7 @@
         },
         {
           "name": "is_headline",
-          "description": "True for the county's headline station: the most days carrying both precipitation and max temperature (ties -> smallest station id)."
+          "description": "True for the county's headline station: the most days carrying precipitation, max and min temperature (ties -> smallest station id)."
         },
         {
           "name": "precip_in",

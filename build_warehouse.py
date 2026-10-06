@@ -338,6 +338,28 @@ def add_headline_flag(
     return out
 
 
+# Per-network "usable observation" rules for headline selection: a row counts
+# only if it carries the measurement that network's charts use.
+def weather_headline_valid(df: pd.DataFrame) -> pd.Series:
+    """GHCN day with precipitation and both temperatures (the charted series)."""
+    return df["PRCP"].notna() & df["TMAX"].notna() & df["TMIN"].notna()
+
+
+def river_headline_valid(df: pd.DataFrame) -> pd.Series:
+    """USGS day with real discharge; no-data sentinels are negative, NaN compares False."""
+    return pd.to_numeric(df["discharge_cfs"], errors="coerce") >= 0
+
+
+def tides_headline_valid(df: pd.DataFrame) -> pd.Series:
+    """NOAA month with a mean-sea-level value (a missing datum arrives as "")."""
+    return pd.to_numeric(df["MSL"], errors="coerce").notna()
+
+
+def snow_headline_valid(df: pd.DataFrame) -> pd.Series:
+    """SNOTEL day with a snow-water-equivalent reading."""
+    return pd.to_numeric(df["swe_in"], errors="coerce").notna()
+
+
 def noaa_tides_monthly_url(station: str, begin: str, end: str) -> str:
     """NOAA CO-OPS monthly-mean sea-level datums JSON (dates as YYYYMMDD)."""
     return (
@@ -887,8 +909,7 @@ def build_river(con: duckdb.DuckDBPyConnection) -> None:
     if not frames:
         raise ValueError("USGS returned no streamflow gages for any region county")
     combined = pd.concat(frames, ignore_index=True)
-    discharge = pd.to_numeric(combined["discharge_cfs"], errors="coerce")
-    valid = discharge >= 0  # USGS no-data sentinels are negative; NaN compares False
+    valid = river_headline_valid(combined)
     load_raw(con, "river", add_headline_flag(combined, "site_no", valid))
 
 
@@ -913,7 +934,7 @@ def build_tides(con: duckdb.DuckDBPyConnection) -> None:
         df["county_name"] = cfg.REGION_COUNTIES[fips]
         frames.append(df)
     combined = pd.concat(frames, ignore_index=True)
-    valid = pd.to_numeric(combined["MSL"], errors="coerce").notna()
+    valid = tides_headline_valid(combined)
     load_raw(con, "tides", add_headline_flag(combined, "station_id", valid))
 
 
@@ -947,7 +968,7 @@ def build_snow(con: duckdb.DuckDBPyConnection) -> None:
         frames.append(df)
         log.info("  snow %s (%s County): %d rows", station["name"], df["county_name"].iloc[0], len(df))
     combined = pd.concat(frames, ignore_index=True)
-    valid = pd.to_numeric(combined["swe_in"], errors="coerce").notna()
+    valid = snow_headline_valid(combined)
     load_raw(con, "snow", add_headline_flag(combined, "station_triplet", valid))
 
 
@@ -1085,8 +1106,7 @@ def build_weather(con: duckdb.DuckDBPyConnection) -> None:
     combined = combined.merge(county_map, on="STATION", how="inner")
     if combined.empty:
         raise ValueError("No weather stations fell inside a region county")
-    # A headline must carry both charted series (rain and temperature) that day.
-    valid = combined["PRCP"].notna() & combined["TMAX"].notna()
+    valid = weather_headline_valid(combined)
     load_raw(con, "weather", add_headline_flag(combined, "STATION", valid))
 
 

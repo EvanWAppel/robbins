@@ -184,3 +184,43 @@ def test_add_headline_flag_ignores_invalid_rows():
     valid = pd.Series([True, False, False, True, True])
     out = bw.add_headline_flag(df, "site", valid)
     assert set(out.loc[out["is_headline"], "site"]) == {"B"}
+
+
+# --------------------------------------------------------------------------- #
+# headline validity — the per-network "usable observation" rule, on the column #
+# names each fetcher actually produces                                         #
+# --------------------------------------------------------------------------- #
+def test_weather_valid_needs_precip_and_both_temperatures():
+    import pandas as pd
+
+    # GHCN CSVs are read dtype=str; blank fields arrive as NaN.
+    df = pd.DataFrame(
+        {
+            "PRCP": ["3", "3", "3", None],
+            "TMAX": ["150", None, "150", "150"],
+            "TMIN": ["50", "50", None, "50"],
+        }
+    )
+    assert list(bw.weather_headline_valid(df)) == [True, False, False, False]
+
+
+def test_river_valid_excludes_negative_sentinels_and_blanks():
+    import pandas as pd
+
+    df = pd.DataFrame({"discharge_cfs": ["512", "0", "-999999", "", None]})
+    assert list(bw.river_headline_valid(df)) == [True, True, False, False, False]
+
+
+def test_tides_valid_needs_msl():
+    import pandas as pd
+
+    # NOAA monthly_mean JSON values are strings; a missing datum is "".
+    df = pd.DataFrame({"MSL": ["7.01", "", None]})
+    assert list(bw.tides_headline_valid(df)) == [True, False, False]
+
+
+def test_snow_valid_needs_swe():
+    import pandas as pd
+
+    df = pd.DataFrame({"swe_in": [12.3, None, 0.0]})
+    assert list(bw.snow_headline_valid(df)) == [True, False, True]

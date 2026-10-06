@@ -1,7 +1,7 @@
 """Regional Puget Sound weather — "Rain & Records" across county headline stations.
 
 Every county's charts use its "headline" NOAA GHCN-Daily station (the most days
-with both rain and temperature); the map shows every temperature-reporting station
+with rain and both temperatures); the map shows every temperature-reporting station
 in the selection. With a county chosen the page reads like the old single-station
 page; across all of Puget Sound it compares counties. Historical observations, not current conditions.
 """
@@ -20,7 +20,7 @@ from regional_weather import weather_queries
 st.title("Rain & Records")
 st.caption(
     "Daily weather from NOAA GHCN-Daily stations across Puget Sound. Each county's "
-    "charts use its 'headline' station (the most days with both rain and temperature "
+    "charts use its 'headline' station (the most days with rain and temperature "
     "readings); the map shows every station. "
     "These are historical observations, not current weather conditions."
 )
