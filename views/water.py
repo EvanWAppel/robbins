@@ -2,8 +2,8 @@
 
 Three federal networks with real, unequal coverage: USGS streamflow gages (8/10
 counties), NOAA tide gauges (the 5 saltwater-front counties), and NRCS SNOTEL snow
-(the 7 mountainous ones). Each county's charts use its longest-record headline
-station; a county with no station in a network is shown as an explicit gap, never
+(the 7 mountainous ones). Each county's charts use its headline station (the one
+with the most valid observations); a county with no station in a network is shown as an explicit gap, never
 filled in from a neighbor. The map shows every station colored by network.
 """
 

@@ -1,6 +1,5 @@
 -- Regional daily weather (NOAA GHCN-Daily). One row per station-day across every
--- temperature-reporting station in the ten-county region; the King headline
--- (Sea-Tac) keeps its full record. GHCN stores precip in tenths of a mm and
+-- temperature-reporting station in the ten-county region, 2014 onward. GHCN stores precip in tenths of a mm and
 -- temperatures in tenths of a degree C (SNOW/SNWD already in mm); we divide and
 -- surface US units. Station identity + county + the per-county headline flag are
 -- carried through so the app can filter and label honestly.

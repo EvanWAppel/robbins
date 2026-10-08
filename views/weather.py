@@ -1,9 +1,9 @@
 """Regional Puget Sound weather — "Rain & Records" across county headline stations.
 
-Every county's charts use its longest-record ("headline") NOAA GHCN-Daily station;
-the map shows every temperature-reporting station in the selection. With a county
-chosen the page reads like the old single-station Sea-Tac page; across all of Puget
-Sound it compares counties. Historical observations, not current conditions.
+Every county's charts use its "headline" NOAA GHCN-Daily station (the most days
+with rain and both temperatures); the map shows every temperature-reporting station
+in the selection. With a county chosen the page reads like the old single-station
+page; across all of Puget Sound it compares counties. Historical observations, not current conditions.
 """
 
 import altair as alt
@@ -13,14 +13,15 @@ from pydeck.data_utils import compute_view
 
 import ui
 from app_db import query
-from city_config import REGION_COUNTIES
+from city_config import REGION_COUNTIES, WEATHER_REGIONAL_START_YEAR
 from geography import county_selector
 from regional_weather import weather_queries
 
 st.title("Rain & Records")
 st.caption(
     "Daily weather from NOAA GHCN-Daily stations across Puget Sound. Each county's "
-    "charts use its longest-record ('headline') station; the map shows every station. "
+    "charts use its 'headline' station (the most days with rain and temperature "
+    "readings); the map shows every station. "
     "These are historical observations, not current weather conditions."
 )
 
@@ -183,7 +184,10 @@ if not mappable.empty:
     )
 
 # --- Records table ---
-st.subheader("All-time records" + (f" — {REGION_COUNTIES[county]} County" if county else " by county"))
+# The warehouse holds WEATHER_REGIONAL_START_YEAR onward only, so these are
+# records within that window, not all-time station records.
+st.subheader(f"Records since {WEATHER_REGIONAL_START_YEAR}"
+             + (f" — {REGION_COUNTIES[county]} County" if county else " by county"))
 records_display = records.rename(
     columns={"county": "County", "record_type": "Record", "obs_date": "Date", "value": "Value"}
 )

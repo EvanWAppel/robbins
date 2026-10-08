@@ -147,8 +147,9 @@ AQS_END_YEAR = 2026  # inclusive; the current year's file is partial but publish
 # --------------------------------------------------------------------------- #
 # NOAA GHCN-Daily — keyless station CSV                                        #
 # --------------------------------------------------------------------------- #
-# Seattle-Tacoma International Airport (Sea-Tac) — the original Seattle station,
-# still the King County headline. The regional expansion (PS-TOPICS-02) also
+# Seattle-Tacoma International Airport (Sea-Tac) — the original Seattle station.
+# Headlines are now chosen per county by data completeness (stations module),
+# not pinned here. The regional expansion (PS-TOPICS-02) also
 # discovers every other temperature-reporting GHCN station in the region.
 NOAA_STATION = "USW00024233"
 
@@ -171,8 +172,8 @@ WEATHER_REGIONAL_START_YEAR = 2014    # uniform per-station history window acros
 # --------------------------------------------------------------------------- #
 # Signature water body — four keyless federal networks, now region-wide        #
 # --------------------------------------------------------------------------- #
-# River: USGS NWIS streamflow. Cedar River at Renton stays the King headline;
-# the build also pulls every active daily-discharge gage in each county by
+# River: USGS NWIS streamflow. Cedar River at Renton was the Seattle-era gage;
+# headlines are now chosen by data completeness, and the build also pulls every active daily-discharge gage in each county by
 # countyCd (verified 2026-09-27: gages in 8/10 counties; Island & Kitsap none).
 USGS_CEDAR_RIVER_SITE = "12119000"   # USGS NWIS — Cedar River at Renton, WA
 USGS_FLOW_PARAM = "00060"            # discharge, cubic feet per second
@@ -192,11 +193,11 @@ NOAA_TIDE_STATIONS = {
     "9446484": ("53053", "Tacoma", 47.267, -122.413),         # Pierce
 }
 
-# Snow: NRCS SNOTEL snow-water-equivalent. Stampede Pass stays the King headline;
-# the build pulls every active WA SNTL station and keeps those the AWDB API
+# Snow: NRCS SNOTEL snow-water-equivalent. Stampede Pass was the Seattle-era
+# station; headlines are now chosen by data completeness, and the build pulls every active WA SNTL station and keeps those the AWDB API
 # assigns to a region county (verified 2026-09-27: stations in 7/10 counties;
 # Island, Kitsap & Thurston are lowland, none).
-SNOTEL_STATION = "791:WA:SNTL"       # Stampede Pass (King headline; kept for compat)
+SNOTEL_STATION = "791:WA:SNTL"       # Stampede Pass (Seattle-era station; kept for compat)
 SNOTEL_NETWORK = "SNTL"
 SNOTEL_STATE = "WA"
 
@@ -280,7 +281,7 @@ DATA_SOURCES = (
            "PM2.5 and ozone, 2019 onward; monitoring locations do not provide uniform county coverage."),
     Source("noaa.weather", "Rain & Records", "NOAA", "https://www.ncei.noaa.gov/pub/data/ghcn/daily/ghcnd-inventory.txt",
            "station", "GHCN-Daily temperature stations across the region", "Station/day/measurement",
-           "Every county's charts use its longest-record headline station; 2014 onward. A station is not every city's weather."),
+           "Every county's charts use its headline station (most days with rain and temperature); 2014 onward. A station is not every city's weather."),
     Source("usgs.water", "Water", "USGS", "https://waterservices.usgs.gov/nwis/dv/",
            "station", "USGS streamflow gages, region counties (Island & Kitsap have none)", "Station/day streamflow",
            "Per-county headline gage; not regional water supply or every watershed. 2014 onward."),

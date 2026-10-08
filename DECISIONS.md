@@ -130,3 +130,22 @@ county-wide coverage the PRD forbids). Cost: ~142 GHCN per-station CSV downloads
 a few minutes to the build; per-county gaps must be shown explicitly (no station is
 extrapolated across a county); station identity, units, and datum/baseline are
 preserved per the PRD.
+
+## 2026-10-05 — Headline station = most valid observations, not longest record
+
+*Status: drafted by the agent from the post-merge review of PR #21; confirmed by the
+owner 2026-10-05.*
+
+The PR #21 headline rule ("most distinct calendar years") collapsed to the
+lexicographic id tie-break, because every network is clipped to the same 2014+
+window — the owner confirmed King's weather headline came out as a co-op station
+(USC00451233), not Sea-Tac. The rule now counts **valid observations of the charted
+measurement** per station: weather days with PRCP, TMAX and TMIN; river days with
+non-negative discharge; tide months with MSL; snow days with SWE. Ties still break
+to the smallest id.
+
+Chosen over: pinning the King headlines (Sea-Tac / Cedar / Stampede) in config —
+simpler and guarantees the familiar Seattle stations, but leaves the other nine
+counties' headlines arbitrary. Cost: the familiar King stations are no longer
+guaranteed; a complete co-op station could still tie a first-order station and win
+on id. Verify the chosen headlines after the next warehouse rebuild.

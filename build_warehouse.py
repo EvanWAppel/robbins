@@ -263,7 +263,7 @@ def usgs_nwis_dv_county_url(fips5: str, param: str, start: str, end: str) -> str
     """
     return (
         "https://waterservices.usgs.gov/nwis/dv/?format=json"
-        f"&countyCd={fips5}&parameterCd={param}&siteStatus=active"
+        f"&countyCd={fips5}&parameterCd={param}&statCd=00003&siteStatus=active"
         f"&startDT={start}&endDT={end}"
     )
 
@@ -302,29 +302,31 @@ def parse_usgs_dv(payload: dict) -> pd.DataFrame:
 
 
 def add_headline_flag(
-    df: pd.DataFrame, station_col: str, years: pd.Series
+    df: pd.DataFrame, station_col: str, valid: pd.Series
 ) -> pd.DataFrame:
     """Add an ``is_headline`` bool marking each county's one curated station.
 
-    The headline is the station with the most distinct calendar years of data in
-    its county (ties -> lexicographically smallest id), via the shared
+    The headline is the station with the most valid observations in its county
+    (ties -> lexicographically smallest id), via the shared
     :func:`stations.pick_headline_stations` rule — so weather, river, tide, and
-    snow all curate identically. ``years`` is the calendar year per row (aligned
-    to ``df``); the frame must carry a ``county`` column. Every other station
-    still loads (for the density map); only the headline drives a county's charts.
+    snow all curate identically. ``valid`` is a per-row bool (aligned to ``df``)
+    that is True when the row carries the measurement the county's charts use;
+    the frame must carry a ``county`` column. Every other station still loads
+    (for the density map); only the headline drives a county's charts.
     """
-    spans = (
+    counts = (
         pd.DataFrame(
-            {"county": df["county"], "station_id": df[station_col], "year": years}
+            {"county": df["county"], "station_id": df[station_col],
+             "valid": valid.astype(bool)}
         )
-        .groupby(["county", "station_id"])["year"]
-        .nunique()
+        .groupby(["county", "station_id"])["valid"]
+        .sum()
         .reset_index()
     )
     records = [
-        {"county": county, "station_id": station, "record_years": int(count)}
+        {"county": county, "station_id": station, "valid_obs": int(count)}
         for county, station, count in zip(
-            spans["county"], spans["station_id"], spans["year"], strict=True
+            counts["county"], counts["station_id"], counts["valid"], strict=True
         )
     ]
     headline = stations.pick_headline_stations(records)
@@ -334,6 +336,28 @@ def add_headline_flag(
         for county, station in zip(df["county"], df[station_col], strict=True)
     ]
     return out
+
+
+# Per-network "usable observation" rules for headline selection: a row counts
+# only if it carries the measurement that network's charts use.
+def weather_headline_valid(df: pd.DataFrame) -> pd.Series:
+    """GHCN day with precipitation and both temperatures (the charted series)."""
+    return df["PRCP"].notna() & df["TMAX"].notna() & df["TMIN"].notna()
+
+
+def river_headline_valid(df: pd.DataFrame) -> pd.Series:
+    """USGS day with real discharge; no-data sentinels are negative, NaN compares False."""
+    return pd.to_numeric(df["discharge_cfs"], errors="coerce") >= 0
+
+
+def tides_headline_valid(df: pd.DataFrame) -> pd.Series:
+    """NOAA month with a mean-sea-level value (a missing datum arrives as "")."""
+    return pd.to_numeric(df["MSL"], errors="coerce").notna()
+
+
+def snow_headline_valid(df: pd.DataFrame) -> pd.Series:
+    """SNOTEL day with a snow-water-equivalent reading."""
+    return pd.to_numeric(df["swe_in"], errors="coerce").notna()
 
 
 def noaa_tides_monthly_url(station: str, begin: str, end: str) -> str:
@@ -367,14 +391,15 @@ def parse_snotel_stations(
 
     ``region_counties`` maps FIPS -> county name (``city_config.REGION_COUNTIES``).
     The AWDB response gives ``countyName`` (e.g. "King") but no FIPS, so we
-    resolve the FIPS by name. Stations in non-region counties (Chelan, Klamath,
+    resolve the FIPS by name — only for Washington stations (``:WA:`` in the
+    triplet), since county names repeat across states (Jefferson MT/OR). Stations in non-region counties (Chelan, Klamath,
     …) drop out. Returns dicts of ``triplet``/``name``/``county``/``elevation``.
     """
     name_to_fips = {name: fips for fips, name in region_counties.items()}
     kept: list[dict] = []
     for station in payload:
         triplet = station.get("stationTriplet", "")
-        if not triplet.endswith(":SNTL"):
+        if not triplet.endswith(":SNTL") or ":WA:" not in triplet:
             continue
         fips = name_to_fips.get(station.get("countyName", ""))
         if fips is None:
@@ -862,7 +887,7 @@ def build_river(con: duckdb.DuckDBPyConnection) -> None:
     One county-scoped NWIS call per county (``countyCd``); counties with no gage
     (Island, Kitsap) return an empty series and are logged, not treated as an
     error. Rows carry gage id, county, and coordinates; the county headline is
-    the gage with the longest record.
+    the gage with the most valid daily discharge observations.
     """
     today = datetime.now(UTC).date()
     frames: list[pd.DataFrame] = []
@@ -884,8 +909,8 @@ def build_river(con: duckdb.DuckDBPyConnection) -> None:
     if not frames:
         raise ValueError("USGS returned no streamflow gages for any region county")
     combined = pd.concat(frames, ignore_index=True)
-    years = combined["obs_date"].str.slice(0, 4).astype(int)
-    load_raw(con, "river", add_headline_flag(combined, "site_no", years))
+    valid = river_headline_valid(combined)
+    load_raw(con, "river", add_headline_flag(combined, "site_no", valid))
 
 
 def build_tides(con: duckdb.DuckDBPyConnection) -> None:
@@ -909,8 +934,8 @@ def build_tides(con: duckdb.DuckDBPyConnection) -> None:
         df["county_name"] = cfg.REGION_COUNTIES[fips]
         frames.append(df)
     combined = pd.concat(frames, ignore_index=True)
-    years = combined["year"].astype(int)
-    load_raw(con, "tides", add_headline_flag(combined, "station_id", years))
+    valid = tides_headline_valid(combined)
+    load_raw(con, "tides", add_headline_flag(combined, "station_id", valid))
 
 
 def build_snow(con: duckdb.DuckDBPyConnection) -> None:
@@ -943,8 +968,8 @@ def build_snow(con: duckdb.DuckDBPyConnection) -> None:
         frames.append(df)
         log.info("  snow %s (%s County): %d rows", station["name"], df["county_name"].iloc[0], len(df))
     combined = pd.concat(frames, ignore_index=True)
-    years = combined["obs_date"].astype(str).str.slice(0, 4).astype(int)
-    load_raw(con, "snow", add_headline_flag(combined, "station_triplet", years))
+    valid = snow_headline_valid(combined)
+    load_raw(con, "snow", add_headline_flag(combined, "station_triplet", valid))
 
 
 def build_water(con: duckdb.DuckDBPyConnection) -> None:
@@ -1081,8 +1106,8 @@ def build_weather(con: duckdb.DuckDBPyConnection) -> None:
     combined = combined.merge(county_map, on="STATION", how="inner")
     if combined.empty:
         raise ValueError("No weather stations fell inside a region county")
-    years = combined["DATE"].str.slice(0, 4).astype(int)
-    load_raw(con, "weather", add_headline_flag(combined, "STATION", years))
+    valid = weather_headline_valid(combined)
+    load_raw(con, "weather", add_headline_flag(combined, "STATION", valid))
 
 
 # raw table name -> builder. Add topics here as their sources are verified.
