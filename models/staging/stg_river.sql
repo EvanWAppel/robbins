@@ -1,7 +1,7 @@
 -- Regional daily streamflow (USGS NWIS). One row per gage-day across every active
 -- daily-discharge gage in the region's counties (Island & Kitsap have none). Each
 -- row carries the gage id, name, coordinates, county, and the per-county headline
--- flag (the gage with the longest record). obs_date arrives as an ISO timestamp.
+-- flag (the gage with the most valid discharge days). obs_date arrives as an ISO timestamp.
 
 with source as (
     select * from {{ source('raw', 'river') }}
