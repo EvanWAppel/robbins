@@ -149,3 +149,19 @@ simpler and guarantees the familiar Seattle stations, but leaves the other nine
 counties' headlines arbitrary. Cost: the familiar King stations are no longer
 guaranteed; a complete co-op station could still tie a first-order station and win
 on id. Verify the chosen headlines after the next warehouse rebuild.
+
+## 2026-10-05 — Replace "Ask the Data" with Tiresias (drafted by Claude; replacement confirmed by Evan 2026-10-04)
+
+Evan chose to replace the in-repo text-to-SQL (`nl_sql.py`, `sql_safety.py`,
+`catalog.py`, `generate_catalog.py`, `catalog/marts.json`) with the Tiresias
+library (v0.1.0, pinned by the tag's commit archive); `semantic.py`, `metrics.yml`
+and `mart_metrics` stay (the overview reads them). The old page enforced table
+scope only in the prompt; Tiresias enforces an explicit allowlist in code. Scope:
+57 of 60 marts; **excluded** the two map samples (silent undercounts) and
+`mart_build_info`; neighborhood `rings_json` and approximate centroids are map-only.
+`mart_metrics` stays queryable (headline totals). The old prompt's geography
+caveats became planner notes. Threshold **0.63**, midway between the generic
+off-topic band and the lowest answerable question (rejected: 0.66+, within ~0.04 of
+a real question). Tiresias metric registry starts empty (rejected: reshaping
+`metrics.yml`, which also drives a dbt model). `anthropic` is no longer a direct
+dependency; `requires-python` narrowed to 3.12.

@@ -12,7 +12,7 @@ apply_theme()
 sections = {
     "Start here": [
         st.Page("views/overview.py", title="Overview", default=True),
-        st.Page("views/ask.py", title="Ask the Data"),
+        st.Page("views/ask.py", title="Ask Tiresias"),
         st.Page("views/data_coverage.py", title="Data Coverage"),
     ],
     "City & housing": [
