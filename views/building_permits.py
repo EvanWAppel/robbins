@@ -80,6 +80,11 @@ st.divider()
 monthly = query(*q["monthly"])
 series_title = "County" if multi else "Jurisdiction"
 st.subheader("Permits issued per month")
+if multi or county == "53035":
+    st.caption(
+        "Kitsap County's feed starts with applications submitted in 2020, so its "
+        "series begins then (and early 2020 is undercounted) — not a building surge."
+    )
 monthly_chart = (
     alt.Chart(monthly)
     .mark_area(opacity=0.8)

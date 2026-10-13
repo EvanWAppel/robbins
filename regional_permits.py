@@ -37,6 +37,9 @@ NORMALIZED_COLUMNS = (
 _LAT = (46.0, 49.1)
 _LON = (-125.0, -120.5)
 _LOCAL_TZ = "America/Los_Angeles"
+# Kept permit types matching this are logged loudly: likely trade/admin records
+# a denylist rule missed (see DECISIONS 2026-10-12, structure permits only).
+_TRADE_LIKE = r"FIRE|SIGN|ELECTR|MECH|PLUMB|UTIL|SOLAR"
 
 
 def _clean_text(s: pd.Series) -> pd.Series:
@@ -46,10 +49,18 @@ def _clean_text(s: pd.Series) -> pd.Series:
 
 
 def _parse_dates(s: pd.Series, today: date, label: str) -> pd.Series:
-    """ArcGIS epoch-millis or ISO-ish strings -> date; future/unparseable -> null."""
-    numeric = pd.to_numeric(s, errors="coerce")
+    """ArcGIS epoch-millis or ISO-ish strings -> date; future/unparseable -> null.
+
+    Only real numbers are epoch-millis; a digit string like '20240115' is a date.
+    """
+    if pd.api.types.is_numeric_dtype(s):
+        is_num = s.notna()
+    else:
+        is_num = s.map(lambda v: isinstance(v, int | float) and not isinstance(v, bool)
+                       and not pd.isna(v)).astype(bool)
+    numeric = pd.to_numeric(s.where(is_num), errors="coerce")
     from_ms = pd.to_datetime(numeric, unit="ms", errors="coerce")
-    text = s.where(numeric.isna()).astype("string").str.strip()
+    text = s.where(~is_num).astype("string").str.strip()
     # Offset-bearing timestamps (Socrata fixed-timestamp columns) are instants:
     # take their Pacific calendar date. Naive strings are already local dates.
     has_tz = text.str.contains(r"(?:Z|[+-]\d\d:?\d\d)$", regex=True).fillna(False)
@@ -95,6 +106,13 @@ def normalize_permits(
         log.info("  %s: structure rule kept %d of %d; top dropped: %s",
                  label, int(keep.sum()), n_raw, top.to_dict())
     df = df[keep]
+    if "permit_class" in spec.fields:
+        kept = _clean_text(df[spec.fields["permit_class"]]).fillna("<null>").value_counts()
+        log.info("  %s: kept permit types: %s", label, kept.head(25).to_dict())
+        suspect = kept[kept.index.str.contains(_TRADE_LIKE, case=False, regex=True)]
+        if not suspect.empty:
+            log.warning("  %s: kept types that look trade/sign/fire/utility — review the "
+                        "structure rule: %s", label, suspect.to_dict())
 
     out = pd.DataFrame(index=df.index)
     out["source_id"] = spec.source_id
@@ -138,6 +156,12 @@ def normalize_permits(
     pending_in = (out["issue_date"].isna() & out["applied_date"].notna()
                   & (out["applied_date"] >= begin))
     out = out[(issued_in | pending_in) & out["permit_key"].notna()]
+    # Several rows per permit (Accela exports): keep the issued, latest, highest
+    # valued row so counts and valuation don't depend on fetch order.
+    out = out.sort_values(
+        ["permit_key", "issue_date", "applied_date", "valuation"],
+        ascending=[True, False, False, False], na_position="last", kind="mergesort",
+    )
     dupes = out["permit_key"].duplicated()
     if dupes.any():
         log.info("  %s: dropped %d duplicate permit numbers", label, int(dupes.sum()))

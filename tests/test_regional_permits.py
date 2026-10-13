@@ -132,6 +132,28 @@ def test_keys_are_source_qualified_and_duplicates_dropped(spec):
     assert norm(other, [row(PNUM="B1")])["permit_key"][0] != out["permit_key"][0]
 
 
+def test_dedupe_prefers_the_issued_row_regardless_of_fetch_order(spec):
+    rows = [row(PNUM="B1", ISSUED=None, APPLIED="2020-01-02", VALUE="1"),
+            row(PNUM="B1", ISSUED="2020-03-01", VALUE="999")]
+    for ordered in (rows, rows[::-1]):
+        out = norm(spec, ordered)
+        assert len(out) == 1
+        assert out["issue_date"][0] == date(2020, 3, 1) and out["valuation"][0] == 999
+
+
+def test_digit_strings_are_dates_not_epoch_millis(spec):
+    out = norm(spec, [row(PNUM="ymd", ISSUED="20240115")])
+    assert out["issue_date"][0] == date(2024, 1, 15)
+
+
+def test_kept_trade_like_types_are_flagged(spec, caplog):
+    spec = replace(spec, include={}, exclude={"PTYPE": ("Mechanical",)})
+    with caplog.at_level("WARNING"):
+        norm(spec, [row(PNUM="a"), row(PNUM="b", PTYPE="Fire Alarm")])
+    assert any("Fire Alarm" in r.getMessage() and "test.city" in r.getMessage()
+               for r in caplog.records)
+
+
 def test_jurisdiction_from_field_with_fallback(spec):
     spec = replace(spec, jurisdiction_field="CITY")
     out = norm(spec, [row(PNUM="a", CITY="Medina "), row(PNUM="b", CITY=None)])

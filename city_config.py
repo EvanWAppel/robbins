@@ -413,7 +413,7 @@ PERMIT_SOURCES: tuple[PermitSource, ...] = (
 PERMIT_GAPS: dict[str, str] = {
     "53029": "Island County publishes only a small, stale permit snapshot (last update 2026-02); no city feed found.",
     "53031": "Jefferson County publishes septic permits only; no building-permit feed found.",
-    "53033": "Seattle and Bellevue (with the small cities it permits for) only. Unincorporated King County, Kent, Federal Way, Redmond, Kirkland and other cities publish no machine-readable permit history.",
+    "53033": "Seattle and Bellevue only. Unincorporated King County, Kent, Federal Way, Redmond, Kirkland and other cities publish no machine-readable permit history.",
     "53035": "Unincorporated Kitsap County only, and only applications since 2020. Bremerton and other cities publish no feed.",
     "53045": "Mason County's permit service requires a login token; no city feed found.",
     "53053": "Unincorporated Pierce County, Tacoma and Puyallup only. Lakewood, University Place and other cities publish no feed.",

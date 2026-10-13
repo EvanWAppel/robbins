@@ -17,6 +17,7 @@ import json
 import logging
 import re
 import socket
+import time
 import urllib.parse
 from datetime import UTC, date, datetime
 from pathlib import Path
@@ -501,36 +502,66 @@ def fetch_features(
 
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-    def get(url: str, params: dict) -> dict:
-        r = requests.get(url, params=params, timeout=180, verify=ssl_verify)
-        r.raise_for_status()
-        return r.json()
-
-    meta = get(base_url, {"f": "json"})
+    meta = _arcgis_get(base_url, {"f": "json"}, ssl_verify)
     page = min(meta.get("maxRecordCount") or ARCGIS_PAGE, ARCGIS_PAGE)
+    oid = meta.get("objectIdField") or next(
+        (f["name"] for f in meta.get("fields", []) if f.get("type") == "esriFieldTypeOID"),
+        None,
+    )
     out: list[tuple[dict, dict | None]] = []
     offset = 0
     while True:
-        feats = get(
-            f"{base_url}/query",
-            {
-                "where": where,
-                "outFields": out_fields,
-                "returnGeometry": "true" if geometry else "false",
-                "outSR": out_sr,
-                "f": "json",
-                "resultOffset": offset,
-                "resultRecordCount": page,
-            },
-        ).get("features", [])
+        params = {
+            "where": where,
+            "outFields": out_fields,
+            "returnGeometry": "true" if geometry else "false",
+            "outSR": out_sr,
+            "f": "json",
+            "resultOffset": offset,
+            "resultRecordCount": page,
+        }
+        if oid:
+            # Stable offsets: without an order, a server may skip or repeat rows.
+            params["orderByFields"] = oid
+        resp = _arcgis_get(f"{base_url}/query", params, ssl_verify)
+        # ArcGIS reports query failures (e.g. timeouts) as HTTP 200 + an error body;
+        # treating that as "no more features" would silently truncate the layer.
+        if "error" in resp:
+            raise RuntimeError(f"ArcGIS error from {base_url} at offset {offset}: {resp['error']}")
+        if "features" not in resp:
+            raise RuntimeError(f"ArcGIS response from {base_url} at offset {offset} has no features")
+        feats = resp["features"]
         if not feats:
             break
         out.extend((f.get("attributes", {}), f.get("geometry")) for f in feats)
         offset += len(feats)
         log.info("  %s: %d features", base_url.rsplit("/services/", 1)[-1], len(out))
-        if len(feats) < page:
+        if len(feats) < page and not resp.get("exceededTransferLimit"):
             break
     return out
+
+
+ARCGIS_ATTEMPTS = 3
+
+
+def _arcgis_get(url: str, params: dict, ssl_verify: bool) -> dict:
+    """GET an ArcGIS REST endpoint, retrying transient connection failures.
+
+    A connection reset or timeout is retried with backoff (one killed a local
+    permits build); HTTP errors and the final failure propagate unchanged.
+    """
+    for attempt in range(1, ARCGIS_ATTEMPTS + 1):
+        try:
+            r = requests.get(url, params=params, timeout=180, verify=ssl_verify)
+            r.raise_for_status()
+            return r.json()
+        except (requests.ConnectionError, requests.Timeout) as err:
+            if attempt == ARCGIS_ATTEMPTS:
+                raise
+            log.warning("ArcGIS %s failed (%s); retry %d of %d",
+                        url, err, attempt, ARCGIS_ATTEMPTS - 1)
+            time.sleep(2 ** attempt)
+    raise AssertionError("unreachable")
 
 
 def _centroid(geom: dict | None) -> tuple[float | None, float | None]:
