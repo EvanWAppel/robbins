@@ -307,7 +307,7 @@ outcome, not implemented coverage.
 - [~] **PS-TOPICS-03 — Transit and ferries:** audit operators serving the region;
   integrate verified coverage at agency/mode grain without inventing county or
   route ridership allocations.
-- [ ] **PS-TOPICS-04 — Permits:** integrate municipal/county feeds; distinguish
+- [~] **PS-TOPICS-04 — Permits:** integrate municipal/county feeds; distinguish
   applications from issued permits, preserve valuation definitions, deduplicate
   overlapping publishers, and retain multiple legitimate permits at an address.
 - [ ] **PS-TOPICS-05 — Parks, trees, and art:** integrate available inventories,
@@ -397,3 +397,21 @@ outcome, not implemented coverage.
 - Checks: 130 pytest tests, Ruff, ty, and `dbt build` (PASS=162, ERROR=0; 2 known
   crime warnings) passed on the existing warehouse. No full warehouse rebuild or
   Docker rehearsal on this branch. No deployment.
+
+
+### Permits continuation — 2026-10-12
+
+- Branch `puget-sound-permits`. Source search (2026-10-11) verified eight full-history
+  public feeds beyond Seattle; all nine now load as one structure-permit table
+  (210k permits, 2016+). Decisions (sources, structure-only definition, 2016+ window
+  incl. Seattle, per-publisher valuation, marts regionalized in place) are in
+  DECISIONS.md 2026-10-12, pending owner confirmation of the wording.
+- Page is county-aware; every county shows what its coverage leaves out
+  (`PERMIT_GAPS`); Island, Jefferson, Mason and Skagit have no integrated publisher.
+- Applications vs issued: applications without an issue date are staged
+  (issue_date null) but the page and marts report issued permits only.
+- Checks: pytest, Ruff, ty, `dbt build` of permits + downstream (28 steps incl. the
+  per-publisher reconcile), `tiresias check`, and an AppTest smoke over every county
+  against the rebuilt local warehouse. No Docker rehearsal; no deployment.
+- Open: residual definition differences between publishers; ArcGIS fetch has no
+  retry (a transient TLS reset failed one local attempt).

@@ -18,7 +18,7 @@ import logging
 import re
 import socket
 import urllib.parse
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from pathlib import Path
 
 import duckdb
@@ -27,6 +27,8 @@ import requests
 
 import city_config as cfg
 import stations
+from regional_permits import normalize_permits
+from source_registry import PermitSource
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger("build_warehouse")
@@ -655,9 +657,52 @@ def load_raw(con: duckdb.DuckDBPyConnection, table: str, df: pd.DataFrame) -> No
 # --------------------------------------------------------------------------- #
 # Per-topic raw builders                                                       #
 # --------------------------------------------------------------------------- #
+def fetch_permit_source(spec: PermitSource) -> pd.DataFrame:
+    """One publisher's permit records: only the columns the spec uses + _lat/_lon.
+
+    Socrata point columns and ArcGIS geometry (requested in WGS84) both become
+    ``_lat``/``_lon``, so the normalizer sees one shape for every platform.
+    """
+    log.info("Permits fetch %s (%s)", spec.source_id, spec.platform)
+    if spec.platform == "socrata":
+        domain, dataset_id = spec.endpoint.split("/", 1)
+        df = fetch_socrata(domain, dataset_id, where=spec.server_where,
+                           select=",".join(spec.out_fields))
+        if spec.point_field:
+            coords = [
+                (p.get("coordinates") or [None, None]) if isinstance(p, dict) else [None, None]
+                for p in df.get(spec.point_field, pd.Series(None, index=df.index))
+            ]
+            df["_lon"] = [c[0] for c in coords]
+            df["_lat"] = [c[1] for c in coords]
+            df = df.drop(columns=[spec.point_field], errors="ignore")
+        return df
+    feats = fetch_features(spec.endpoint, where=spec.server_where,
+                           out_fields=",".join(spec.out_fields), geometry=True, out_sr=4326)
+    if not feats:
+        raise ValueError(f"{spec.source_id}: ArcGIS layer returned zero features")
+    df = pd.DataFrame([attrs for attrs, _ in feats])
+    df["_lon"] = [g.get("x") if g else None for _, g in feats]
+    df["_lat"] = [g.get("y") if g else None for _, g in feats]
+    return df
+
+
 def build_building_permits(con: duckdb.DuckDBPyConnection) -> None:
-    """Seattle DCI building permits (Socrata JSON, ~192k rows)."""
-    load_raw(con, "building_permits", fetch_socrata(*cfg.PERMITS))
+    """Regional structure permits from nine publishers, 2016 onward (PS-TOPICS-04).
+
+    Each feed is normalized to one schema by :func:`regional_permits.normalize_permits`
+    (structure-permit rule, date window, source-qualified keys, no personal names).
+    A source that yields nothing raises — never ship a silently missing publisher.
+    """
+    start = date.fromisoformat(cfg.PERMITS_START)
+    today = datetime.now(UTC).date()
+    frames = [
+        normalize_permits(spec, fetch_permit_source(spec), start=start, today=today)
+        for spec in cfg.PERMIT_SOURCES
+    ]
+    combined = pd.concat(frames, ignore_index=True)
+    log.info("Permits: %d structure permits from %d publishers", len(combined), len(frames))
+    load_raw(con, "building_permits", combined)
 
 
 def build_crime(con: duckdb.DuckDBPyConnection) -> None:

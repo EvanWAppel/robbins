@@ -6,16 +6,16 @@
 select
     'total_permits' as metric_name,
     'Building permits' as label,
-    'Total building permits issued in the loaded window.' as description,
+    'Structure permits issued since 2016 across the nine integrated publishers (Seattle plus eight regional feeds; not every jurisdiction).' as description,
     'count' as unit,
     (select cast(sum(permit_count) as double) from {{ ref('mart_permits_monthly') }}) as value
 union all
 select
     'total_permit_valuation' as metric_name,
-    'Permit valuation' as label,
-    'Summed estimated project cost across issued permits (USD).' as description,
+    'Seattle permit valuation' as label,
+    'Summed estimated project cost of Seattle''s issued structure permits (USD). Seattle only: other publishers define valuation differently, so it is never summed across them.' as description,
     'usd' as unit,
-    (select cast(sum(total_valuation) as double) from {{ ref('mart_permits_monthly') }}) as value
+    (select cast(sum(total_valuation) filter (where source_id = 'seattle.permits') as double) from {{ ref('mart_permits_monthly') }}) as value
 union all
 select
     'total_crime_offenses' as metric_name,

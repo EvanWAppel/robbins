@@ -52,7 +52,7 @@ with st.sidebar:
     st.html('<div class="sidebar-note">A closer look at the place we call home.<br>Seattle roots · Puget Sound expansion</div>')
 
 st.session_state["_regional_navigation"] = True
-if selected_county and page.title not in {"Air Quality", "Rain & Records", "Water", "Data Coverage"}:
+if selected_county and page.title not in {"Air Quality", "Rain & Records", "Water", "Building Permits", "Data Coverage"}:
     st.title(page.title)
     st.info(
         f"{REGION_COUNTIES[selected_county]} County filtering is not available for this topic yet. "

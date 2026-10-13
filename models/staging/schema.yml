@@ -10,18 +10,34 @@ version: 2
 models:
   # ---- Socrata SODA sources -------------------------------------------------
   - name: stg_building_permits
-    description: Seattle DCI building permits, one row per permit.
+    description: >
+      Regional structure permits (new / addition / alteration / re-roof /
+      demolition), 2016 onward, one row per permit across nine publishers.
+      Permit numbers repeat across publishers, so permit_key (source-qualified)
+      is the key. Includes not-yet-issued applications (issue_date null).
     columns:
-      - name: permit_number
-        description: Permit number — the natural key (verified unique, no nulls).
+      - name: permit_key
+        description: Source-qualified permit key (JSON [source_id, permit_number]).
         data_tests:
           - not_null
           - unique
-      - name: permit_class_mapped
+      - name: source_id
         data_tests:
+          - not_null
           - accepted_values:
               arguments:
-                values: ["Residential", "Non-Residential", "N/A"]
+                values: ["seattle.permits", "pierce.permits", "tacoma.permits",
+                         "bellevue.permits", "everett.permits", "bellingham.permits",
+                         "puyallup.permits", "kitsap.permits", "trpc.permits"]
+      - name: county_fips
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["53029", "53031", "53033", "53035", "53045", "53053", "53057", "53061", "53067", "53073"]
+      - name: jurisdiction
+        data_tests:
+          - not_null
 
   - name: stg_crime
     description: >

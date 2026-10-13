@@ -442,70 +442,123 @@ models:
       - name: sort_order
         description: 1–5 ordering key for the bands.
 
-  # ===== Building permits (Seattle DCI) =====================================
+  # ===== Building permits (regional, PS-TOPICS-04) ==========================
+  # Nine publishers, structure permits only, issued 2016 onward. Valuation
+  # definitions differ by publisher: sum valuation within one source_id only.
   - name: mart_permits_by_class
-    description: Permit counts and valuation by permit class.
+    description: >
+      Issued structure permits (2016+) by the publisher's own permit type label,
+      per publisher and jurisdiction. Labels are not harmonized across publishers.
     columns:
+      - name: source_id
+        description: Publisher feed (e.g. seattle.permits, pierce.permits).
+      - name: jurisdiction
+        description: City or unincorporated area the publisher attributes the permit to.
+      - name: county_fips
+        description: 5-digit county FIPS of the publisher's jurisdiction.
+      - name: county
+        description: County name.
       - name: permit_class
-        description: Permit class; blanks rolled to 'Unknown'.
+        description: Publisher's permit type label; blanks rolled to 'Unknown'.
       - name: permit_count
-        description: Permits in the class.
+        description: Issued permits with this label.
       - name: total_valuation
-        description: >
-          Summed estimated project cost (USD; source estprojectcost).
+        description: Summed valuation (USD) under this publisher's valuation_basis; never add across source_id.
       - name: avg_valuation
+        description: Mean valuation per permit (USD) under this publisher's valuation_basis.
+      - name: valuation_basis
         description: >
-          Mean estimated project cost per permit (USD; source estprojectcost).
+          The publisher's own valuation definition (e.g. Seattle estimated project
+          cost, Pierce building valuation, Everett job value); null where the
+          publisher reports none (Puyallup, Thurston/TRPC).
 
   - name: mart_permits_map_sample
-    description: 5k most recent geocoded permits for the map, clipped to the metro box.
+    description: >
+      Map sample: the 2,000 most recent geocoded issued permits per publisher, so
+      small jurisdictions stay visible. Not a count — never aggregate it.
     columns:
-      - name: permit_number
-        description: Permit number — traces back to a real staging permit.
+      - name: permit_key
+        description: Source-qualified permit key — traces back to a real staging permit.
         data_tests:
+          - unique
           - relationships:
               arguments:
                 to: ref('stg_building_permits')
-                field: permit_number
+                field: permit_key
+      - name: source_id
+        description: Publisher feed.
+      - name: permit_number
+        description: Publisher's permit number (unique only within source_id).
+      - name: jurisdiction
+        description: City or unincorporated area.
+      - name: county_fips
+        description: 5-digit county FIPS.
+      - name: county
+        description: County name.
       - name: permit_class
-        description: Permit class.
-      - name: permit_type_desc
-        description: Permit type description.
+        description: Publisher's permit type label.
       - name: valuation
+        description: Valuation (USD) under valuation_basis.
+      - name: valuation_basis
         description: >
-          Estimated project cost (USD; source estprojectcost).
+          The publisher's own valuation definition (e.g. Seattle estimated project
+          cost, Pierce building valuation, Everett job value); null where the
+          publisher reports none (Puyallup, Thurston/TRPC).
       - name: issue_date
         description: Date the permit was issued.
       - name: address
-        description: Project address.
+        description: Project site address.
       - name: latitude
-        description: Permit latitude (within the metro box).
+        description: WGS84 latitude (out-of-region coordinates were nulled at ingest).
         data_tests:
           - dbt_utils.accepted_range:
               arguments:
-                min_value: 47.0
-                max_value: 48.5
+                min_value: 46.0
+                max_value: 49.1
       - name: longitude
-        description: Permit longitude.
+        description: WGS84 longitude.
         data_tests:
           - dbt_utils.accepted_range:
               arguments:
-                min_value: -122.6
-                max_value: -121.5
+                min_value: -125.0
+                max_value: -120.5
 
   - name: mart_permits_monthly
-    description: Permit issuance and valuation per month.
+    description: >
+      Structure permits issued per month, per publisher and jurisdiction, 2016
+      onward. Coverage is the nine integrated publishers, not every jurisdiction
+      in the region (see coverage/scope). Thurston (trpc.permits) covers only
+      residential new construction and demolition.
     columns:
       - name: issue_month
         description: Month (first-of-month date) permits were issued.
+      - name: source_id
+        description: Publisher feed.
+      - name: jurisdiction
+        description: City or unincorporated area.
+      - name: county_fips
+        description: 5-digit county FIPS.
+        data_tests:
+          - not_null
+      - name: county
+        description: County name.
+      - name: coverage
+        description: City, Unincorporated county, or Multi-jurisdiction.
+      - name: scope
+        description: Structure permits, or TRPC's narrower residential-only scope.
+      - name: valuation_basis
+        description: >
+          The publisher's own valuation definition (e.g. Seattle estimated project
+          cost, Pierce building valuation, Everett job value); null where the
+          publisher reports none (Puyallup, Thurston/TRPC).
       - name: permit_count
         description: Permits issued that month.
       - name: total_valuation
-        description: >
-          Summed estimated project cost (USD; source estprojectcost).
+        description: Summed valuation (USD) under this publisher's valuation_basis; never add across source_id.
       - name: avg_valuation
-        description: >
-          Mean estimated project cost per permit (USD; source estprojectcost).
+        description: Mean valuation per permit (USD) under this publisher's valuation_basis.
+      - name: housing_units
+        description: Housing units added, where the publisher reports them (null otherwise).
 
   # ===== Water: regional river / tide / snow observations ===================
   - name: mart_river_observations

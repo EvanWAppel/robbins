@@ -1,12 +1,12 @@
 # Tiresias config for robbins (Seattle metro open data). Engine:
 # github.com/EvanWAppel/tiresias, pinned in pyproject.toml / requirements.txt.
 # Check with `uv run tiresias check`; calibrate with `uv run tiresias calibrate`.
-# Excluded: the two map samples (most recent 5k permits; random ~15k trees) would
+# Excluded: the two map samples (recent 2k permits per publisher; random ~15k trees) would
 # silently undercount, and mart_build_info is pipeline metadata. Map-only: the
 # neighborhood polygon rings and approximate centroids drawn by the choropleths.
 city: Seattle metro
-blurb: City of Seattle permits, crime, fire 911 calls, 311 requests, business and short-term-rental
-  licenses, restaurant inspections, street trees, public art and parks; regional weather,
+blurb: Building permits from Seattle and eight other Puget Sound publishers; City of Seattle crime,
+  fire 911 calls, 311 requests, business and short-term-rental licenses, restaurant inspections, street trees, public art and parks; regional weather,
   rivers, tides, snowpack and air quality across the ten-county Puget Sound region; transit
   and ferry ridership
 warehouse: seattle.duckdb
@@ -95,8 +95,9 @@ tables:
     - centroid_lat
 examples:
 - question: How many building permits were issued each month and what were they worth?
-  guidance: Use mart_permits_monthly (permit_count, total_valuation in USD by issue_month)
-    or mart_permits_by_class.
+  guidance: Use mart_permits_monthly (permit_count by issue_month, source_id, jurisdiction,
+    county_fips) or mart_permits_by_class. total_valuation is per publisher (valuation_basis
+    differs); report it per source_id and never sum it across publishers.
   grounds:
   - mart_permits_monthly
   - mart_permits_by_class
@@ -186,9 +187,14 @@ examples:
   grounds:
   - mart_art_by_type
 planner_notes:
-- City feeds (permits, crime, fire 911, 311, licenses, short-term rentals, inspections, trees,
-  art, parks) cover the City of Seattle, not the region; never substitute Seattle data for
-  another county.
+- City feeds (crime, fire 911, 311, licenses, short-term rentals, inspections, trees, art,
+  parks) cover the City of Seattle, not the region; never substitute Seattle data for another
+  county.
+- Building permits are structure permits issued since 2016 from nine publishers (Seattle,
+  unincorporated Pierce County, Tacoma, Bellevue, Everett, Bellingham, Puyallup, unincorporated
+  Kitsap County since 2020, and Thurston's residential-only TRPC feed). Many cities and
+  counties publish none, so a county total covers only its listed jurisdictions; say so.
+  Never sum total_valuation across source_id.
 - Regional weather, river, tide, snow and air tables have one row per station per day (or
   month) with county_fips and is_headline; filter county_fips for a county and is_headline
   for one series per county. Missing observations are not zeros.

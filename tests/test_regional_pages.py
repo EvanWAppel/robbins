@@ -70,3 +70,29 @@ def test_water_kitsap_shows_network_gaps(monkeypatch, water_database):
     infos = ' '.join(info.value for info in app.info)
     assert 'SNOTEL' in infos  # no snow station
     assert 'streamflow' in infos  # no river gage
+
+
+def test_permits_selection_valuation_and_missing_coverage(monkeypatch, permits_database):
+    monkeypatch.setattr(app_db, 'query', lambda sql, params=(): permits_database.cursor().execute(sql, params).df())
+    app = AppTest.from_file(str(ROOT / 'views/building_permits.py')).run()
+    assert not app.exception
+    assert app.metric[0].value == '344'
+    # Region view never shows a summed regional valuation.
+    assert not any('cost' in m.label.lower() or 'valuation' in m.label.lower() for m in app.metric)
+    app.selectbox[0].set_value('53033').run()
+    assert not app.exception
+    assert app.metric[0].value == '242'
+    assert app.session_state['selected_county'] == '53033'
+    app.selectbox[0].set_value('53029').run()  # Island: no integrated publisher
+    assert not app.exception
+    assert not app.metric
+    assert any('missing coverage' in info.value for info in app.info)
+
+
+def test_permits_page_accepts_regional_county_selection(monkeypatch, permits_database):
+    monkeypatch.setattr(app_db, 'query', lambda sql, params=(): permits_database.cursor().execute(sql, params).df())
+    app = AppTest.from_file(str(ROOT / 'streamlit_app.py'))
+    app.session_state['selected_county'] = '53053'
+    app.switch_page('views/building_permits.py').run()
+    assert not app.exception
+    assert not any('filtering is not available' in info.value for info in app.info)
