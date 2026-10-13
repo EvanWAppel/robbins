@@ -14,16 +14,21 @@
 metrics:
   - name: total_permits
     label: Building permits
-    description: Total building permits issued in the loaded window.
+    description: >-
+      Structure permits issued since 2016 across the nine integrated publishers
+      (Seattle plus eight regional feeds; not every jurisdiction).
     mart: mart_permits_monthly
     expression: sum(permit_count)
     unit: count
 
   - name: total_permit_valuation
-    label: Permit valuation
-    description: Summed estimated project cost across issued permits (USD).
+    label: Seattle permit valuation
+    description: >-
+      Summed estimated project cost of Seattle's issued structure permits (USD).
+      Seattle only: other publishers define valuation differently, so it is never
+      summed across them.
     mart: mart_permits_monthly
-    expression: sum(total_valuation)
+    expression: sum(total_valuation) filter (where source_id = 'seattle.permits')
     unit: usd
 
   - name: total_crime_offenses

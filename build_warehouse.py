@@ -17,8 +17,9 @@ import json
 import logging
 import re
 import socket
+import time
 import urllib.parse
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from pathlib import Path
 
 import duckdb
@@ -27,6 +28,8 @@ import requests
 
 import city_config as cfg
 import stations
+from regional_permits import normalize_permits
+from source_registry import PermitSource
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger("build_warehouse")
@@ -499,36 +502,66 @@ def fetch_features(
 
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-    def get(url: str, params: dict) -> dict:
-        r = requests.get(url, params=params, timeout=180, verify=ssl_verify)
-        r.raise_for_status()
-        return r.json()
-
-    meta = get(base_url, {"f": "json"})
+    meta = _arcgis_get(base_url, {"f": "json"}, ssl_verify)
     page = min(meta.get("maxRecordCount") or ARCGIS_PAGE, ARCGIS_PAGE)
+    oid = meta.get("objectIdField") or next(
+        (f["name"] for f in meta.get("fields", []) if f.get("type") == "esriFieldTypeOID"),
+        None,
+    )
     out: list[tuple[dict, dict | None]] = []
     offset = 0
     while True:
-        feats = get(
-            f"{base_url}/query",
-            {
-                "where": where,
-                "outFields": out_fields,
-                "returnGeometry": "true" if geometry else "false",
-                "outSR": out_sr,
-                "f": "json",
-                "resultOffset": offset,
-                "resultRecordCount": page,
-            },
-        ).get("features", [])
+        params = {
+            "where": where,
+            "outFields": out_fields,
+            "returnGeometry": "true" if geometry else "false",
+            "outSR": out_sr,
+            "f": "json",
+            "resultOffset": offset,
+            "resultRecordCount": page,
+        }
+        if oid:
+            # Stable offsets: without an order, a server may skip or repeat rows.
+            params["orderByFields"] = oid
+        resp = _arcgis_get(f"{base_url}/query", params, ssl_verify)
+        # ArcGIS reports query failures (e.g. timeouts) as HTTP 200 + an error body;
+        # treating that as "no more features" would silently truncate the layer.
+        if "error" in resp:
+            raise RuntimeError(f"ArcGIS error from {base_url} at offset {offset}: {resp['error']}")
+        if "features" not in resp:
+            raise RuntimeError(f"ArcGIS response from {base_url} at offset {offset} has no features")
+        feats = resp["features"]
         if not feats:
             break
         out.extend((f.get("attributes", {}), f.get("geometry")) for f in feats)
         offset += len(feats)
         log.info("  %s: %d features", base_url.rsplit("/services/", 1)[-1], len(out))
-        if len(feats) < page:
+        if len(feats) < page and not resp.get("exceededTransferLimit"):
             break
     return out
+
+
+ARCGIS_ATTEMPTS = 3
+
+
+def _arcgis_get(url: str, params: dict, ssl_verify: bool) -> dict:
+    """GET an ArcGIS REST endpoint, retrying transient connection failures.
+
+    A connection reset or timeout is retried with backoff (one killed a local
+    permits build); HTTP errors and the final failure propagate unchanged.
+    """
+    for attempt in range(1, ARCGIS_ATTEMPTS + 1):
+        try:
+            r = requests.get(url, params=params, timeout=180, verify=ssl_verify)
+            r.raise_for_status()
+            return r.json()
+        except (requests.ConnectionError, requests.Timeout) as err:
+            if attempt == ARCGIS_ATTEMPTS:
+                raise
+            log.warning("ArcGIS %s failed (%s); retry %d of %d",
+                        url, err, attempt, ARCGIS_ATTEMPTS - 1)
+            time.sleep(2 ** attempt)
+    raise AssertionError("unreachable")
 
 
 def _centroid(geom: dict | None) -> tuple[float | None, float | None]:
@@ -655,9 +688,52 @@ def load_raw(con: duckdb.DuckDBPyConnection, table: str, df: pd.DataFrame) -> No
 # --------------------------------------------------------------------------- #
 # Per-topic raw builders                                                       #
 # --------------------------------------------------------------------------- #
+def fetch_permit_source(spec: PermitSource) -> pd.DataFrame:
+    """One publisher's permit records: only the columns the spec uses + _lat/_lon.
+
+    Socrata point columns and ArcGIS geometry (requested in WGS84) both become
+    ``_lat``/``_lon``, so the normalizer sees one shape for every platform.
+    """
+    log.info("Permits fetch %s (%s)", spec.source_id, spec.platform)
+    if spec.platform == "socrata":
+        domain, dataset_id = spec.endpoint.split("/", 1)
+        df = fetch_socrata(domain, dataset_id, where=spec.server_where,
+                           select=",".join(spec.out_fields))
+        if spec.point_field:
+            coords = [
+                (p.get("coordinates") or [None, None]) if isinstance(p, dict) else [None, None]
+                for p in df.get(spec.point_field, pd.Series(None, index=df.index))
+            ]
+            df["_lon"] = [c[0] for c in coords]
+            df["_lat"] = [c[1] for c in coords]
+            df = df.drop(columns=[spec.point_field], errors="ignore")
+        return df
+    feats = fetch_features(spec.endpoint, where=spec.server_where,
+                           out_fields=",".join(spec.out_fields), geometry=True, out_sr=4326)
+    if not feats:
+        raise ValueError(f"{spec.source_id}: ArcGIS layer returned zero features")
+    df = pd.DataFrame([attrs for attrs, _ in feats])
+    df["_lon"] = [g.get("x") if g else None for _, g in feats]
+    df["_lat"] = [g.get("y") if g else None for _, g in feats]
+    return df
+
+
 def build_building_permits(con: duckdb.DuckDBPyConnection) -> None:
-    """Seattle DCI building permits (Socrata JSON, ~192k rows)."""
-    load_raw(con, "building_permits", fetch_socrata(*cfg.PERMITS))
+    """Regional structure permits from nine publishers, 2016 onward (PS-TOPICS-04).
+
+    Each feed is normalized to one schema by :func:`regional_permits.normalize_permits`
+    (structure-permit rule, date window, source-qualified keys, no personal names).
+    A source that yields nothing raises — never ship a silently missing publisher.
+    """
+    start = date.fromisoformat(cfg.PERMITS_START)
+    today = datetime.now(UTC).date()
+    frames = [
+        normalize_permits(spec, fetch_permit_source(spec), start=start, today=today)
+        for spec in cfg.PERMIT_SOURCES
+    ]
+    combined = pd.concat(frames, ignore_index=True)
+    log.info("Permits: %d structure permits from %d publishers", len(combined), len(frames))
+    load_raw(con, "building_permits", combined)
 
 
 def build_crime(con: duckdb.DuckDBPyConnection) -> None:

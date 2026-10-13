@@ -79,7 +79,8 @@ flowchart LR
     MRT -. relationships · ranges .-> TST
 ```
 
-Example lineage — the Building Permits page: `raw.building_permits` →
+Example lineage — the Building Permits page: nine publisher feeds, normalized by
+`regional_permits.normalize_permits` into `raw.building_permits` →
 `stg_building_permits` (view) → `mart_permits_by_class`, `mart_permits_monthly`,
 `mart_permits_map_sample` (tables) → the permits view.
 
@@ -196,7 +197,7 @@ Fifteen topics across three ingestion patterns:
 | Page | Source | Pattern |
 | --- | --- | --- |
 | Overview | (aggregates all marts) | — |
-| Building Permits | Seattle DCI Building Permits (`76t5-zqzr`) | Socrata |
+| Building Permits | Structure permits since 2016 from 9 publishers: Seattle DCI (`76t5-zqzr`), Pierce County (`nhnt-v7ka`), Everett (`3w3u-656c`), Tacoma, Bellevue, Bellingham, Puyallup, Kitsap County, Thurston RPC — see `city_config.PERMIT_SOURCES` | Socrata + ArcGIS |
 | Crime | SPD Crime (`tazs-3rd5`, CSV export) | Socrata |
 | Fire 911 Calls | Seattle Real-Time Fire 911 (`kzjm-xkqj`) | Socrata |
 | 311 Requests | Seattle Customer Service Requests / Find-It-Fix-It (`5ngg-rpne`, CSV export) | Socrata |

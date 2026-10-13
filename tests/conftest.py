@@ -143,3 +143,43 @@ def ntd_database():
         ('King County', 'King County Metro', false, '2024-01-01', 100)''')
     yield con
     con.close()
+
+
+@pytest.fixture
+def permits_database():
+    """Synthetic regional permits: King (Seattle + Bellevue/Medina), Pierce (county +
+    Tacoma), Thurston (TRPC, no valuation). Island has no publisher."""
+    import duckdb
+
+    con = duckdb.connect()
+    con.execute('''create table mart_permits_monthly (
+        issue_month date, source_id varchar, jurisdiction varchar, county_fips varchar,
+        county varchar, coverage varchar, scope varchar, valuation_basis varchar,
+        permit_count bigint, total_valuation double, avg_valuation double,
+        housing_units bigint)''')
+    con.execute('''insert into mart_permits_monthly values
+        ('2023-01-01','seattle.permits','Seattle','53033','King','City','Structure permits','Est. cost',100, 5e7, 5e5, 40),
+        ('2023-02-01','seattle.permits','Seattle','53033','King','City','Structure permits','Est. cost',110, 6e7, 5.5e5, 30),
+        ('2023-01-01','bellevue.permits','Bellevue','53033','King','City','Structure permits','Valuation',30, 9e6, 3e5, 5),
+        ('2023-01-01','bellevue.permits','Medina','53033','King','City','Structure permits','Valuation',2, 4e6, 2e6, 0),
+        ('2023-01-01','pierce.permits','Unincorporated Pierce County','53053','Pierce','Unincorporated county','Structure permits','Building valuation',50, 1e7, 2e5, 20),
+        ('2024-03-01','tacoma.permits','Tacoma','53053','Pierce','City','Structure permits','Valuation',40, 8e6, 2e5, 10),
+        ('2023-01-01','trpc.permits','Olympia','53067','Thurston','Multi-jurisdiction','Residential new construction and demolition only',null,12, null, null, 12)''')
+    con.execute('''create table mart_permits_by_class (
+        source_id varchar, jurisdiction varchar, county_fips varchar, county varchar,
+        permit_class varchar, valuation_basis varchar, permit_count bigint,
+        total_valuation double, avg_valuation double)''')
+    con.execute('''insert into mart_permits_by_class values
+        ('seattle.permits','Seattle','53033','King','Single Family/Duplex','Est. cost',150, 6e7, 4e5),
+        ('seattle.permits','Seattle','53033','King','Commercial','Est. cost',60, 5e7, 8e5),
+        ('pierce.permits','Unincorporated Pierce County','53053','Pierce','Construction Residential','Building valuation',50, 1e7, 2e5)''')
+    con.execute('''create table mart_permits_map_sample (
+        permit_key varchar, source_id varchar, permit_number varchar, jurisdiction varchar,
+        county_fips varchar, county varchar, permit_class varchar, valuation double,
+        valuation_basis varchar, issue_date date, address varchar, latitude double,
+        longitude double)''')
+    con.execute('''insert into mart_permits_map_sample values
+        ('["seattle.permits","S1"]','seattle.permits','S1','Seattle','53033','King','Commercial',1e6,'Est. cost','2023-02-10','1 Pine St',47.61,-122.33),
+        ('["tacoma.permits","T1"]','tacoma.permits','T1','Tacoma','53053','Pierce','New Building',2e5,'Valuation','2024-03-05','1 Pacific Ave',47.25,-122.44)''')
+    yield con
+    con.close()

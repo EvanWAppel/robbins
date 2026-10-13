@@ -13,10 +13,13 @@ sources:
       # feed that has gone stale, not to chase same-day currency.
       - name: building_permits
         description: >
-          Seattle DCI building permits (Socrata 76t5-zqzr, ~192k rows, 1986-present).
-          One row per permit: class, type, estimated project cost, applied/issued/
-          completed dates, current status, address, and WGS84 coordinates.
-        loaded_at_field: "try_cast(issueddate as timestamp)"
+          Regional structure permits, 2016 onward, normalized at ingest from nine
+          publishers (Seattle DCI, Pierce County, Tacoma, Bellevue, Everett,
+          Bellingham, Puyallup, Kitsap County, Thurston Regional Planning Council)
+          by regional_permits.normalize_permits — see city_config.PERMIT_SOURCES
+          for each feed's endpoint and structure-permit rule. One row per permit;
+          no personal names are loaded.
+        loaded_at_field: "try_cast(issue_date as timestamp)"
         freshness:
           warn_after: {count: 30, period: day}
           error_after: {count: 90, period: day}

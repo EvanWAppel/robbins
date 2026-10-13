@@ -16,7 +16,7 @@ protected secret.
 
 from __future__ import annotations
 
-from source_registry import Source, validate_sources
+from source_registry import PermitSource, Source, validate_sources
 
 # --------------------------------------------------------------------------- #
 # Socrata (SODA API) — City of Seattle + King County open-data portals         #
@@ -234,6 +234,196 @@ UNVERIFIED: tuple[str, ...] = ()
 #     Checked 2026-08-12. A pivot to WSDOT ferry ridership could stand in for a
 #     Puget Sound travel page if desired.
 
+# --------------------------------------------------------------------------- #
+# Regional building permits (PS-TOPICS-04) — verified live 2026-10-11          #
+# --------------------------------------------------------------------------- #
+# Structure permits only (new / addition / alteration / re-roof / demolition,
+# incl. manufactured-home placement): trade-only (mechanical, plumbing,
+# electrical), fire-system, sign, utility and administrative records are
+# dropped even where a publisher files them under "Building". The server-side
+# where narrows to each publisher's building category; include/exclude then
+# applies the structure rule (testable, and logged with what it drops). One
+# 2016+ window for every publisher, Seattle included (DECISIONS 2026-10-12).
+# Gaps (no full-history public feed, 2026-10-11): unincorporated King, Kent,
+# Federal Way, Redmond, Kirkland and most other cities; Snohomish/Island/Skagit
+# counties (active snapshots only); Whatcom & Mason counties (token-gated);
+# Auburn (frozen 2025-02, no coordinates); Jefferson (septic permits only).
+PERMITS_START = "2016-01-01"
+_ARCGIS_DATE_WINDOW = "({issued} >= DATE '2016-01-01' OR {applied} >= DATE '2016-01-01')"
+_SODA_DATE_WINDOW = "({issued} >= '2016-01-01' OR {applied} >= '2016-01-01')"
+_GEOM = {"latitude": "_lat", "longitude": "_lon"}
+
+PERMIT_SOURCES: tuple[PermitSource, ...] = (
+    PermitSource(
+        "seattle.permits", "Seattle DCI", "socrata", f"{SEATTLE_SOCRATA}/{PERMITS[1]}",
+        "53033", "City", "Seattle",
+        fields={"permit_number": "permitnum", "permit_class": "permitclass",
+                "status": "statuscurrent", "applied_date": "applieddate",
+                "issue_date": "issueddate", "valuation": "estprojectcost",
+                "housing_units": "housingunitsadded", "address": "originaladdress1",
+                "latitude": "latitude", "longitude": "longitude"},
+        # The dataset is already structure permits; drop ECA/shoreline exemption
+        # requests and grading (not structure permits).
+        server_where="permittypemapped in ('Building','Demolition','Roof') and "
+        + _SODA_DATE_WINDOW.format(issued="issueddate", applied="applieddate"),
+        include={"permittypemapped": ("Building", "Demolition", "Roof")},
+        valuation_basis="Estimated project cost (Seattle DCI)",
+    ),
+    PermitSource(
+        "pierce.permits", "Pierce County Planning & Public Works", "socrata",
+        "open.piercecountywa.gov/nhnt-v7ka", "53053", "Unincorporated county",
+        "Unincorporated Pierce County",
+        fields={"permit_number": "applicationnumber", "permit_class": "applicationtype",
+                "status": "applicationstatus", "applied_date": "applicationdate",
+                "issue_date": "issueddate", "valuation": "buildingvaluation",
+                "housing_units": "dwellingunits", "address": "siteaddress", **_GEOM},
+        point_field="the_geom",
+        server_where="applicationdept='*BUILDING*' and "
+        + _SODA_DATE_WINDOW.format(issued="issueddate", applied="applicationdate"),
+        include={"applicationtype": (
+            "Construction Residential", "Construction Commercial",
+            "Residential Demolition", "Commercial Demolition", "Building Amnesty",
+            "Swimming Pool", "Mobile/Manuf Home Anch and Fdn",
+            "Mobile/Manuf Home in a Non Conforming Park",
+            "Mobile/Manuf Home Includes Anchoring", "Mobile Home in a Conforming Park",
+            "Mobile/Manuf Home Park", "Mobile/Manuf Home Anchoring Only",
+            "Mobile/Manuf Home Foundation Only", "Mobile/Manuf Home Temp Dwelling",
+            "Mobile/Manuf Home Temp Dwelling - Const",
+            "Mobile/Manuf Home Temp Dwelling - Public Facility",
+        )},
+        exclude={"worktype": ("Mobile Home Left City",)},
+        valuation_basis="Building valuation (Pierce County)",
+    ),
+    PermitSource(
+        "tacoma.permits", "City of Tacoma", "arcgis",
+        "https://services3.arcgis.com/SCwJH1pD8WSn5T5y/arcgis/rest/services/"
+        "accela_permit_data/FeatureServer/0", "53053", "City", "Tacoma",
+        fields={"permit_number": "permit_number", "permit_class": "permit_category",
+                "status": "current_status", "applied_date": "application_date",
+                "issue_date": "issued_date", "valuation": "valuation",
+                "housing_units": "housing_units", "address": "address_line_1", **_GEOM},
+        server_where="permit_type='Building' AND "
+        + _ARCGIS_DATE_WINDOW.format(issued="issued_date", applied="application_date"),
+        include={"permit_category": ("New Building", "Alteration", "Demolition")},
+        valuation_basis="Valuation (City of Tacoma)",
+    ),
+    PermitSource(
+        "bellevue.permits", "City of Bellevue", "arcgis",
+        "https://services1.arcgis.com/EYzEZbDhXZjURPbP/arcgis/rest/services/"
+        "Bellevue_Permit/FeatureServer/0", "53033", "City", "Bellevue",
+        fields={"permit_number": "PERMITNUMBER", "permit_class": "PERMITTYPEDESCRIPTION",
+                "status": "PERMITSTATUS", "applied_date": "APPLIEDDATE",
+                "issue_date": "ISSUEDDATE", "valuation": "VALUATION",
+                "housing_units": "DWELLINGUNITSCREATED", "address": "SITEADDRESS", **_GEOM},
+        # Bellevue has permitted for small neighbors (Medina, Clyde Hill, ...);
+        # its CITY field attributes each record. Since 2016 its building-group
+        # records are Bellevue's own (checked 2026-10-12), but keep the mapping.
+        jurisdiction_field="CITY",
+        server_where="FOLDERGROUP='Building' AND "
+        + _ARCGIS_DATE_WINDOW.format(issued="ISSUEDDATE", applied="APPLIEDDATE"),
+        include={"PERMITTYPEDESCRIPTION": (
+            "Single Family New", "Single Family Addition", "SF Remodel No Plan Review",
+            "Single Family Remodel Plan Review", "Middle Housing New",
+            "Tenant Improvement", "Tenant Improvement - New Use",
+            "Minor Commercial Project", "Medium Commercial Project",
+            "Major Commercial Project", "Major Commercial Project w/ SEPA",
+            "Demolition", "Demolition No Plan Review", "Shoring Permit",
+            "Foundation Permit", "Portable Building Foundation", "Spa Plan Review Combo",
+        )},
+        valuation_basis="Valuation (City of Bellevue)",
+    ),
+    PermitSource(
+        "everett.permits", "City of Everett", "socrata", "data.everettwa.gov/3w3u-656c",
+        "53061", "City", "Everett",
+        fields={"permit_number": "permitno", "permit_class": "permitsubtype",
+                "applied_date": "applieddate", "issue_date": "issueddate",
+                "valuation": "jobvalue", "address": "siteaddress", **_GEOM},
+        point_field="geocoded_column",
+        server_where="permittype in ('BUILDING','RESIDENTIAL BUILDING','COMMERCIAL BUILDING',"
+        "'BUILDING ONLINE','RESIDENTIAL BASIC','COMBINATION','DEMOLITION','DEMOLITION ONLINE') and "
+        + _SODA_DATE_WINDOW.format(issued="issueddate", applied="applieddate"),
+        exclude={"permitsubtype": ("MECHANICAL", "PLUMBING")},
+        valuation_basis="Job value (City of Everett)",
+    ),
+    PermitSource(
+        "bellingham.permits", "City of Bellingham", "arcgis",
+        "https://maps.cob.org/arcgis3/rest/services/Maps/Permits/MapServer/0",
+        "53073", "City", "Bellingham",
+        fields={"permit_number": "PERMIT_NO", "permit_class": "PermitType",
+                "status": "STATUS", "applied_date": "APPLIED", "issue_date": "ISSUED",
+                "valuation": "JOBVALUE", "housing_units": "NEW_DWELL_UNITS",
+                "address": "SITE_ADDR", **_GEOM},
+        server_where="PERMIT_CATEGORY IN ('BUILDING','DEMOLITION') AND "
+        + _ARCGIS_DATE_WINDOW.format(issued="ISSUED", applied="APPLIED"),
+        exclude={"PermitType": ("SIGN AND AWNING",)},
+        valuation_basis="Job value (City of Bellingham)",
+    ),
+    PermitSource(
+        "puyallup.permits", "City of Puyallup", "arcgis",
+        "https://services8.arcgis.com/5K6vnOH0GkPyJs6A/arcgis/rest/services/"
+        "City_View/FeatureServer/0", "53053", "City", "Puyallup",
+        fields={"permit_number": "PermitNumber", "permit_class": "PermitType",
+                "status": "CurrentStatus", "applied_date": "ApplicationDate",
+                "issue_date": "IssueDate", "address": "PermitAddress", **_GEOM},
+        # IssueDate is a string field, so the window is applied after fetch.
+        server_where="PermitCategory IN ('Building','Demolition')",
+        exclude={"PermitType": (
+            "Mechanical/Plumbing - RESIDENTIAL ONLY", "Mechanical - COMMERCIAL ONLY",
+            "Plumbing - COMMERCIAL ONLY", "Utility Service Repair/PRIVATE PROPERTY ONLY",
+            "Water or Sewer Adequacy (for FOOD SERVICE ESTABLISHMENTS)",
+            "Solar Panel Permit", "Utility Extension/Connection Outside City Limits",
+            "Adult Family Home - DSHS INSPECTION ONLY", "UNKOWN LEGACY PERMIT TYPE",
+        )},
+    ),
+    PermitSource(
+        "kitsap.permits", "Kitsap County DCD", "arcgis",
+        "https://services6.arcgis.com/qt3UCV9x5kB4CwRA/arcgis/rest/services/"
+        "Permit_Activity_DCD_Permits_view/FeatureServer/0", "53035",
+        "Unincorporated county", "Unincorporated Kitsap County",
+        fields={"permit_number": "Permit_Number", "permit_class": "Permit_Type",
+                "status": "Status", "applied_date": "Date_Submitted",
+                "issue_date": "DateIssued", "valuation": "Value", "housing_units": "Units",
+                "address": "Site_Address", **_GEOM},
+        # The published feed only holds submissions since 2020-01-01.
+        server_where="Department IN ('RESIDENTIAL','COMMERCIAL')",
+        exclude={"Permit_Type": (
+            "R-MECH/PLUM", "C-MECH/PLUM", "SIGN", "TCO - COM", "ROAD NAME - BP",
+            "REACT", "RV-TLQ", "RV-SEASONAL", "C-HOME BUSINESS",
+        )},
+        valuation_basis="Value (Kitsap County)",
+    ),
+    PermitSource(
+        "trpc.permits", "Thurston Regional Planning Council", "arcgis",
+        "https://services1.arcgis.com/MA2nPVLxVTdAZLej/arcgis/rest/services/"
+        "Residential_Building_Permits/FeatureServer/0", "53067", "Multi-jurisdiction",
+        "Thurston County",
+        fields={"permit_number": "PERMITID", "permit_class": "BPTYPE_Desc",
+                "issue_date": "ISSUEDATE", "housing_units": "DWELLINGS",
+                "address": "SITEADDR", **_GEOM},
+        jurisdiction_field="IJURIS_Desc",
+        jurisdiction_labels={"Thurston County": "Unincorporated Thurston County"},
+        server_where="ISSUEDATE >= DATE '2016-01-01'",
+        scope="Residential new construction and demolition only",
+    ),
+)
+
+
+# What each county's permit coverage leaves out (source search of 2026-10-11).
+# Shown on the Building Permits page so partial coverage is never implied complete.
+PERMIT_GAPS: dict[str, str] = {
+    "53029": "Island County publishes only a small, stale permit snapshot (last update 2026-02); no city feed found.",
+    "53031": "Jefferson County publishes septic permits only; no building-permit feed found.",
+    "53033": "Seattle and Bellevue only. Unincorporated King County, Kent, Federal Way, Redmond, Kirkland and other cities publish no machine-readable permit history.",
+    "53035": "Unincorporated Kitsap County only, and only applications since 2020. Bremerton and other cities publish no feed.",
+    "53045": "Mason County's permit service requires a login token; no city feed found.",
+    "53053": "Unincorporated Pierce County, Tacoma and Puyallup only. Lakewood, University Place and other cities publish no feed.",
+    "53057": "Skagit County publishes only currently active permits (no history); Mount Vernon and other cities publish no feed.",
+    "53061": "Everett only. Snohomish County publishes only an active-permit snapshot without dates; other cities publish no feed.",
+    "53067": "Residential new construction and demolition only (Thurston Regional Planning Council), no valuation or application dates.",
+    "53073": "Bellingham only. Whatcom County's permit services require a login token.",
+}
+
+
 # Configured coverage, audited from the pipeline on 2026-09-27. These entries
 # describe existing integrations, not newly verified endpoints or launch scope.
 # Keep retrieval timestamps and observed date ranges in build metadata.
@@ -247,8 +437,8 @@ def _arcgis_layer(source: tuple[str, str, int]) -> str:
 
 DATA_SOURCES = (
     Source("seattle.permits", "Building Permits", "Seattle DCI", _soda_page(PERMITS),
-           "municipality", "City of Seattle", "One permit",
-           "Issued permits; map shows the most recent 5,000 geocoded records."),
+           "municipality", "City of Seattle", "One structure permit",
+           "Structure permits (building, demolition, roof) since 2016; map shows each publisher's 2,000 most recent geocoded permits."),
     Source("seattle.crime", "Crime", "Seattle Police Department", _soda_page(SPD_CRIME),
            "municipality", "City of Seattle", "Source crime record",
            "2019 onward; missing/redacted locations are excluded from maps. Not county-wide."),
@@ -299,5 +489,19 @@ DATA_SOURCES = (
            "agency", "Ferry-mode records within the configured NTD operator list",
            "Agency/ferry-mode/month ridership",
            "Shares the transit source; no route/county allocation. Regional operator completeness has not been verified."),
+)
+_PERMIT_REGISTRY_URL = {
+    "socrata": lambda spec: "https://{}/d/{}".format(*spec.endpoint.split("/", 1)),
+    "arcgis": lambda spec: spec.endpoint,
+}
+DATA_SOURCES += tuple(
+    Source(spec.source_id, "Building Permits", spec.publisher,
+           _PERMIT_REGISTRY_URL[spec.platform](spec),
+           "municipality" if spec.coverage == "City" else "county",
+           f"{spec.jurisdiction} ({spec.coverage.lower()})", "One structure permit",
+           f"{spec.scope} since 2016; valuation: {spec.valuation_basis or 'not published'}. "
+           + PERMIT_GAPS[spec.county_fips])
+    for spec in PERMIT_SOURCES
+    if spec.source_id != "seattle.permits"
 )
 validate_sources(DATA_SOURCES)

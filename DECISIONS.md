@@ -165,3 +165,38 @@ off-topic band and the lowest answerable question (rejected: 0.66+, within ~0.04
 a real question). Tiresias metric registry starts empty (rejected: reshaping
 `metrics.yml`, which also drives a dbt model). `anthropic` is no longer a direct
 dependency; `requires-python` narrowed to 3.12.
+
+## 2026-10-12 — Regional building permits: sources, definition, window, valuation (PS-TOPICS-04)
+
+*Status: drafted by the agent from the owner's interview answers of 2026-10-11/12;
+awaiting owner confirmation of the wording.*
+
+- **Sources:** Seattle plus the eight full-history public feeds verified 2026-10-11 —
+  Pierce County (unincorporated, Socrata `nhnt-v7ka`), Tacoma, Bellevue (its CITY
+  field attributes records; since 2016 all are Bellevue's own), Everett, Bellingham,
+  Puyallup, Kitsap County (unincorporated, submissions since 2020) and the Thurston
+  Regional Planning Council feed (residential + demolition only, no valuation, no
+  applied date; shown as its own labeled scope). Rejected: dropping TRPC (leaves all
+  of Thurston a gap) or keeping only the five largest. Snapshot/stale/token-gated
+  feeds (Auburn, Renton, SeaTac, Skagit, Island, Snohomish County, Whatcom, Mason)
+  are documented gaps, not integrated.
+- **Definition — structure permits only:** new construction, addition, alteration,
+  re-roof and demolition of a structure (incl. manufactured-home placement). Trade-only
+  (mechanical/plumbing/electrical), fire-system, sign, utility, right-of-way and
+  administrative records are dropped even where a publisher files them under
+  "Building", via per-source rules in `city_config.PERMIT_SOURCES`. Rejected: each
+  publisher's own Building category as-is — Pierce/Tacoma/Kitsap/Puyallup counts
+  would be inflated by trade permits relative to Seattle/Everett/Bellingham.
+  Residual definitional differences remain and are disclosed on the page.
+- **Window — 2016 onward, Seattle included:** Tacoma's issue dates begin 2016, so one
+  window keeps trends comparable. Seattle loses its pre-2016 history. Future/garbage
+  dates (e.g. Everett's 2914) are nulled. Rejected: 2020+ (loses the pre-COVID
+  baseline); each source's full history (incomparable spans, larger build).
+- **Valuation — per publisher only:** each source's valuation keeps its own definition
+  (`valuation_basis`) and is never summed into a regional total; regional views use
+  permit counts. Rejected: a captioned regional sum (mixes incompatible definitions).
+- **Marts regionalized in place:** `mart_permits_*` keep their names and their
+  count/valuation columns and gain jurisdiction/county/source columns (as
+  weather/water did); Seattle-only columns (e.g. the map's `permit_type_desc`) go.
+  Rejected: parallel `mart_regional_permits_*` (two overlapping permit sets that
+  overview/Tiresias could double-count).

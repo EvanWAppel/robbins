@@ -1,19 +1,21 @@
 # Puget Sound source coverage audit
 
-Updated 2026-09-27. This matrix audits configured integrations, not live data
+Updated 2026-10-12. This matrix audits configured integrations, not live data
 completeness. See Data Coverage in the app for loaded air observations and dates.
 
 **Codes:** S = Seattle-only integration (partial King County); K = King County
 inspection jurisdiction; A = county filter configured for EPA monitors (actual
 pollutant/date coverage must be checked); T = agency totals, county allocation
-unavailable; P = station series, broader coverage unverified; U = regional source
-not yet verified or integrated. U does not mean no public source exists.
+unavailable; P = station series, broader coverage unverified; M = some municipal or
+county publishers integrated (partial — see the gap note); G = searched 2026-10-11, no
+usable public machine-readable source found; U = regional source not yet verified or
+integrated. U does not mean no public source exists.
 
 | Topic | Island | Jefferson | King | Kitsap | Mason | Pierce | Skagit | Snohomish | Thurston | Whatcom |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 311 Requests | U | U | S | U | U | U | U | U | U | U |
 | Air Quality | A | A | A | A | A | A | A | A | A | A |
-| Building Permits | U | U | S | U | U | U | U | U | U | U |
+| Building Permits | G | G | M | M | G | M | G | M | M | M |
 | Business Licenses | U | U | S | U | U | U | U | U | U | U |
 | Crime | U | U | S | U | U | U | U | U | U | U |
 | Ferry Ridership | T | T | T | T | T | T | T | T | T | T |
@@ -99,3 +101,21 @@ model/test steps plus the source-total reconciliation test passed. The two King
 County ferry reporting names have no overlapping loaded months. Transit, ferry,
 and Data Coverage page smoke checks passed; browser inspection confirmed the
 four-operator ferry chart and coverage labels. No deployment performed.
+
+## Building permits (PS-TOPICS-04) — sources searched 2026-10-11
+
+Integrated (structure permits, issued 2016+; rules in `city_config.PERMIT_SOURCES`):
+Seattle DCI, Bellevue (King); unincorporated Pierce County, Tacoma, Puyallup (Pierce);
+Everett (Snohomish); Bellingham (Whatcom); unincorporated Kitsap County, submissions
+since 2020 (Kitsap); Thurston Regional Planning Council — unincorporated Thurston plus
+Lacey, Olympia, Tumwater, Yelm and smaller jurisdictions, residential new construction
+and demolition only (Thurston).
+
+Gaps (per-county notes in `city_config.PERMIT_GAPS`, shown on the page): no
+machine-readable permit history for unincorporated King County, Kent, Federal Way,
+Redmond, Kirkland, Lakewood, Bremerton, Mount Vernon and most other cities; Snohomish,
+Skagit and Island counties publish only active-permit snapshots; Whatcom and Mason
+county services require a login token; Jefferson County publishes septic permits only;
+Auburn's feed stopped updating in 2025-02 and has no coordinates; Renton and SeaTac
+publish active permits only. Duplicate copies (Pierce's ArcGIS mirror, Bellevue's
+archive layer, Everett's derived views) are deliberately not loaded.
