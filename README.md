@@ -189,6 +189,18 @@ uv run prek install    # optional: install the git hooks (ruff + ty on commit,
                        # pytest on push)
 ```
 
+Performance measurement (PS-SCOPE-02, measurement only; budgets are not set yet):
+
+```sh
+uv run python benchmark.py                          # times a full read of every main.mart_*
+uv run python benchmark.py --repeats 5 --json bench.json   # + warehouse file size, as JSON
+```
+
+`benchmark.py` reads the warehouse the way `app_db.query` does (read-only DuckDB,
+fresh cursor, `.df()`) but skips the Streamlit cache, so it times the warehouse
+rather than the cache. It reports min/median/max ms per mart and the `.duckdb` size.
+It needs a built warehouse; the unit tests use a tiny synthetic DuckDB instead.
+
 ## Data sources
 
 Public, no secrets. A Socrata app token is optional (raises rate limits only). The

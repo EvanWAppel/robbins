@@ -244,6 +244,10 @@ PS-RELEASE. Shared contracts settle before topic implementation.
   mobility first; air quality selected for the first slice.
 - [~] **PS-SCOPE-02** — Benchmark build time, image/warehouse size, runtime memory,
   query latency, and map load times; agree numeric budgets and history windows.
+  Measurement half started 2026-10-24: `benchmark.py` times every mart read (the
+  `app_db` path, uncached) and reports warehouse file size, unit-tested on a
+  synthetic DuckDB. Still open: build time, image size, runtime memory, map load
+  times, a run against a real warehouse, and the owner's numeric budgets.
 
 ### Group PS-DISCOVERY — Verify sources (after PS-SCOPE)
 

@@ -246,3 +246,23 @@ def coverage_database():
         ('air_quality', '2026-10-20 08:40:00', 300)''')
     yield con
     con.close()
+
+
+@pytest.fixture
+def synthetic_warehouse(tmp_path: Path) -> Path:
+    """A tiny on-disk DuckDB shaped like the built warehouse, for the benchmark.
+
+    Two marts (``main.mart_*`` tables), plus a staging view and a raw table the
+    benchmark must ignore. No real data.
+    """
+    import duckdb
+
+    path = tmp_path / "synthetic.duckdb"
+    con = duckdb.connect(str(path))
+    con.execute("create schema raw")
+    con.execute("create table raw.parks as select range as id from range(5)")
+    con.execute("create view main.stg_parks as select id from raw.parks")
+    con.execute("create table main.mart_alpha as select range as n from range(10)")
+    con.execute("create table main.mart_beta as select 'x' as label, 1 as total")
+    con.close()
+    return path
