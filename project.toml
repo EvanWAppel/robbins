@@ -32,8 +32,8 @@ path = "/"
 
 [keys]
 paid = ["anthropic"]        # Ask Tiresias page (tiresias library) reads ANTHROPIC_API_KEY
-isolated = "unknown"        # open in BLOCKED.md: confirm Railway's key is a dedicated workspace key
-spend_cap = "unknown"
+isolated = true             # dedicated "robbins" Anthropic workspace key, set on Railway; Evan confirmed not his personal key (2026-10-23)
+spend_cap = "$10/month"     # workspace limit, email alert at $9 (2026-10-23)
 
 [platform]
 done = []
