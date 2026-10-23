@@ -321,3 +321,156 @@ item license text. Raw records were not inspected.
    so, what is the dedupe key against `r878-4sxa` for the overlapping 2021–2024 years?
 4. Whatcom: can you identify the portal behind `whatcomcounty.us/3239` (it's blocked to
    `curl`)?
+
+## Licenses, STR, crime, fire and 311 (PS-TOPICS-07/08) — sources searched 2026-10-22
+
+Research only. Nothing below is wired, and the matrix codes above are unchanged. Every
+row is a *candidate*: a public, keyless, machine-readable endpoint that answered on
+2026-10-22. None is verified for completeness, and none has an owner decision on
+definitions, windows, grain or overlap. The Business Licenses, Short-Term Rentals,
+Crime, Fire 911 Calls and 311 Requests rows stay `S` for King and `U` elsewhere. No
+cell moved to `G`. Where nothing turned up, the search did not reach every city
+server, so that is not evidence of absence.
+
+**Method.** Socrata Discovery API (`api.us.socrata.com/api/catalog/v1`) by keyword
+("business license", "short term rental", "vacation rental", "crime", "police
+incidents", "911", "fire incidents", "NFIRS", "fire marshal", "service requests", "311",
+"SeeClickFix", "code enforcement", "calls for service", "lodging tax") and a full
+listing of `data.wa.gov`, `data.everettwa.gov`, `internal.open.piercecountywa.gov`,
+`data.auburnwa.gov` and `data.kingcounty.gov`. ArcGIS Online item search for the same
+terms, once region-wide and once per county and major city (33 place names), plus a
+listing of the City of Tacoma open-data owner's items. Web search for county STR
+rules, 911 dispatch-center feeds and city police statistics pages. Candidates were
+checked for metadata only: schema, `count(*)`/`returnCountOnly`, min/max date
+statistics, distinct/grouped counts of categorical columns (county, agency, status,
+NAICS description), `editingInfo.lastEditDate`, and license text. Raw records were not
+inspected. **Count** is the record count on 2026-10-22.
+
+**Reuse terms.** Explicit **Public Domain**: Everett Police Incidents, Auburn Crimes,
+and Seattle's own feeds. Pierce County Socrata items point to the county's "Terms of
+Use" story page. Tacoma items link a "Disclaimer | City of Tacoma Open Data" page whose
+host (`data.cityoftacoma.org`) did not resolve from here, so its text is unread.
+Bellevue items carry a no-warranty disclaimer only. The rest have no license text.
+Whether disclaimer-only feeds are acceptable is the same owner call as for parks.
+
+### Crime
+
+| County | Publisher | Endpoint | Grain | Count / period | Notes |
+| --- | --- | --- | --- | --- | --- |
+| All 10 | WA OFM Statistical Analysis Center (WASPC NIBRS) | Socrata `data.wa.gov` `vvfu-ry7f` | **Agency × year** offense counts (crimes against persons / property / society, by offense), with population and rate | 3,471 rows, 2012–2024, 270 locations; posting "Yearly", last update 2025-11 | **The only region-wide candidate.** Every Puget Sound county is present (King 42 agencies, Snohomish 24, Pierce 21, Whatcom 11, Thurston 10, Skagit 8, Kitsap 7, Island 5, Jefferson 3, Mason 3). Each county also has a `COUNTY TOTAL` row, which must not be summed with its agencies. Agency counts grow while agencies convert to NIBRS (King: 19 in 2012, 28 in 2015–2017, 42 from 2018), so early years are partial. Publisher says NIBRS and SRS counts "cannot be compared". No license text. |
+| All 10 | WA OFM SAC (SRS) | Socrata `data.wa.gov` `6njs-53y5` | Agency × year, Part I offenses | 1990–2018 | Legacy method. Not comparable with NIBRS (publisher's note). Only relevant if pre-2012 history is wanted. |
+| Pierce | Pierce County (Finance, from OFM) | Socrata `internal.open.piercecountywa.gov` `u3gb-kmc7` | Location × year | 91 rows, 2012–2024, 3 locations | A subset copy of the OFM NIBRS table. **Overlap — don't load alongside `vvfu-ry7f`.** |
+| Pierce | Pierce County Sheriff | Socrata `internal.open.piercecountywa.gov` `9ik3-ebpg` (also ArcGIS `services2.arcgis.com/1UvBaQ5y1ubjUPmd/.../Crime_Data/FeatureServer/1`) | Offense point (approximate location) | 16,386 rows, 2025-10-01 to 2026-09-30 | **Rolling 12-month window**, monthly refresh. Covers unincorporated Pierce plus Bonney Lake, Eatonville, Edgewood, Gig Harbor, Puyallup, South Prairie, University Place. History would have to be accumulated by snapshotting, which is a design call. The two endpoints are copies. |
+| Pierce | City of Tacoma Police | ArcGIS `services3.arcgis.com/SCwJH1pD8WSn5T5y/arcgis/rest/services/TPD_RMS_Crime/FeatureServer/0` (table, lat/lon fields) | Offense description per report | 232,543 rows, 2018-01-01 to 2026-10-21, edited 2026-10-22 | Publisher: "neither NIBRS compliant nor UCR compliant and should not be compared to any report or data source using either standard". It excludes sexual offenses. |
+| King | City of Auburn | Socrata `data.auburnwa.gov` `8g4u-7zzy` | Offense per case (no coordinates; address + reporting district) | 199,901 rows, 2014-01-01 to 2026-10-20 | **Public Domain.** Auburn spans King and Pierce. Also on `gis.auburnwa.gov/hosting/rest/services/Police/Police/MapServer/0` (copy). |
+| King | City of Bellevue Police | ArcGIS `services1.arcgis.com/EYzEZbDhXZjURPbP/arcgis/rest/services/Offenses/FeatureServer/1` | Offense point with `NIBRS_CODE` | 76,563 rows, reported 2019-01-01 to 2026-10-20 | Daily refresh. The item says "2017 to present" but the reported-date range starts 2019. An older `Crime_Cases_By_100_Block` layer (2,820 rows, last edit 2022-06) is stale. |
+| Snohomish | City of Everett Police | Socrata `data.everettwa.gov` `szww-y224` | Police case (report) per row | 170,613 rows, 2015-01-01 to 2026-10-21 | Excludes DV, child-abuse and minor sex-offense cases. No license text. |
+| Skagit | Skagit County Sheriff (multi-agency) | ArcGIS `gis.skagitcountywa.gov/arcgis/rest/services/Sheriff/CrimeRelatedIncidentsForAGOL/FeatureServer/0` | Crime-related incident point (`NatureDesc`, `Category`) | 1,251,537 rows, 2005-01-01 to 2026-10-21 | Five agencies: Mount Vernon PD 425,929, Sheriff 338,423, Burlington 182,417, Anacortes 163,177, Sedro-Woolley 141,591. The AGOL item was last modified 2021, but the data is current. No license text. "Crime-related incidents" may include calls that are not offenses; definition unverified. |
+| Kitsap | City of Bremerton Police | `bremertonwa.gov/991/Statistics` (Document Center) | Monthly XLSX with incident, arrest and citation tabs | Monthly files 2025-01 to 2026-09, older years in the Document Center | File-per-month spreadsheets, not an API. Schema stability across months is unverified. |
+| King | City of Kirkland | `maps.kirklandwa.gov/host/rest/services/Hosted/CrimeAnalysis_(Public)/FeatureServer` | Unknown | — | Returns a Cloudflare challenge to `curl`. Not assessable without a browser. |
+
+Apart from the OFM table, nothing open was found for the King County Sheriff, Kitsap
+County Sheriff, or any Thurston, Island, Mason, Jefferson or Whatcom agency. Bellingham
+offers neighborhood statistics and daily activity pages, which are search/HTML only.
+
+### Police calls for service (not offenses)
+
+These are CAD/dispatch records. They are a different grain from crime reports and must
+not be pooled with them.
+
+| County | Publisher | Endpoint | Count / period | Notes |
+| --- | --- | --- | --- | --- |
+| Snohomish | Everett PD / SNO911 | Socrata `data.everettwa.gov` `f6vp-3svh` | 1,619,466 rows, 2015-01-01 onward | **Public Domain.** All police responses, including officer-initiated activity; locations rounded to the 100 block. Max `datetimereceived` is 2026-12-20, a future date, so some timestamps are wrong. |
+| Pierce | City of Tacoma Police | ArcGIS `.../SCwJH1pD8WSn5T5y/.../Tacoma_CAD/FeatureServer/0` (table) | 1,691,485 rows, 2018-01-01 to 2026-10-22 | Agency field is TPD only. |
+| King | City of Bellevue Police | ArcGIS `.../EYzEZbDhXZjURPbP/.../Incidents/FeatureServer/0` | 395,971 rows, 2021-01-01 to 2026-10-21 | Daily refresh. Has call-received and dispatch response seconds. |
+| Pierce | South Sound 911 | Socrata `internal.open.piercecountywa.gov` `ff4w-c69w` | 583,563 rows, 2016-01-01 to 2021-12-31 | One-off snapshot posted 2022-06 by the County Council; not updated. |
+| Thurston | Thurston County Sheriff / TCOMM 911 | `thurstoncountywa.gov/911-incident-responses` | Rolling 24 h | Daily HTML incident log only. Not a feed. |
+
+Seattle also publishes SPD Call Data (`33kz-ixgy`, 11.1M rows, 2009-06 to 2026-10,
+Public Domain). It is not integrated today and would be a new Seattle source, not a
+regional one.
+
+### Fire / EMS 911
+
+| County | Publisher | Endpoint | Grain | Count / period | Notes |
+| --- | --- | --- | --- | --- | --- |
+| Snohomish | Everett Fire / SNO911 | Socrata `data.everettwa.gov` `w35j-83t3` | **Unit dispatch** (several rows per incident) | 1,063,586 rows, 266,583 distinct incidents, 2015-10-26 to 2026-08-31 | Includes responses outside city limits by Everett units. Seattle's `kzjm-xkqj` is one row per incident, so the two need an incident-level rollup before comparison. No license text. Last data is 2026-08-31, about seven weeks behind. |
+
+No other open fire/EMS incident feed was found for any Puget Sound fire department,
+fire district or regional dispatch center (South Sound 911 fire, Kitsap 911, TCOMM,
+WhatComm, Skagit 911, ICOM, JeffCom, MACECOM, NORCOM, Valley Com). Statewide fire
+incident (NFIRS / State Fire Marshal) data was not found on `data.wa.gov`. The only WA
+fire-district incident tables there are eastern Washington (Asotin, Blue Mountain).
+
+### 311 / service requests
+
+| County | Publisher | Endpoint | Count / period | Notes |
+| --- | --- | --- | --- | --- |
+| Pierce | City of Tacoma (Tacoma FIRST 311, SeeClickFix) | ArcGIS `.../SCwJH1pD8WSn5T5y/.../SeeClickFix_Requests/FeatureServer/0` (points) | 156,515 rows, created 2022-06-17 to 2026-10-22 | All requests regardless of status. Category set is SeeClickFix's, not Seattle's. |
+| King | City of Bellevue (MyBellevue, PublicStuff) | ArcGIS `.../EYzEZbDhXZjURPbP/.../MyBellevue_311/FeatureServer/0` (points) | 34,663 rows, created 2021-06-15 to 2026-10-22 | Web and mobile submissions only (not phone). Bellevue disclaimer. |
+| Pierce | Pierce County Planning & Public Works | Socrata `internal.open.piercecountywa.gov` `9wmg-abtz` | Quarterly aggregates since 2017 | Nuisance code-enforcement counts, not requests. Not comparable. |
+
+Seattle's `43nw-pkdq` (Customer Service Request Tracking Data) is a status-history
+companion to the integrated `5ngg-rpne`, not a new source.
+
+### Business licenses
+
+| County | Publisher | Endpoint | Grain | Count / dates | Notes |
+| --- | --- | --- | --- | --- | --- |
+| Pierce | City of Tacoma | ArcGIS `.../SCwJH1pD8WSn5T5y/.../Business_Licenses/FeatureServer/0` (table, x/y) | License | 22,138 rows; `Business_Open_Date` 1893-01-07 to 2027-02-01, a string field with out-of-range values | Some rows are "Not Mapped". Whether it holds only current licenses is unverified. |
+| King | City of Bellevue | ArcGIS `.../EYzEZbDhXZjURPbP/.../Business_Licenses_(All)/FeatureServer/3` | Registered business, with `CancelDate` | 82,274 rows; `IssueDate` 1950-01-01 to 2026-10-16; daily refresh | Includes cancelled licenses (status rule needed). |
+| Snohomish | City of Everett | Socrata `data.everettwa.gov` `qvfa-2v26` | License | 11,573 rows; `issuedate` 1900-01-01 to 2087-03-16 (sentinel/out-of-range values) | Active vs. expired status is not a column. No license text. |
+| King | City of Seattle | ArcGIS `services.arcgis.com/ZOyb2t4B0UYuYNYH/.../Seattle_Business_License/FeatureServer` | — | — | A copy of the integrated `wnbq-64tb`. **Overlap — don't load.** |
+
+Many Washington cities (Bellingham included) license through the state Business
+Licensing Service (DOR). Its public lookup is search-only, and no bulk BLS or UBI
+dataset for the region was found on `data.wa.gov` (only an Asotin County UBI table).
+Renton's 2023 ArcGIS layers (`Vista_Business_Licenses`, day-care licenses) are
+special-purpose and stale.
+
+### Short-term rentals
+
+No STR-specific registry or permit feed was found outside Seattle (`s7df-xba4`, already
+integrated). Related, but **not** STR inventories:
+
+- **Tacoma — Business Licenses for Rental Activity**: ArcGIS
+  `.../SCwJH1pD8WSn5T5y/.../Business_Licenses_Rental_Activity/FeatureServer/0` (table,
+  8,843 rows, 8,252 with `Current_License = Yes`). It is mostly long-term rentals
+  (7,417 "Lessors of Residential Buildings" and 1,192 nonresidential). Only 55 rows are
+  NAICS "All Other Traveler Accommodation", and whether NAICS identifies STRs is
+  unverified.
+- **Bellingham — Rental Registrations**: ArcGIS
+  `services1.arcgis.com/mg5xPlZs10O6tWPP/.../Plan_RentalRegistrations/FeatureServer/1`
+  (5,386 locations, type "RENTAL REGISTRATION", 5,295 active; edited 2026-10-12). This is
+  the long-term rental-safety program, not STRs.
+- **Pierce County LTAC** lodging-tax revenue tables (`pet7-x8tm`, `rvg5-atcq`) are
+  revenue, not licenses.
+
+County STR rules that would create a permit list exist (Whatcom County vacation-rental
+permits, Jefferson County's 2025 permit cap, Kitsap's 2016 code with deferred
+enforcement), but none publishes the permits as data.
+
+### Open questions for the owner (before any PS-TOPICS-07/08 integration)
+
+1. **Crime:** is the OFM/WASPC NIBRS table (agency × year, 2012–2024) acceptable as the
+   regional crime layer, next to Seattle's offense-level SPD feed? That means a separate
+   annual agency-level view, excluding `COUNTY TOTAL` rows or using only them, and
+   deciding how to show years before each agency moved to NIBRS. Should incident-level
+   city feeds (Tacoma, Bellevue, Everett, Auburn, Skagit) be added as well, given that
+   Tacoma says its feed is not NIBRS/UCR comparable?
+2. **Calls vs. offenses:** should police calls for service (Everett, Tacoma, Bellevue)
+   be in scope at all, and if so as a separate page? Seattle's own Call Data would then
+   also be a candidate.
+3. **Fire:** Everett's unit-dispatch feed is the only regional fire candidate. Integrate
+   it with an incident-level rollup, or leave Fire 911 as Seattle-only?
+4. **311:** Tacoma (SeeClickFix) and Bellevue (MyBellevue, web/app only) categories differ
+   from Seattle's. Show them per city without a harmonized category, or harmonize?
+5. **Licenses:** what status rule defines "a license" (current only, or including
+   cancelled/expired), and how should out-of-range dates (1893, 1900, 2087) be handled?
+   Are disclaimer-only or no-license-text feeds acceptable?
+6. **STR:** with no regional STR feed, should Short-Term Rentals stay Seattle-only?
+   Should cells move to `G`? That needs a definition of `G` beyond the permits search.
+7. **Rolling windows:** Pierce Sheriff publishes a 12-month window only. Is accumulating
+   snapshots across builds acceptable, or should it be shown as "last 12 months" only?
+8. **Kirkland:** its crime layer sits behind a Cloudflare challenge. Can you check
+   whether it is a public open-data service, or should it be skipped?

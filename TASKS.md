@@ -339,10 +339,22 @@ outcome, not implemented coverage.
 - [ ] **PS-TOPICS-07 — Business and STR licenses:** integrate verified feeds with
   explicit jurisdiction/status rules; distinguish licenses from all operating
   businesses or rentals.
+  *2026-10-22 (branch `weekend-2026-10-24`):* discovery only. Candidates (publisher,
+  endpoint, grain, count, date range, reuse terms, overlaps) and owner questions are in
+  `docs/puget-sound-coverage.md` § "Licenses, STR, crime, fire and 311". Business-license
+  candidates: Tacoma, Bellevue, Everett. No STR registry was found outside Seattle;
+  Tacoma and Bellingham publish long-term rental licensing/registration only. Nothing is
+  integrated and the matrix codes are unchanged. Integration needs owner answers.
 - [ ] **PS-TOPICS-08 — Crime, fire, and 311:** verify agency coverage; harmonize
   only comparable categories/periods, preserve incident/offense/dispatch/request
   grain, and use applicable local boundaries. Population rates require documented
   geographic/year-matched denominators.
+  *2026-10-22 (branch `weekend-2026-10-24`):* discovery only (same doc section). The
+  only region-wide crime candidate is the OFM/WASPC NIBRS agency × year table
+  (`data.wa.gov` `vvfu-ry7f`, 2012–2024). Incident-level crime: Tacoma, Bellevue,
+  Everett, Auburn, Skagit (5 agencies), Pierce Sheriff (rolling 12 months). Fire: Everett
+  unit dispatches only. 311: Tacoma (SeeClickFix), Bellevue (MyBellevue). Nothing is
+  integrated and the matrix codes are unchanged. Integration needs owner answers.
 
 ### Group PS-RELEASE — Regional completion and operational validation
 
