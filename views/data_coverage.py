@@ -22,9 +22,24 @@ if coverage.empty:
 else:
     st.dataframe(coverage, hide_index=True, width="stretch")
 st.caption(
-    "Dates above are observation dates. Retrieval freshness is not yet tracked. "
+    "Dates above are observation dates; see Source retrievals below for when each "
+    "source was fetched. "
     "Monitor observations do not represent uniform coverage of a county."
 )
+st.subheader("Source retrievals")
+st.caption(
+    "When the warehouse build last fetched each raw source table (UTC), and how many "
+    "rows it loaded. A retrieval time says when data was fetched, not how recent "
+    "the observations in it are."
+)
+retrievals = query(
+    "select source_id, retrieved_at, row_count "
+    "from main.mart_source_retrievals order by source_id"
+)
+if retrievals.empty:
+    st.info("No source retrievals are recorded in this warehouse.")
+else:
+    st.dataframe(retrievals, hide_index=True, width="stretch")
 st.subheader("Transit and ferry reporting coverage")
 st.caption("The county selector does not allocate these agency-wide totals to a county.")
 show_mobility_coverage(is_ferry=False)

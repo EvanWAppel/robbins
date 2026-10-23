@@ -209,3 +209,40 @@ def permits_database():
         ('["tacoma.permits","T1"]','tacoma.permits','T1','Tacoma','53053','Pierce','New Building',2e5,'Valuation','2024-03-05','1 Pacific Ave',47.25,-122.44)''')
     yield con
     con.close()
+
+
+@pytest.fixture
+def raw_warehouse():
+    """An empty in-memory DuckDB for exercising the raw loaders."""
+    import duckdb
+
+    con = duckdb.connect()
+    yield con
+    con.close()
+
+
+@pytest.fixture
+def coverage_database():
+    """Synthetic marts behind the Data Coverage page, incl. source retrievals."""
+    import duckdb
+
+    con = duckdb.connect()
+    con.execute('''create table mart_air_observations (
+        county varchar, county_fips varchar, site_id varchar, site varchar,
+        latitude double, longitude double, obs_date date, pollutant varchar,
+        aqi double, aqi_category varchar)''')
+    con.execute('''insert into mart_air_observations values
+        ('King', '53033', '530330001', 'Site A', 47.6, -122.3, '2024-01-01', 'PM2.5', 40, 'Good')''')
+    con.execute('''create table mart_mobility_coverage (
+        agency varchar, agency_label varchar, is_ferry boolean, first_month date,
+        last_month date, months_reported bigint, boardings bigint)''')
+    con.execute('''insert into mart_mobility_coverage values
+        ('King County', 'King County Metro', false, '2024-01-01', '2024-02-01', 2, 100),
+        ('Washington State Ferries', 'Washington State Ferries', true, '2024-01-01', '2024-02-01', 2, 10)''')
+    con.execute('''create table mart_source_retrievals (
+        source_id varchar, retrieved_at timestamp, row_count bigint)''')
+    con.execute('''insert into mart_source_retrievals values
+        ('building_permits', '2026-10-20 08:15:00', 1200),
+        ('air_quality', '2026-10-20 08:40:00', 300)''')
+    yield con
+    con.close()

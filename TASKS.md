@@ -271,6 +271,12 @@ Use test-first synthetic fixtures for parsers and transforms.
 - [~] **PS-FOUNDATION-03** — Add coverage metadata, observation/retrieval dates,
   and explicit unavailable/stale/zero states. Define required/optional source
   behavior; expose omissions rather than silently publishing incomplete totals.
+  *2026-10-22 (branch `weekend-2026-10-24`):* retrieval timestamps done. Every raw
+  load records `(source_id, retrieved_at, row_count)` in `raw.source_retrievals`
+  (`build_warehouse.record_retrieval`). This feeds `stg_source_retrievals` →
+  `mart_source_retrievals` (dbt schema tests) and a "Source retrievals" table on Data
+  Coverage (`tests/test_source_retrievals.py`). Still open: required/optional source
+  semantics and stale-state thresholds, which need owner decisions.
 - [~] **PS-FOUNDATION-04** — Build the agreed geographic navigation and selection
   state. Apply selection to maps/charts/tables/metrics; test persistence across
   pages and explain unsupported places without falling back to Seattle.

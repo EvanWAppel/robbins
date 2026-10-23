@@ -144,7 +144,10 @@ incremental path twice.
 A `mart_build_info` model captures the **build timestamp** (dbt's `run_started_at`,
 frozen into the baked warehouse) and the total record count. The Overview page reads it
 for a *"Warehouse built &lt;date&gt; · N records"* freshness banner — and because prod
-rebuilds every deploy, that timestamp is an honest "data loaded" signal. Three sources
+rebuilds every deploy, that timestamp is an honest "data loaded" signal. Each raw
+load also records its own retrieval time and row count in `raw.source_retrievals`
+(written by `build_warehouse.record_retrieval`), modeled through
+`stg_source_retrievals` into `mart_source_retrievals` and shown on the Data Coverage page. Three sources
 that carry a real event timestamp (`crime`, `csr_311`, `building_permits`) also declare
 dbt **source freshness** thresholds:
 

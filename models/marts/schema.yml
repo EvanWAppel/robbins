@@ -887,6 +887,30 @@ models:
               arguments:
                 min_value: 3000000
 
+  - name: mart_source_retrievals
+    description: >
+      Retrieval freshness per raw source table — when the warehouse build last
+      fetched each one (UTC) and how many rows it loaded. Complements
+      mart_build_info (dbt build time) and the observation dates on each page; the
+      Data Coverage page shows it. Pipeline metadata, excluded from Tiresias.
+    columns:
+      - name: source_id
+        description: Raw table name, one row each.
+        data_tests:
+          - not_null
+          - unique
+      - name: retrieved_at
+        description: UTC time the build loaded this raw table from its upstream fetch.
+        data_tests:
+          - not_null
+      - name: row_count
+        description: Rows loaded into the raw table on that retrieval.
+        data_tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+
   # ===== Neighborhood choropleths (SPD MCPP polygons) =======================
   # One row per MCPP neighborhood, incidents assigned by point-in-polygon and
   # normalized by area. Back the crime / fire 911 / 311 choropleth maps.

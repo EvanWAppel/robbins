@@ -2,7 +2,7 @@
 # github.com/EvanWAppel/tiresias, pinned in pyproject.toml / requirements.txt.
 # Check with `uv run tiresias check`; calibrate with `uv run tiresias calibrate`.
 # Excluded: the two map samples (recent 2k permits per publisher; random ~15k trees) would
-# silently undercount, and mart_build_info is pipeline metadata. Map-only: the
+# silently undercount; mart_build_info and mart_source_retrievals are pipeline metadata. Map-only: the
 # neighborhood polygon rings and approximate centroids drawn by the choropleths.
 city: Seattle metro
 blurb: Building permits from Seattle and eight other Puget Sound publishers; City of Seattle crime,
@@ -79,6 +79,7 @@ tables:
   excluded:
   - mart_build_info
   - mart_permits_map_sample
+  - mart_source_retrievals
   - mart_trees_map_sample
   map_only_columns:
     mart_crime_by_neighborhood:
