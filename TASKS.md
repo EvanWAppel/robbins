@@ -371,7 +371,8 @@ outcome, not implemented coverage.
 
 ### Mobility continuation — 2026-09-27
 
-- Foundations/air slice opened as PR #19. Continuation branch: `puget-sound-mobility`.
+- Foundations/air slice opened as PR #19 (merged 2026-09-27). Continuation branch:
+  `puget-sound-mobility` (merged as PR #20 on 2026-09-27).
 - Verified and integrated five additional FTA reporters: Kitsap, Skagit, Whatcom,
   Intercity, and Pierce County Ferry. Thirteen reporting agencies now load.
 - Fixed ferry aggregation so new operators are not mislabeled as Water Taxi;
@@ -413,5 +414,26 @@ outcome, not implemented coverage.
 - Checks: pytest, Ruff, ty, `dbt build` of permits + downstream (28 steps incl. the
   per-publisher reconcile), `tiresias check`, and an AppTest smoke over every county
   against the rebuilt local warehouse. No Docker rehearsal; no deployment.
-- Open: residual definition differences between publishers; ArcGIS fetch has no
-  retry (a transient TLS reset failed one local attempt).
+- Open: residual definition differences between publishers. (The ArcGIS-retry gap
+  noted here originally was closed before merge: `_arcgis_get` in
+  `build_warehouse.py` retries connection resets/timeouts up to `ARCGIS_ATTEMPTS = 3`
+  times with backoff, covered by `tests/test_fetch_arcgis.py`.)
+- Merged to `main` as PR #24 on 2026-10-12 (merge = Railway deploy). The decision
+  wording in DECISIONS.md is still awaiting owner confirmation (see BLOCKED.md).
+
+
+### Checkpoint — 2026-10-22
+
+- Merged since the last checkpoint: PR #19 (foundations/air) and #20 (mobility) on
+  2026-09-27, #21 (weather/water) 2026-10-05, #22 (its review fixes) 2026-10-07,
+  #23 (Ask Tiresias page) 2026-10-11, #24 (regional permits) 2026-10-12, and #25
+  (blocker tidy) 2026-10-17. No open PRs at this checkpoint.
+- Task statuses above are unchanged: every `[~]` remains partial; this pass only
+  corrects notes. PS-TOPICS-05..08, PS-RELEASE-02..05, retrieval-timestamp tracking
+  (PS-FOUNDATION-03), and numeric budgets (PS-SCOPE-02) remain open.
+- Baseline on `main` @ `d970b14`: Ruff, ty, and `dbt parse` clean; pytest 146 passed /
+  2 skipped / 3 failed under heavy machine load (AppTest's 3 s default timeout; all
+  three pass alone). Branch `weekend-2026-10-24` gives every AppTest an explicit
+  timeout via a `tests/conftest.py` fixture (not yet merged).
+- Open owner items (Railway Anthropic key check, Tiresias gold-set review, permits
+  decision wording, `project.toml` draft) live in BLOCKED.md. No deployment.
