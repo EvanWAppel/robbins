@@ -323,6 +323,11 @@ outcome, not implemented coverage.
 - [ ] **PS-TOPICS-05 — Parks, trees, and art:** integrate available inventories,
   resolve overlapping publishers, and distinguish managed street-tree inventory
   from canopy coverage or all trees.
+  *2026-10-22 (branch `weekend-2026-10-24`):* discovery only. Candidate feeds for each
+  county (publisher, endpoint, grain, count, last edit, reuse terms, overlaps) and
+  owner questions are in `docs/puget-sound-coverage.md` § "Parks, trees and public
+  art". Nothing is integrated and the matrix codes are unchanged. Integration needs
+  owner answers.
 - [ ] **PS-TOPICS-06 — Inspections:** integrate health-jurisdiction feeds;
   preserve inspection event grain and differences between scoring systems.
 - [ ] **PS-TOPICS-07 — Business and STR licenses:** integrate verified feeds with
