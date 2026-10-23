@@ -169,7 +169,7 @@ dependency; `requires-python` narrowed to 3.12.
 ## 2026-10-12 — Regional building permits: sources, definition, window, valuation (PS-TOPICS-04)
 
 *Status: drafted by the agent from the owner's interview answers of 2026-10-11/12;
-awaiting owner confirmation of the wording.*
+confirmed by the owner 2026-10-23 (Evan, blocker triage 2026-10-23).*
 
 - **Sources:** Seattle plus the eight full-history public feeds verified 2026-10-11 —
   Pierce County (unincorporated, Socrata `nhnt-v7ka`), Tacoma, Bellevue (its CITY
@@ -200,3 +200,23 @@ awaiting owner confirmation of the wording.*
   weather/water did); Seattle-only columns (e.g. the map's `permit_type_desc`) go.
   Rejected: parallel `mart_regional_permits_*` (two overlapping permit sets that
   overview/Tiresias could double-count).
+
+## 2026-10-23 — Ask Tiresias spends a dedicated, capped workspace key (confirmed by Evan, blocker triage 2026-10-23)
+
+The public Ask Tiresias page (live since PR #23, 2026-10-11) calls Claude with
+Railway's `ANTHROPIC_API_KEY`. **Chosen:** a key minted in a dedicated `robbins`
+Anthropic workspace with a $10/month spend limit and an email alert at $9, set on
+Railway; Evan confirmed from the Console that it is not his personal/default key.
+**Rejected:** a personal or default-workspace key (anyone on the internet could spend
+against his account, uncapped), and unsetting the key (the page would show only its
+"needs a key" notice). The cap is enforced server-side by the workspace, so no client
+can exceed it; when it is hit the page fails until the next month. The key Railway
+held before the swap should be revoked (BLOCKED.md).
+
+## 2026-10-23 — Bump Tiresias to v0.1.1 (Evan, blocker triage 2026-10-23)
+
+Tiresias v0.1.1 was tagged (commit `0ae9123`). The pin moves from v0.1.0's commit
+archive (`bbb34d6`) to v0.1.1's, keeping the commit-archive URL form (no git needed
+in the slim image) in both `pyproject.toml` (via `uv add`) and `requirements.txt`.
+Rejected: a floating branch or tag reference, which would let the deployed library
+change without a robbins commit.

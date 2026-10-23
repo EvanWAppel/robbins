@@ -439,7 +439,7 @@ outcome, not implemented coverage.
   public feeds beyond Seattle; all nine now load as one structure-permit table
   (210k permits, 2016+). Decisions (sources, structure-only definition, 2016+ window
   incl. Seattle, per-publisher valuation, marts regionalized in place) are in
-  DECISIONS.md 2026-10-12, pending owner confirmation of the wording.
+  DECISIONS.md 2026-10-12, wording confirmed by the owner 2026-10-23.
 - Page is county-aware; every county shows what its coverage leaves out
   (`PERMIT_GAPS`); Island, Jefferson, Mason and Skagit have no integrated publisher.
 - Applications vs issued: applications without an issue date are staged
@@ -452,7 +452,7 @@ outcome, not implemented coverage.
   `build_warehouse.py` retries connection resets/timeouts up to `ARCGIS_ATTEMPTS = 3`
   times with backoff, covered by `tests/test_fetch_arcgis.py`.)
 - Merged to `main` as PR #24 on 2026-10-12 (merge = Railway deploy). The decision
-  wording in DECISIONS.md is still awaiting owner confirmation (see BLOCKED.md).
+  wording in DECISIONS.md was confirmed by the owner 2026-10-23.
 
 
 ### Checkpoint — 2026-10-22
