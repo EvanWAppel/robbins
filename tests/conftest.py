@@ -3,8 +3,34 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from pathlib import Path
 
 import pytest
+from streamlit.testing.v1 import AppTest
+
+ROOT = Path(__file__).resolve().parents[1]
+
+# AppTest's default 3 s per-run timeout flakes when the machine is busy; give
+# every page run (including widget-triggered reruns) a generous explicit budget.
+# 30 s still timed out with every core 2x oversubscribed; the limit only exists
+# to catch a hung script, so err long.
+APPTEST_TIMEOUT_S = 120
+
+
+@pytest.fixture
+def app_test() -> Callable[[str], AppTest]:
+    """Build an ``AppTest`` for a repo-relative script with an explicit timeout.
+
+    Usage::
+
+        app = app_test("views/air_quality.py").run()
+        app.selectbox[0].set_value("53035").run()  # same timeout applies
+    """
+
+    def _factory(script: str) -> AppTest:
+        return AppTest.from_file(str(ROOT / script), default_timeout=APPTEST_TIMEOUT_S)
+
+    return _factory
 
 
 @pytest.fixture
@@ -183,3 +209,60 @@ def permits_database():
         ('["tacoma.permits","T1"]','tacoma.permits','T1','Tacoma','53053','Pierce','New Building',2e5,'Valuation','2024-03-05','1 Pacific Ave',47.25,-122.44)''')
     yield con
     con.close()
+
+
+@pytest.fixture
+def raw_warehouse():
+    """An empty in-memory DuckDB for exercising the raw loaders."""
+    import duckdb
+
+    con = duckdb.connect()
+    yield con
+    con.close()
+
+
+@pytest.fixture
+def coverage_database():
+    """Synthetic marts behind the Data Coverage page, incl. source retrievals."""
+    import duckdb
+
+    con = duckdb.connect()
+    con.execute('''create table mart_air_observations (
+        county varchar, county_fips varchar, site_id varchar, site varchar,
+        latitude double, longitude double, obs_date date, pollutant varchar,
+        aqi double, aqi_category varchar)''')
+    con.execute('''insert into mart_air_observations values
+        ('King', '53033', '530330001', 'Site A', 47.6, -122.3, '2024-01-01', 'PM2.5', 40, 'Good')''')
+    con.execute('''create table mart_mobility_coverage (
+        agency varchar, agency_label varchar, is_ferry boolean, first_month date,
+        last_month date, months_reported bigint, boardings bigint)''')
+    con.execute('''insert into mart_mobility_coverage values
+        ('King County', 'King County Metro', false, '2024-01-01', '2024-02-01', 2, 100),
+        ('Washington State Ferries', 'Washington State Ferries', true, '2024-01-01', '2024-02-01', 2, 10)''')
+    con.execute('''create table mart_source_retrievals (
+        source_id varchar, retrieved_at timestamp, row_count bigint)''')
+    con.execute('''insert into mart_source_retrievals values
+        ('building_permits', '2026-10-20 08:15:00', 1200),
+        ('air_quality', '2026-10-20 08:40:00', 300)''')
+    yield con
+    con.close()
+
+
+@pytest.fixture
+def synthetic_warehouse(tmp_path: Path) -> Path:
+    """A tiny on-disk DuckDB shaped like the built warehouse, for the benchmark.
+
+    Two marts (``main.mart_*`` tables), plus a staging view and a raw table the
+    benchmark must ignore. No real data.
+    """
+    import duckdb
+
+    path = tmp_path / "synthetic.duckdb"
+    con = duckdb.connect(str(path))
+    con.execute("create schema raw")
+    con.execute("create table raw.parks as select range as id from range(5)")
+    con.execute("create view main.stg_parks as select id from raw.parks")
+    con.execute("create table main.mart_alpha as select range as n from range(10)")
+    con.execute("create table main.mart_beta as select 'x' as label, 1 as total")
+    con.close()
+    return path

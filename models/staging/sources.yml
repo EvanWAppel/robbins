@@ -137,3 +137,9 @@ sources:
           GeoJSON MultiPolygon (feeds the point-in-polygon joins) and raw rings (feeds
           the map render), plus a bounding box (minx/miny/maxx/maxy) and centroid. No
           event timestamp, so no freshness check.
+      - name: source_retrievals
+        description: >
+          Build metadata written by build_warehouse.record_retrieval: one row per raw
+          table (source_id = raw table name) with the UTC time the build loaded it from
+          its upstream fetch (retrieved_at) and the rows loaded (row_count). A partial
+          rebuild replaces only the rebuilt tables' rows. No freshness thresholds yet.

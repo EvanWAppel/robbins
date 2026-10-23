@@ -305,3 +305,22 @@ models:
               arguments:
                 min_value: 1
                 max_value: 12
+
+  # ---- Build metadata ---------------------------------------------------------
+  # One row per raw table by construction (record_retrieval deletes then inserts).
+  - name: stg_source_retrievals
+    description: When each raw table was retrieved (UTC) and how many rows it loaded.
+    columns:
+      - name: source_id
+        description: Raw table name (e.g. building_permits, crime, river).
+        data_tests:
+          - not_null
+          - unique
+      - name: retrieved_at
+        description: UTC time the build loaded this raw table from its upstream fetch.
+        data_tests:
+          - not_null
+      - name: row_count
+        description: Rows loaded into the raw table on that retrieval.
+        data_tests:
+          - not_null

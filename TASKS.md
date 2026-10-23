@@ -244,6 +244,10 @@ PS-RELEASE. Shared contracts settle before topic implementation.
   mobility first; air quality selected for the first slice.
 - [~] **PS-SCOPE-02** — Benchmark build time, image/warehouse size, runtime memory,
   query latency, and map load times; agree numeric budgets and history windows.
+  Measurement half started 2026-10-24: `benchmark.py` times every mart read (the
+  `app_db` path, uncached) and reports warehouse file size, unit-tested on a
+  synthetic DuckDB. Still open: build time, image size, runtime memory, map load
+  times, a run against a real warehouse, and the owner's numeric budgets.
 
 ### Group PS-DISCOVERY — Verify sources (after PS-SCOPE)
 
@@ -271,6 +275,12 @@ Use test-first synthetic fixtures for parsers and transforms.
 - [~] **PS-FOUNDATION-03** — Add coverage metadata, observation/retrieval dates,
   and explicit unavailable/stale/zero states. Define required/optional source
   behavior; expose omissions rather than silently publishing incomplete totals.
+  *2026-10-22 (branch `weekend-2026-10-24`):* retrieval timestamps done. Every raw
+  load records `(source_id, retrieved_at, row_count)` in `raw.source_retrievals`
+  (`build_warehouse.record_retrieval`). This feeds `stg_source_retrievals` →
+  `mart_source_retrievals` (dbt schema tests) and a "Source retrievals" table on Data
+  Coverage (`tests/test_source_retrievals.py`). Still open: required/optional source
+  semantics and stale-state thresholds, which need owner decisions.
 - [~] **PS-FOUNDATION-04** — Build the agreed geographic navigation and selection
   state. Apply selection to maps/charts/tables/metrics; test persistence across
   pages and explain unsupported places without falling back to Seattle.
@@ -313,15 +323,38 @@ outcome, not implemented coverage.
 - [ ] **PS-TOPICS-05 — Parks, trees, and art:** integrate available inventories,
   resolve overlapping publishers, and distinguish managed street-tree inventory
   from canopy coverage or all trees.
+  *2026-10-22 (branch `weekend-2026-10-24`):* discovery only. Candidate feeds for each
+  county (publisher, endpoint, grain, count, last edit, reuse terms, overlaps) and
+  owner questions are in `docs/puget-sound-coverage.md` § "Parks, trees and public
+  art". Nothing is integrated and the matrix codes are unchanged. Integration needs
+  owner answers.
 - [ ] **PS-TOPICS-06 — Inspections:** integrate health-jurisdiction feeds;
   preserve inspection event grain and differences between scoring systems.
+  *2026-10-22 (branch `weekend-2026-10-24`):* discovery only. Per health jurisdiction
+  findings (publisher, endpoint, grain, count, last edit, reuse terms, overlaps) and
+  owner questions are in `docs/puget-sound-coverage.md` § "Restaurant inspections". The
+  only new machine-readable candidate is Kitsap (an establishment snapshot, not event
+  history). Nothing is integrated and the matrix codes are unchanged. Integration needs
+  owner answers.
 - [ ] **PS-TOPICS-07 — Business and STR licenses:** integrate verified feeds with
   explicit jurisdiction/status rules; distinguish licenses from all operating
   businesses or rentals.
+  *2026-10-22 (branch `weekend-2026-10-24`):* discovery only. Candidates (publisher,
+  endpoint, grain, count, date range, reuse terms, overlaps) and owner questions are in
+  `docs/puget-sound-coverage.md` § "Licenses, STR, crime, fire and 311". Business-license
+  candidates: Tacoma, Bellevue, Everett. No STR registry was found outside Seattle;
+  Tacoma and Bellingham publish long-term rental licensing/registration only. Nothing is
+  integrated and the matrix codes are unchanged. Integration needs owner answers.
 - [ ] **PS-TOPICS-08 — Crime, fire, and 311:** verify agency coverage; harmonize
   only comparable categories/periods, preserve incident/offense/dispatch/request
   grain, and use applicable local boundaries. Population rates require documented
   geographic/year-matched denominators.
+  *2026-10-22 (branch `weekend-2026-10-24`):* discovery only (same doc section). The
+  only region-wide crime candidate is the OFM/WASPC NIBRS agency × year table
+  (`data.wa.gov` `vvfu-ry7f`, 2012–2024). Incident-level crime: Tacoma, Bellevue,
+  Everett, Auburn, Skagit (5 agencies), Pierce Sheriff (rolling 12 months). Fire: Everett
+  unit dispatches only. 311: Tacoma (SeeClickFix), Bellevue (MyBellevue). Nothing is
+  integrated and the matrix codes are unchanged. Integration needs owner answers.
 
 ### Group PS-RELEASE — Regional completion and operational validation
 
@@ -371,7 +404,8 @@ outcome, not implemented coverage.
 
 ### Mobility continuation — 2026-09-27
 
-- Foundations/air slice opened as PR #19. Continuation branch: `puget-sound-mobility`.
+- Foundations/air slice opened as PR #19 (merged 2026-09-27). Continuation branch:
+  `puget-sound-mobility` (merged as PR #20 on 2026-09-27).
 - Verified and integrated five additional FTA reporters: Kitsap, Skagit, Whatcom,
   Intercity, and Pierce County Ferry. Thirteen reporting agencies now load.
 - Fixed ferry aggregation so new operators are not mislabeled as Water Taxi;
@@ -413,5 +447,26 @@ outcome, not implemented coverage.
 - Checks: pytest, Ruff, ty, `dbt build` of permits + downstream (28 steps incl. the
   per-publisher reconcile), `tiresias check`, and an AppTest smoke over every county
   against the rebuilt local warehouse. No Docker rehearsal; no deployment.
-- Open: residual definition differences between publishers; ArcGIS fetch has no
-  retry (a transient TLS reset failed one local attempt).
+- Open: residual definition differences between publishers. (The ArcGIS-retry gap
+  noted here originally was closed before merge: `_arcgis_get` in
+  `build_warehouse.py` retries connection resets/timeouts up to `ARCGIS_ATTEMPTS = 3`
+  times with backoff, covered by `tests/test_fetch_arcgis.py`.)
+- Merged to `main` as PR #24 on 2026-10-12 (merge = Railway deploy). The decision
+  wording in DECISIONS.md is still awaiting owner confirmation (see BLOCKED.md).
+
+
+### Checkpoint — 2026-10-22
+
+- Merged since the last checkpoint: PR #19 (foundations/air) and #20 (mobility) on
+  2026-09-27, #21 (weather/water) 2026-10-05, #22 (its review fixes) 2026-10-07,
+  #23 (Ask Tiresias page) 2026-10-11, #24 (regional permits) 2026-10-12, and #25
+  (blocker tidy) 2026-10-17. No open PRs at this checkpoint.
+- Task statuses above are unchanged: every `[~]` remains partial; this pass only
+  corrects notes. PS-TOPICS-05..08, PS-RELEASE-02..05, retrieval-timestamp tracking
+  (PS-FOUNDATION-03), and numeric budgets (PS-SCOPE-02) remain open.
+- Baseline on `main` @ `d970b14`: Ruff, ty, and `dbt parse` clean; pytest 146 passed /
+  2 skipped / 3 failed under heavy machine load (AppTest's 3 s default timeout; all
+  three pass alone). Branch `weekend-2026-10-24` gives every AppTest an explicit
+  timeout via a `tests/conftest.py` fixture (not yet merged).
+- Open owner items (Railway Anthropic key check, Tiresias gold-set review, permits
+  decision wording, `project.toml` draft) live in BLOCKED.md. No deployment.

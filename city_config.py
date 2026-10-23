@@ -426,7 +426,8 @@ PERMIT_GAPS: dict[str, str] = {
 
 # Configured coverage, audited from the pipeline on 2026-09-27. These entries
 # describe existing integrations, not newly verified endpoints or launch scope.
-# Keep retrieval timestamps and observed date ranges in build metadata.
+# Retrieval timestamps are recorded per raw table in raw.source_retrievals
+# (mart_source_retrievals); observed date ranges belong in build metadata.
 def _soda_page(source: tuple[str, str]) -> str:
     return f"https://{source[0]}/d/{source[1]}"
 

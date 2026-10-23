@@ -675,6 +675,7 @@ def ingest_csv(
     log.info("Loaded raw.%s: %d rows (CSV %s)", table, n, source)
     if not n:
         raise ValueError(f"CSV ingest for raw.{table} returned zero rows: {source}")
+    record_retrieval(con, table, n)
 
 
 def load_raw(con: duckdb.DuckDBPyConnection, table: str, df: pd.DataFrame) -> None:
@@ -683,6 +684,27 @@ def load_raw(con: duckdb.DuckDBPyConnection, table: str, df: pd.DataFrame) -> No
     con.execute(f"CREATE OR REPLACE TABLE raw.{table} AS SELECT * FROM _df")
     con.unregister("_df")
     log.info("Loaded raw.%s: %d rows, %d cols", table, len(df), len(df.columns))
+    record_retrieval(con, table, len(df))
+
+
+def record_retrieval(con: duckdb.DuckDBPyConnection, source_id: str, row_count: int) -> None:
+    """Upsert ``(source_id, retrieved_at, row_count)`` into ``raw.source_retrievals``.
+
+    ``source_id`` is the raw table name; ``retrieved_at`` is the UTC time the build
+    loaded that table from its upstream fetch. One row per raw table: a partial
+    rebuild (``main(["crime"])``) replaces only that table's row.
+    """
+    con.execute(
+        "CREATE TABLE IF NOT EXISTS raw.source_retrievals "
+        "(source_id VARCHAR, retrieved_at TIMESTAMP, row_count BIGINT)"
+    )
+    retrieved_at = datetime.now(UTC).replace(tzinfo=None)
+    con.execute("DELETE FROM raw.source_retrievals WHERE source_id = ?", [source_id])
+    con.execute(
+        "INSERT INTO raw.source_retrievals VALUES (?, ?, ?)",
+        [source_id, retrieved_at, row_count],
+    )
+    log.info("Recorded retrieval of raw.%s at %s UTC", source_id, retrieved_at)
 
 
 # --------------------------------------------------------------------------- #

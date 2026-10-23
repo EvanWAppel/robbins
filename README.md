@@ -144,7 +144,10 @@ incremental path twice.
 A `mart_build_info` model captures the **build timestamp** (dbt's `run_started_at`,
 frozen into the baked warehouse) and the total record count. The Overview page reads it
 for a *"Warehouse built &lt;date&gt; · N records"* freshness banner — and because prod
-rebuilds every deploy, that timestamp is an honest "data loaded" signal. Three sources
+rebuilds every deploy, that timestamp is an honest "data loaded" signal. Each raw
+load also records its own retrieval time and row count in `raw.source_retrievals`
+(written by `build_warehouse.record_retrieval`), modeled through
+`stg_source_retrievals` into `mart_source_retrievals` and shown on the Data Coverage page. Three sources
 that carry a real event timestamp (`crime`, `csr_311`, `building_permits`) also declare
 dbt **source freshness** thresholds:
 
@@ -185,6 +188,18 @@ uv run ty check
 uv run prek install    # optional: install the git hooks (ruff + ty on commit,
                        # pytest on push)
 ```
+
+Performance measurement (PS-SCOPE-02, measurement only; budgets are not set yet):
+
+```sh
+uv run python benchmark.py                          # times a full read of every main.mart_*
+uv run python benchmark.py --repeats 5 --json bench.json   # + warehouse file size, as JSON
+```
+
+`benchmark.py` reads the warehouse the way `app_db.query` does (read-only DuckDB,
+fresh cursor, `.df()`) but skips the Streamlit cache, so it times the warehouse
+rather than the cache. It reports min/median/max ms per mart and the `.duckdb` size.
+It needs a built warehouse; the unit tests use a tiny synthetic DuckDB instead.
 
 ## Data sources
 
