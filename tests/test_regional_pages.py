@@ -1,17 +1,11 @@
 """Exercise selection, missing coverage, and navigation using synthetic data."""
 
-from pathlib import Path
-
-from streamlit.testing.v1 import AppTest
-
 import app_db
 
-ROOT = Path(__file__).resolve().parents[1]
 
-
-def test_air_selection_and_missing_coverage(monkeypatch, air_database):
+def test_air_selection_and_missing_coverage(app_test, monkeypatch, air_database):
     monkeypatch.setattr(app_db, 'query', lambda sql, params=(): air_database.cursor().execute(sql, params).df())
-    app = AppTest.from_file(str(ROOT / 'views/air_quality.py')).run()
+    app = app_test('views/air_quality.py').run()
     assert not app.exception
     assert app.metric[0].value == '2'
     app.selectbox[0].set_value('53035').run()
@@ -24,31 +18,31 @@ def test_air_selection_and_missing_coverage(monkeypatch, air_database):
     assert any('missing coverage' in info.value for info in app.info)
 
 
-def test_ozone_only_county_does_not_crash(monkeypatch, air_database):
+def test_ozone_only_county_does_not_crash(app_test, monkeypatch, air_database):
     air_database.execute("delete from mart_air_observations where pollutant = 'PM2.5'")
     monkeypatch.setattr(app_db, 'query', lambda sql, params=(): air_database.cursor().execute(sql, params).df())
-    app = AppTest.from_file(str(ROOT / 'views/air_quality.py')).run()
+    app = app_test('views/air_quality.py').run()
     assert not app.exception
     assert app.metric[0].value == '0'
     assert app.metric[2].value == 'No PM2.5 data'
     assert any('No mapped PM2.5' in info.value for info in app.info)
 
 
-def test_unsupported_county_does_not_query_seattle(monkeypatch):
+def test_unsupported_county_does_not_query_seattle(app_test, monkeypatch):
     def reject_query(*args, **kwargs):
         raise AssertionError('An unsupported selection queried the old geography')
 
     monkeypatch.setattr(app_db, 'query', reject_query)
-    app = AppTest.from_file(str(ROOT / 'streamlit_app.py'))
+    app = app_test('streamlit_app.py')
     app.session_state['selected_county'] = '53035'
     app.run()
     assert not app.exception
     assert any('Kitsap County filtering is not available' in info.value for info in app.info)
 
 
-def test_weather_selection_and_missing_coverage(monkeypatch, weather_database):
+def test_weather_selection_and_missing_coverage(app_test, monkeypatch, weather_database):
     monkeypatch.setattr(app_db, 'query', lambda sql, params=(): weather_database.cursor().execute(sql, params).df())
-    app = AppTest.from_file(str(ROOT / 'views/weather.py')).run()
+    app = app_test('views/weather.py').run()
     assert not app.exception
     # Region view: two counties covered.
     assert app.metric[0].value == '2'
@@ -61,9 +55,9 @@ def test_weather_selection_and_missing_coverage(monkeypatch, weather_database):
     assert any('missing' in info.value.lower() for info in app.info)
 
 
-def test_water_kitsap_shows_network_gaps(monkeypatch, water_database):
+def test_water_kitsap_shows_network_gaps(app_test, monkeypatch, water_database):
     monkeypatch.setattr(app_db, 'query', lambda sql, params=(): water_database.cursor().execute(sql, params).df())
-    app = AppTest.from_file(str(ROOT / 'views/water.py')).run()
+    app = app_test('views/water.py').run()
     assert not app.exception
     app.selectbox[0].set_value('53035').run()  # Kitsap: tide only
     assert not app.exception
@@ -72,9 +66,9 @@ def test_water_kitsap_shows_network_gaps(monkeypatch, water_database):
     assert 'streamflow' in infos  # no river gage
 
 
-def test_permits_selection_valuation_and_missing_coverage(monkeypatch, permits_database):
+def test_permits_selection_valuation_and_missing_coverage(app_test, monkeypatch, permits_database):
     monkeypatch.setattr(app_db, 'query', lambda sql, params=(): permits_database.cursor().execute(sql, params).df())
-    app = AppTest.from_file(str(ROOT / 'views/building_permits.py')).run()
+    app = app_test('views/building_permits.py').run()
     assert not app.exception
     assert app.metric[0].value == '344'
     # Region view never shows a summed regional valuation.
@@ -89,9 +83,9 @@ def test_permits_selection_valuation_and_missing_coverage(monkeypatch, permits_d
     assert any('missing coverage' in info.value for info in app.info)
 
 
-def test_permits_page_accepts_regional_county_selection(monkeypatch, permits_database):
+def test_permits_page_accepts_regional_county_selection(app_test, monkeypatch, permits_database):
     monkeypatch.setattr(app_db, 'query', lambda sql, params=(): permits_database.cursor().execute(sql, params).df())
-    app = AppTest.from_file(str(ROOT / 'streamlit_app.py'))
+    app = app_test('streamlit_app.py')
     app.session_state['selected_county'] = '53053'
     app.switch_page('views/building_permits.py').run()
     assert not app.exception

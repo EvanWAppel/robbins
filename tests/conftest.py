@@ -3,8 +3,34 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from pathlib import Path
 
 import pytest
+from streamlit.testing.v1 import AppTest
+
+ROOT = Path(__file__).resolve().parents[1]
+
+# AppTest's default 3 s per-run timeout flakes when the machine is busy; give
+# every page run (including widget-triggered reruns) a generous explicit budget.
+# 30 s still timed out with every core 2x oversubscribed; the limit only exists
+# to catch a hung script, so err long.
+APPTEST_TIMEOUT_S = 120
+
+
+@pytest.fixture
+def app_test() -> Callable[[str], AppTest]:
+    """Build an ``AppTest`` for a repo-relative script with an explicit timeout.
+
+    Usage::
+
+        app = app_test("views/air_quality.py").run()
+        app.selectbox[0].set_value("53035").run()  # same timeout applies
+    """
+
+    def _factory(script: str) -> AppTest:
+        return AppTest.from_file(str(ROOT / script), default_timeout=APPTEST_TIMEOUT_S)
+
+    return _factory
 
 
 @pytest.fixture

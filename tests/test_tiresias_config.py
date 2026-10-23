@@ -38,11 +38,9 @@ def test_every_built_mart_is_classified(built):
     assert marts == built.tables.allowed | built.tables.excluded
 
 
-def test_ask_page_without_a_key_shows_a_notice(monkeypatch):
-    from streamlit.testing.v1 import AppTest
-
+def test_ask_page_without_a_key_shows_a_notice(app_test, monkeypatch):
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
-    at = AppTest.from_file(str(ROOT / "views" / "ask.py"), default_timeout=30).run()
+    at = app_test("views/ask.py").run()
     assert not at.exception
     assert "Seattle metro" in at.title[0].value
     assert "ANTHROPIC_API_KEY" in at.info[0].value
