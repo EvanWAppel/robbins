@@ -1,0 +1,39 @@
+# Drafted 2026-10-22 by a weekend-prep agent (not yet verified in robbins' own session).
+# Format: ~/Documents/_system/docs/project-toml.md
+
+[project]
+name = "robbins"
+group = "portfolio/geographic"
+kind = "app"
+status = "active"
+repo = "EvanWAppel/robbins"
+visibility = "public"
+on_site = true              # enki data/projects.ts has a "robbins" card (live link = Railway origin)
+verified = false
+
+[deploy]
+host = "railway"
+services = ["robbins"]      # Railway project "robbins" (TASKS.md VS-08/DEPLOY-04); service name unverified
+domain = "robbins.evanappel.me"   # serves a Railway Streamlit app (HTTP 200, 2026-10-22); DEPLOY-06 still open in TASKS.md
+origin_urls_closed = false  # robbins-production.up.railway.app still serves (HTTP 200, 2026-10-22)
+
+[auth]
+scheme = "none"
+access_list = ""
+target = "unknown"
+
+[data]
+db = "duckdb"               # baked at Docker build time (build_warehouse.py + dbt build)
+
+[demo]
+status = "live"             # whole app is public
+url = "https://robbins-production.up.railway.app/"
+path = "/"
+
+[keys]
+paid = ["anthropic"]        # Ask Tiresias page (tiresias library) reads ANTHROPIC_API_KEY
+isolated = "unknown"        # open in BLOCKED.md: confirm Railway's key is a dedicated workspace key
+spend_cap = "unknown"
+
+[platform]
+done = []
