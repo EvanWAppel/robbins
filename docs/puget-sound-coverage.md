@@ -240,3 +240,84 @@ found was a Gig Harbor mirror. Seattle's 2016/2021 canopy assessments were not s
    Collection shown as a separate publisher layer?
 5. Is canopy in scope at all, as a separate measure? The PRD's distinction between
    managed inventory and canopy stands either way.
+
+## Restaurant inspections (PS-TOPICS-06) — sources searched 2026-10-22
+
+Research only. Nothing below is wired, and the matrix codes above are unchanged.
+Retail food inspection is a county (or health-district) function in Washington, so the
+search went one health jurisdiction at a time. King County stays `K` (the integrated
+`king.inspections` feed). The other nine stay `U`: one has a machine-readable
+*candidate*, and eight publish inspections only as a search UI, PDFs or on request.
+Nothing moved to `G`. The `G` code is defined by the 2026-10-11 permits search, and
+whether "search UI only" counts as "no usable source" is an owner call (see Open
+questions below).
+
+**Method.** The WA Department of Health's list of county inspection sites
+(`doh.wa.gov/community-and-environment/food/restaurant-inspections`, which is also the
+target of the data.wa.gov `7ktr-3bhb` "Restaurant Inspections" link item). Each
+jurisdiction's food-safety page was fetched with `curl` and its links scanned for
+exports, APIs and vendor portals. The Socrata Discovery API was searched for
+"food inspection", "restaurant inspection", "food establishment" and "health
+inspection" on WA domains. ArcGIS Online item search used the same terms plus each
+county or health-district name. A web search covered Whatcom, whose site returns 403
+to `curl`. Candidates were checked for metadata only: layer schema,
+`returnCountOnly` count, `editingInfo.lastEditDate`, min/max date statistics, and
+item license text. Raw records were not inspected.
+
+### Per health jurisdiction
+
+| County | Health jurisdiction | What is published | Machine-readable? | Notes |
+| --- | --- | --- | --- | --- |
+| King | Public Health — Seattle & King County | Socrata `data.kingcounty.gov` `r878-4sxa` (**integrated** as `king.inspections`) | Yes | **Public Domain.** One row per violation within an inspection (inspection rows repeat). 110,068 rows, 2021-01-04 to 2026-10-21, refreshed 2026-10-22. See the King copies below. |
+| Kitsap | Kitsap Public Health District | ArcGIS `services3.arcgis.com/rM2bN63KIgsKua6J/arcgis/rest/services/Emoji_Food_Map_(Public_Map)/FeatureServer/0` ("Open Food Establisments") | Yes — **candidate** | One row per **open establishment**, point. 1,334 features. Last edit 2026-09-11, though the app says "updated daily". Has `LastScore` and `SafetyCategory` (Kitsap's emoji rating), **not inspection events**, so it is a current snapshot with no history. The item has no license text. It backs the district's "Food Establishment Inspections Map" (Experience `df34c4c6…`). |
+| Kitsap | Kitsap Public Health District | ArcGIS `services3.arcgis.com/rM2bN63KIgsKua6J/arcgis/rest/services/Foodinspections/FeatureServer/0` | Yes — superseded | Same establishment grain (`LastScore`, no `SafetyCategory`). 1,409 features, last edit 2025-11-01. Item license reads **"Non-commercial use only"**. It looks like the predecessor of the layer above, so don't load both. |
+| Pierce | Tacoma-Pierce County Health Department | Accela Citizen Access property lookup (`aca-prod.accela.com/TPCHD/...PropertyLookUp.aspx?isFoodFacility=Y`) | No | Per-facility search UI. Accela offers an in-session "Export" of search results, but that is not a feed. No TPCHD inspection layer turned up on ArcGIS Online (its `TPCHDFoodAssets_PublicView` is food-access sites, not inspections). |
+| Snohomish | Snohomish County Health Department | EnvisionConnect public search (`snohomishonline.envisionconnect.com/#/pa1/search`) | No | Search UI behind reCAPTCHA. No open-data item found. |
+| Thurston | Thurston County Public Health & Social Services | Classic ASP lookup (`co.thurston.wa.us/apps/eh-food-inspections/`), with an "All Inspections — Last 90 Days" list | No (HTML only) | The 90-day list is event-grain HTML. Scraping it would be the only route, which is a design call and not a published feed. |
+| Island | Island County Public Health | myhealthdepartment.com portal (`inspections.myhealthdepartment.com/wa_islandcounty/`) | No | The portal returns 403 to `curl`. No documented export. |
+| Mason | Mason County Public Health | inspect2go public index (`mason.inspect2go33.com/Public/Index`), plus monthly PDF report bundles for 2023–2026 on `masoncountywa.gov` | No (PDF) | Monthly PDFs have gaps (for example, no 2025-09 or 2025-12 link). |
+| Jefferson | Jefferson County Public Health | Tyler EnerGov self-service portal (`selfservice-op.jeffcowa.us/energov_prod/selfservice`) | No | Per-permit lookup. The county says results appear about two weeks after the inspection. |
+| Skagit | Skagit County Public Health | Nothing online | No | The county's food-establishment page says: "We do not currently have inspection reports available online." Reports are available by public records request. This is the strongest evidence of absence found. |
+| Whatcom | Whatcom County Health and Community Services | A "Restaurant Inspection" page (`whatcomcounty.us/3239`) says a searchable database exists | Unknown | The site returns 403 to `curl`, so the portal vendor and any export were not identified. It needs a manual look (Evan) or another route. |
+
+### King County copies (overlap — do not load alongside `r878-4sxa`)
+
+- `services.arcgis.com/Ej0PsM5Aw677QF1W/.../RESTAURANT_INSPECTIONS_POINT_857/FeatureServer/0`
+  (also `gisdata.kingcounty.gov/.../pubsafe__restaurant_inspections_point/MapServer/857`).
+  It has the same violation grain with coordinates. 260,845 rows, inspection dates
+  2006-01-02 to 2024-03-30, layer edited 2026-10-14. King County GIS terms apply.
+  It is an older, longer history (2006–2024) of the same records. It could backfill
+  pre-2021 history, which is an owner decision about the time window. It is not a new
+  jurisdiction.
+- `.../King_County_Restaurant_Inspection_and_Violation_Records_SEARCH_view/FeatureServer/0`:
+  12,311 business points (record ID, name, address, parcel). It's a lookup index, not
+  inspections.
+- Socrata filter views on `r878-4sxa`/`j2pu-r4ru` (`sgr5-u9rw`, `29us-kypr`, `mzbk-wwns`)
+  are derived views, not sources.
+
+### Grain and scoring differences (must be preserved if anything is integrated)
+
+- **King**: violation-level rows that roll up to inspection events. The score is
+  violation points (red/blue), and King also publishes a 4-tier emoji rating (`grade`).
+- **Kitsap**: one row per establishment with only the *last* score and an emoji safety
+  category. There's no event history, so inspection counts or trends cannot be built
+  from it, and Kitsap scores must not be pooled with King points without an owner
+  rule.
+- The other jurisdictions all run the WA Food Code inspection form (priority/core
+  violation points), but none publishes it machine-readably.
+
+### Open questions for the owner (before any PS-TOPICS-06 integration)
+
+1. Is a Kitsap **establishment snapshot** (last score only, no events) acceptable for an
+   "Inspections" page whose King grain is inspection events? Or should Kitsap be shown
+   as a separate "current ratings" view? Also, the older Kitsap layer says
+   "non-commercial use only" and the current one has no license text. Is that
+   acceptable?
+2. Should jurisdictions with only search UIs, PDFs or records requests (Pierce,
+   Snohomish, Thurston, Island, Mason, Jefferson, Skagit) move from `U` to `G`? Doing
+   so means redefining `G` beyond the 2026-10-11 permits search. Scraping any of the
+   portals is out of scope unless you decide otherwise.
+3. Should King history be backfilled before 2021 from the ArcGIS copy (2006–2024)? If
+   so, what is the dedupe key against `r878-4sxa` for the overlapping 2021–2024 years?
+4. Whatcom: can you identify the portal behind `whatcomcounty.us/3239` (it's blocked to
+   `curl`)?

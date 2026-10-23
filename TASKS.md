@@ -330,6 +330,12 @@ outcome, not implemented coverage.
   owner answers.
 - [ ] **PS-TOPICS-06 — Inspections:** integrate health-jurisdiction feeds;
   preserve inspection event grain and differences between scoring systems.
+  *2026-10-22 (branch `weekend-2026-10-24`):* discovery only. Per health jurisdiction
+  findings (publisher, endpoint, grain, count, last edit, reuse terms, overlaps) and
+  owner questions are in `docs/puget-sound-coverage.md` § "Restaurant inspections". The
+  only new machine-readable candidate is Kitsap (an establishment snapshot, not event
+  history). Nothing is integrated and the matrix codes are unchanged. Integration needs
+  owner answers.
 - [ ] **PS-TOPICS-07 — Business and STR licenses:** integrate verified feeds with
   explicit jurisdiction/status rules; distinguish licenses from all operating
   businesses or rentals.
