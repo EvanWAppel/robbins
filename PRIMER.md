@@ -2,30 +2,34 @@
 
 ## Next session — 2026-10-24 weekend
 
-> Written 2026-10-22 for a fresh, unattended Claude session. Branch:
-> `weekend-2026-10-24` (cut from `origin/main` @ `d970b14`). The rest of this file
-> below is the original 2026-08-11 build handoff — historical.
+> Written 2026-10-22 for a fresh, unattended Claude session; refreshed 2026-10-24
+> against `main` @ `2d3b43a` (2026-10-23). The weekend branch `weekend-2026-10-24`
+> merged as PR #26. The rest of this file below is the original 2026-08-11 build
+> handoff — historical.
 
 **Goal.** Robbins is a Streamlit + DuckDB/dbt open-data explorer, originally Seattle,
 now mid-way through the Puget Sound (10-county) expansion of PRD §12. Live (public) at
 https://robbins-production.up.railway.app — merge to `main` = Railway deploy.
 
-**Current state.**
+**Current state (main @ `2d3b43a`, 2026-10-23).**
 - Merged: air slice (#19), mobility (#20), weather/water (#21, #22), Ask Tiresias page
-  (#23), regional permits PS-TOPICS-04 (#24), blocker tidy (#25). **No open PRs.**
+  (#23), regional permits PS-TOPICS-04 (#24), blocker tidy (#25), the weekend run (#26:
+  all seven tasks from the 2026-10-22 primer, see below), tiresias bumped to v0.1.1 with
+  the key and permits-wording blockers cleared (#28), blocker protocol sync (#27).
+  **No open PRs.** CI on main green.
 - Local checkouts: `robbins` is on `puget-sound-permits` and
   `robbins-review-fixes` on `review-fixes-weather-water`; both branches are merged and
   carry only an unmerged 2026-10-17 sweep snapshot (new `AGENTS.md` + a ROCRLL wording
-  tweak in `CLAUDE.md`). Don't redo that work and don't touch those checkouts.
-- Baseline on `main` (2026-10-22): `ruff` clean, `ty` clean, `dbt parse` clean;
-  pytest 146 passed / 2 skipped / **3 failed under heavy machine load**
-  (`test_regional_pages.py::test_air_selection_and_missing_coverage`,
-  `::test_ozone_only_county_does_not_crash`,
-  `test_tiresias_config.py::test_ask_page_without_a_key_shows_a_notice`). All 3 pass
-  when re-run alone: `AppTest.run()`'s 3 s default timeout is too short under load.
-- Open: PS-TOPICS-05..08 (parks/trees/art, inspections, licenses/STR, crime/fire/311
-  still Seattle/King-only), PS-DISCOVERY-03/04, retrieval-timestamp tracking
-  (PS-FOUNDATION-03), benchmarks (PS-SCOPE-02), PS-RELEASE-*.
+  tweak in `CLAUDE.md`). Don't redo that work and don't touch those checkouts (what to do
+  with them is an open BLOCKED.md item).
+- Baseline on `main` (measured 2026-10-22, before #26): `ruff` clean, `ty` clean,
+  `dbt parse` clean; pytest 146 passed / 2 skipped / 3 failed under heavy machine load
+  from AppTest's 3 s default timeout. #26 gave every AppTest run an explicit timeout via
+  `conftest.py` and added tests, so re-measure the counts.
+- Open in TASKS.md: PS-TOPICS-05..08 implementation (discovery candidates are now in
+  `docs/puget-sound-coverage.md`), PS-DISCOVERY-03/04, PS-FOUNDATION-03 and PS-SCOPE-02
+  (both `[~]`: retrieval timestamps and the `benchmark.py` harness landed, numeric
+  budgets are Evan's), PS-RELEASE-*.
 
 **Quality gate (run before every commit; same as CI):**
 ```sh
@@ -36,38 +40,21 @@ uv run dbt deps && uv run dbt parse --profiles-dir . --no-partial-parse
 (No local warehouse in this worktree; don't run `build_warehouse.py`. It pulls
 dozens of live sources for many minutes, and the agent never inspects raw data.)
 
-**Autonomous tasks, in order** (one PR-ready branch each, cut from
-`weekend-2026-10-24`; open PRs only if the orchestrator says so; never merge):
+**Autonomous tasks, in order.** All seven tasks from the 2026-10-22 primer are done,
+merged in PR #26:
 
-1. **TEST-FLAKE: AppTest timeouts.** Pass an explicit `timeout=` (e.g. 30 s) to every
-   `AppTest...run()` in `tests/`, ideally through one `conftest.py` fixture/helper
-   (DRY rule). *Done:* the 3 tests above pass in a full `uv run pytest -q` even while other
-   heavy jobs run on the machine; full gate green.
-2. **DOCS-SYNC: TASKS.md truth pass.** The permits checkpoint says "ArcGIS fetch has no
-   retry", but `_arcgis_get` (build_warehouse.py, `ARCGIS_ATTEMPTS = 3`) now retries.
-   Fix that note, record PR #24 as merged, and add a 2026-10-22 checkpoint. No
-   status upgrades without evidence. *Done:* docs-only diff; gate green.
-3. **PS-FOUNDATION-03: source retrieval timestamps.** `city_config.py:429` and
-   `views/data_coverage.py` both say retrieval freshness isn't tracked. Test-first:
-   have each build step record `(source_id, retrieved_at, row_count)` into a
-   `raw.source_retrievals` table, then stage it, add a mart and show it on Data Coverage.
-   Use synthetic fixtures only, and follow the `mart_build_info` pattern.
-   *Done:* new pytest + dbt schema tests; `dbt parse` clean; Data Coverage AppTest
-   asserts the retrieval column renders. Stop and record it in BLOCKED.md if this needs
-   a design call (e.g. required vs optional source semantics).
-4. **PS-SCOPE-02 (measurement half): benchmark harness.** Add a script (e.g.
-   `scripts/benchmark.py`) that times the query of each mart via `app_db` and reports
-   the warehouse file size, with a unit test against a tiny synthetic DuckDB. Don't
-   choose numeric budgets. That's Evan's call. *Done:* tests green; README note.
-5. **PS-DISCOVERY for PS-TOPICS-05 (parks, trees, art).** Research only. Use
-   `curl`/WebFetch (never a browser) to find official machine-readable regional feeds
-   and record publisher, URL/ID, reuse terms, grain, period, cadence and overlap in
-   `docs/puget-sound-coverage.md` as *candidates* (U → candidate notes). Wire nothing
-   and don't touch the matrix codes beyond U/G with evidence. *Done:* docs diff
-   with a dated source-search section like the permits one.
-6. **PS-DISCOVERY for PS-TOPICS-06 (inspections).** Same research-only shape, per county
-   health jurisdiction.
-7. **PS-DISCOVERY for PS-TOPICS-07/08 (licenses/STR; crime/fire/311).** Same shape.
+1. ~~TEST-FLAKE: AppTest timeouts~~ (explicit timeout via `conftest.py`).
+2. ~~DOCS-SYNC: TASKS.md truth pass~~ (ArcGIS retry note, merged PRs, 2026-10-22 checkpoint).
+3. ~~PS-FOUNDATION-03: source retrieval timestamps~~.
+4. ~~PS-SCOPE-02 (measurement half): benchmark harness~~ (`benchmark.py` at the repo root,
+   documented in README).
+5. ~~PS-DISCOVERY for PS-TOPICS-05 (parks, trees, art)~~.
+6. ~~PS-DISCOVERY for PS-TOPICS-06 (inspections)~~.
+7. ~~PS-DISCOVERY for PS-TOPICS-07/08 (licenses/STR; crime/fire/311)~~.
+
+No further autonomous tasks are queued in this primer. The remaining TASKS.md items above
+mostly need Evan (source interviews, budgets, release approval; see "Do NOT"); anything
+only Evan can do is in BLOCKED.md.
 
 **House rules that bite** (CLAUDE.md): TDD with pytest, fixtures in
 `tests/conftest.py`; `uv add` only (never hand-edit `pyproject.toml` deps); ruff + ty;
@@ -78,8 +65,9 @@ anything is unclear, stop and write it in BLOCKED.md.
 
 **Do NOT:**
 - Deploy, run `railway`, merge, or push to `main` (merge = public deploy).
-- Touch `ANTHROPIC_API_KEY`, run the live `tiresias eval`, or read any `.env`. The
-  Railway key check is open in BLOCKED.md.
+- Touch `ANTHROPIC_API_KEY`, run the live `tiresias eval`, or read any `.env`. Railway
+  now uses a dedicated `robbins` workspace key (#28); revoking the old key is Evan's
+  (BLOCKED.md).
 - Use browser automation. Verify with tests, curl and logs.
 - Run a full warehouse rebuild or Docker rehearsal (PS-RELEASE-03/04). Both are
   slow and network-heavy and need data inspection by Evan.
