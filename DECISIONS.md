@@ -220,3 +220,14 @@ archive (`bbb34d6`) to v0.1.1's, keeping the commit-archive URL form (no git nee
 in the slim image) in both `pyproject.toml` (via `uv add`) and `requirements.txt`.
 Rejected: a floating branch or tag reference, which would let the deployed library
 change without a robbins commit.
+
+## 2026-10-24 — Bump Tiresias to v0.1.2; keep rejection text hidden (drafted by Claude, awaiting Evan's confirmation)
+
+Tiresias v0.1.2 was tagged (commit `6d5de45`): the SQL guard bans settings,
+environment and introspection functions (`current_setting`, `getenv`, `duckdb_*`,
+`pragma_*` and others), and the chat trace panel hides guard and DuckDB rejection
+text by default. The pin moves from v0.1.1's commit archive (`0ae9123`) to v0.1.2's,
+same URL form, in `pyproject.toml` (via `uv add`) and `requirements.txt`.
+`tiresias.yml` leaves `chat.show_rejections` unset (library default `false`), because
+the page is public. Rejected: turning rejection text back on, which would show
+schema detail from error messages to anonymous visitors.
