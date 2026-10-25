@@ -32,8 +32,8 @@ path = "/"
 
 [keys]
 paid = ["anthropic"]        # Ask Tiresias page (tiresias library) reads ANTHROPIC_API_KEY
-isolated = true             # dedicated "robbins" Anthropic workspace key, set on Railway; Evan confirmed not his personal key (2026-10-23)
-spend_cap = "$10/month"     # workspace limit, email alert at $9 (2026-10-23)
+isolated = "yes"            # dedicated "robbins" Anthropic workspace key, set on Railway; Evan confirmed not his personal key (2026-10-23)
+spend_cap = "yes"           # $10/month workspace limit, email alert at $9 (2026-10-23)
 
 [platform]
 done = []
