@@ -39,6 +39,7 @@ spend_cap = "yes"           # $10/month workspace limit, email alert at $9 (2026
 done = []
 
 [commands]
+setup = "uv sync --dev"
 dev = "uv run streamlit run streamlit_app.py"
 test = "uv run pytest"
 lint = "uv run ruff check . && uv run ty check"
@@ -47,3 +48,10 @@ lint = "uv run ruff check . && uv run ty check"
 description = "Seattle-metro open-data explorer (port of elvis)"
 language = "python"
 tags = ["portfolio"]
+
+[fleet]                     # joined 2026-10-31 (_system D-051); also has the `fleet` topic
+component = "robbins"
+agents = ["claude", "codex"]
+default_model = "sonnet"
+default_branch = "main"
+max_minutes = 45
