@@ -5,12 +5,14 @@ recruiter a red error box. This drives the real entrypoint, switches to each
 page registered in `streamlit_app.py`, and asserts nothing raised and no
 `st.error` rendered. It needs the warehouse `build_warehouse.py` + `dbt build`
 produce, so it skips when that is absent (CI); the Docker build runs it as a gate
-right after baking the warehouse. Asserts on exceptions and elements only, never
+right after baking the warehouse, with REQUIRE_WAREHOUSE=1 so a missing warehouse
+fails instead of skipping. Asserts on exceptions and elements only, never
 on data values.
 """
 
 from __future__ import annotations
 
+import os
 import re
 from pathlib import Path
 
@@ -21,7 +23,7 @@ WAREHOUSE = ROOT / "seattle.duckdb"
 PAGES = re.findall(r'st\.Page\("(views/[a-z0-9_]+\.py)"', (ROOT / "streamlit_app.py").read_text())
 
 needs_warehouse = pytest.mark.skipif(
-    not WAREHOUSE.exists(),
+    not WAREHOUSE.exists() and not os.environ.get("REQUIRE_WAREHOUSE"),
     reason="seattle.duckdb absent; run build_warehouse.py + dbt build (the Docker build runs this)",
 )
 
@@ -29,6 +31,12 @@ needs_warehouse = pytest.mark.skipif(
 def test_router_registers_every_view():
     # A page added to views/ but not the router would silently escape the smoke test.
     assert sorted(PAGES) == sorted(f"views/{p.name}" for p in (ROOT / "views").glob("*.py"))
+
+
+def test_router_uses_default_url_paths():
+    # AppTest.switch_page can't reach a page with a custom url_path; st.navigation
+    # would silently render the default page instead, so that page's test passes untested.
+    assert "url_path" not in (ROOT / "streamlit_app.py").read_text()
 
 
 @needs_warehouse

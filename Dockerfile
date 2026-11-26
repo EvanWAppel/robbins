@@ -25,9 +25,10 @@ RUN tiresias check
 
 # Fail the build if any page raises or shows st.error against the baked warehouse
 # (PLAT-DEMO-04). pytest is installed for this step only and removed after.
-RUN pip install --no-cache-dir pytest \
-    && python -m pytest -q -p no:cacheprovider tests/test_page_smoke.py \
-    && pip uninstall -y pytest
+# REQUIRE_WAREHOUSE turns the no-warehouse skip into a failure.
+RUN pip install --no-cache-dir pytest==9.1.1 \
+    && REQUIRE_WAREHOUSE=1 python -m pytest -q -p no:cacheprovider tests/test_page_smoke.py \
+    && pip uninstall -y pytest pluggy iniconfig
 
 # Railway injects $PORT at runtime; default to 8501 for local runs.
 EXPOSE 8501
