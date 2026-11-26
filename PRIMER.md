@@ -9,7 +9,7 @@
 
 **Goal.** Robbins is a Streamlit + DuckDB/dbt open-data explorer, originally Seattle,
 now mid-way through the Puget Sound (10-county) expansion of PRD §12. Live (public) at
-https://robbins-production.up.railway.app — merge to `main` = Railway deploy.
+https://robbins.evanappel.me — merge to `main` = Railway deploy.
 
 **Current state (main @ `2d3b43a`, 2026-10-23).**
 - Merged: air slice (#19), mobility (#20), weather/water (#21, #22), Ask Tiresias page

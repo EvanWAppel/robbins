@@ -1,14 +1,14 @@
 # Robbins — Seattle-Metro Open-Data Explorer
 
 [![CI](https://github.com/EvanWAppel/robbins/actions/workflows/ci.yml/badge.svg)](https://github.com/EvanWAppel/robbins/actions/workflows/ci.yml)
-[![Live demo](https://img.shields.io/badge/live-Railway-brightgreen)](https://robbins-production.up.railway.app)
+[![Live demo](https://img.shields.io/badge/live-Railway-brightgreen)](https://robbins.evanappel.me)
 [![dbt docs](https://img.shields.io/badge/dbt%20docs-lineage%20%26%20catalog-FF694B)](https://evanwappel.github.io/robbins/)
 
 **Robbins** is an interactive, multi-page [Streamlit](https://streamlit.io) app
 that explores free public datasets about the **Seattle metro** (King County core,
 extending to Pierce & Snohomish) — maps, trends, and searchable tables in one place.
 
-**Live:** https://robbins-production.up.railway.app
+**Live:** https://robbins.evanappel.me
 
 It's a portfolio piece demonstrating end-to-end data engineering: multi-source
 ingestion across **three access patterns** (Socrata SODA API, ArcGIS FeatureServers,

@@ -216,8 +216,9 @@ source.
 - [x] **DEPLOY-05** — `README.md` refreshed ✅ live URL, three-pattern ingestion story
   (Socrata + ArcGIS + federal bulk), full 11-topic source table, dropped-topic note,
   local run + quality-gate steps.
-- [ ] **DEPLOY-06** *(optional, interview #8)* — Register in the portfolio
-  orchestrator manifest and wire `robbins.evanappel.me`.
+- [x] **DEPLOY-06** *(optional, interview #8)* — Register in the portfolio
+  orchestrator manifest and wire `robbins.evanappel.me`. ✅ `project.toml` verified and
+  `robbins.evanappel.me` confirmed canonical (EA-44, 2026-11-25).
 
 ---
 
