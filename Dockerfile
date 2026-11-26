@@ -23,6 +23,12 @@ RUN dbt docs generate --profiles-dir .
 # renamed column, bad map-only column). Warnings don't fail it.
 RUN tiresias check
 
+# Fail the build if any page raises or shows st.error against the baked warehouse
+# (PLAT-DEMO-04). pytest is installed for this step only and removed after.
+RUN pip install --no-cache-dir pytest \
+    && python -m pytest -q -p no:cacheprovider tests/test_page_smoke.py \
+    && pip uninstall -y pytest
+
 # Railway injects $PORT at runtime; default to 8501 for local runs.
 EXPOSE 8501
 CMD streamlit run streamlit_app.py --server.port ${PORT:-8501} --server.address 0.0.0.0
