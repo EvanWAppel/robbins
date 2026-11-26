@@ -1,4 +1,4 @@
-# Drafted 2026-10-22 by a weekend-prep agent (not yet verified in robbins' own session).
+# Drafted 2026-10-22 by a weekend-prep agent; Evan's answers 2026-11-01, applied 2026-11-25 (EA-44).
 # Format: ~/Documents/_system/docs/project-toml.md
 
 [project]
@@ -8,26 +8,26 @@ kind = "app"
 status = "active"
 repo = "EvanWAppel/robbins"
 visibility = "public"
-on_site = true              # enki data/projects.ts has a "robbins" card (live link = Railway origin)
-verified = false
+on_site = true              # enki data/projects.ts has a "robbins" card
+verified = true
 
 [deploy]
 host = "railway"
-services = ["robbins"]      # Railway project "robbins" (TASKS.md VS-08/DEPLOY-04); service name unverified
-domain = "robbins.evanappel.me"   # serves a Railway Streamlit app (HTTP 200, 2026-10-22); DEPLOY-06 still open in TASKS.md
+services = ["robbins"]      # Railway project + service "robbins" (confirmed by Evan, EA-44)
+domain = "robbins.evanappel.me"   # canonical (Evan, EA-44); health check HTTP 200, 2026-11-25
 origin_urls_closed = false  # robbins-production.up.railway.app still serves (HTTP 200, 2026-10-22)
 
 [auth]
 scheme = "none"
 access_list = ""
-target = "unknown"
+target = "none"             # stays a fully public portfolio demo (Evan, EA-44)
 
 [data]
 db = "duckdb"               # baked at Docker build time (build_warehouse.py + dbt build)
 
 [demo]
 status = "live"             # whole app is public
-url = "https://robbins-production.up.railway.app/"
+url = "https://robbins.evanappel.me/"
 path = "/"
 
 [keys]
