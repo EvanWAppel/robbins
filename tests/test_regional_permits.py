@@ -356,3 +356,12 @@ def test_selection_is_parameterized():
     for sql, params in permits_queries("53033'; drop table x; --").values():
         assert "drop table" not in sql
         assert params == ("53033'; drop table x; --",)
+
+
+def test_tacoma_reads_the_public_dev_layer():
+    # The production `accela_permit_data` layer went token-only (499) by 2026-11-25;
+    # the public `_DEV` copy carries the same fields, so the source points there.
+    from city_config import PERMIT_SOURCES
+
+    (tacoma,) = [s for s in PERMIT_SOURCES if s.source_id == "tacoma.permits"]
+    assert "/Accela_Permit_Data_(Tacoma)_DEV/FeatureServer/0" in tacoma.endpoint
