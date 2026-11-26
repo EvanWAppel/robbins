@@ -231,3 +231,15 @@ same URL form, in `pyproject.toml` (via `uv add`) and `requirements.txt`.
 `tiresias.yml` leaves `chat.show_rejections` unset (library default `false`), because
 the page is public. Rejected: turning rejection text back on, which would show
 schema detail from error messages to anonymous visitors.
+
+## 2026-11-25 — Tacoma permits read the public `_DEV` layer (Evan chose; drafted by Claude, awaiting Evan's confirmation)
+
+Tacoma's `accela_permit_data` FeatureServer started answering `499 Token Required`,
+which failed `build_warehouse.py` on its first builder and so would fail every Docker
+build. The same ArcGIS org publishes `Accela_Permit_Data_(Tacoma)_DEV` publicly, with
+the same layer name and fields, and it was edited the same day. `tacoma.permits` now
+reads that layer: the live fetch kept 22,727 structure permits since 2016. **Rejected:**
+dropping Tacoma from regional permits (loses Pierce County's largest city), and an
+ArcGIS token (a credential for a public demo, and Tacoma hasn't offered one). Risk: a
+`_DEV` service can drift or disappear without notice. A Jira follow-up tracks asking
+Tacoma whether a public production layer is coming back.

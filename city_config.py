@@ -296,8 +296,10 @@ PERMIT_SOURCES: tuple[PermitSource, ...] = (
     ),
     PermitSource(
         "tacoma.permits", "City of Tacoma", "arcgis",
+        # The production `accela_permit_data` service went token-only (499) by
+        # 2026-11-25; this public `_DEV` copy has the same layer and fields.
         "https://services3.arcgis.com/SCwJH1pD8WSn5T5y/arcgis/rest/services/"
-        "accela_permit_data/FeatureServer/0", "53053", "City", "Tacoma",
+        "Accela_Permit_Data_(Tacoma)_DEV/FeatureServer/0", "53053", "City", "Tacoma",
         fields={"permit_number": "permit_number", "permit_class": "permit_category",
                 "status": "current_status", "applied_date": "application_date",
                 "issue_date": "issued_date", "valuation": "valuation",
